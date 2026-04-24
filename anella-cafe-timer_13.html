@@ -717,7 +717,7 @@ function confirmCheckout() {
   // スプレッドシートに送信
   if (g && g.visit) {
     var img = new Image();
-    img.src = 'https://script.google.com/macros/s/AKfycbwwRaUFzoVqobnN_n6zgc6YRTe2zo0MOzakkUHxrnCE9kQxUS_lXcxzQia3AVvooG5Hig/exec?visit=' + encodeURIComponent(g.visit);
+    img.src = 'https://script.google.com/macros/s/AKfycby0BhfKBJG_iUdXSYM4NJ_oCKLlhYe7-Xa27GVJCz2jwfRdoye0OdgPElJrtzSKgkgcTA/exec?visit=' + encodeURIComponent(g.visit);
   }
   groups = groups.filter(x=>x.id!==checkoutTargetId);
   saveData();

@@ -499,7 +499,7 @@
 </div>
 
 <script>
-const GAS_URL = 'ここにGASのURLを入れる';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzZnnkIl-kt2sJS7EyAimh0k3FzMQH-a39_-EFTRnzGdcrpM-CXZOQalhyKGUeoFL8yaA/exec';
 
 const now = new Date();
 const yyyy = now.getFullYear();
@@ -619,7 +619,12 @@ async function doSubmit() {
   };
 
   try {
-    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
   } catch (e) { /* CORSエラーは無視 */ }
 
   document.getElementById('loadingOverlay').classList.remove('active');

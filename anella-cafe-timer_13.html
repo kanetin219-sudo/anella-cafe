@@ -716,7 +716,7 @@ function confirmCheckout() {
   const label = g?.label||'';
   // スプレッドシートに送信
   if (g && g.visit) {
-    fetch('https://script.google.com/macros/s/AKfycby0BhfKBJG_iUdXSYM4NJ_oCKLlhYe7-Xa27GVJCz2jwfRdoye0OdgPElJrtzSKgkgcTA/exec?visit=' + encodeURIComponent(g.visit), {mode:'no-cors'}).catch(()=>{});
+    fetch('https://script.google.com/macros/s/AKfycby0BhfKBJG_iUdXSYM4NJ_oCKLlhYe7-Xa27GVJCz2jwfRdoye0OdgPElJrtzSKgkgcTA/exec?visit=' + encodeURIComponent(g.visit) + '&t=' + Date.now(), {mode:'no-cors', cache:'no-store'}).catch(()=>{});
   }
   groups = groups.filter(x=>x.id!==checkoutTargetId);
   saveData();

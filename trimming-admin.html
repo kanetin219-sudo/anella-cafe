@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面 | ANELLA CAFE トリミング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <style>
+    :root {
+      --bg: #FDF6EE;
+      --surface: #FFFAF4;
+      --primary: #C96A3B;
+      --primary-light: #E8946A;
+      --accent: #4A7C6F;
+      --accent-light: #6FA898;
+      --text: #2C1F14;
+      --text-mid: #6B4F3A;
+      --text-soft: #A88870;
+      --border: #E8D5C0;
+      --shadow: rgba(150, 80, 30, 0.12);
+      --warn: #D4502A;
+      --warn-bg: #FFF3EE;
+      --gray: #9E9E9E;
+      --gray-bg: #F5F5F5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+    /* ── ログイン画面 ── */
+    #loginScreen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .login-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px var(--shadow);
+    }
+    .login-logo { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--primary); text-align: center; margin-bottom: 4px; }
+    .login-sub { font-size: 13px; color: var(--text-soft); text-align: center; margin-bottom: 32px; }
+    .login-field { margin-bottom: 16px; }
+    .login-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
+    .login-field input {
+      width: 100%; padding: 13px 14px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 16px; color: var(--text); outline: none;
+    }
+    .login-field input:focus { border-color: var(--primary-light); }
+    .login-btn {
+      width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 12px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;
+      margin-top: 8px; box-shadow: 0 4px 12px rgba(201,106,59,0.3); transition: opacity 0.2s;
+    }
+    .login-btn:hover { opacity: 0.9; }
+    .login-btn:disabled { background: #D0B49E; box-shadow: none; cursor: not-allowed; }
+    .login-err { color: var(--warn); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+    .login-err.active { display: block; }
+
+    /* ── メイン画面 ── */
+    #mainScreen { display: none; }
+
+    /* ── ヘッダー ── */
+    .admin-header {
+      background: var(--text); color: #fff; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .admin-header-logo { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary-light); }
+    .admin-header-right { display: flex; align-items: center; gap: 12px; }
+    .admin-user { font-size: 12px; color: #bbb; }
+    .logout-btn {
+      padding: 7px 14px; background: transparent; border: 1px solid #555; border-radius: 8px;
+      color: #ccc; font-family: 'Noto Sans JP', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .logout-btn:hover { border-color: #aaa; color: #fff; }
+
+    /* ── タブ ── */
+    .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; }
+    .tab-btn {
+      flex: 1; padding: 14px 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--text-soft); background: none; border: none; border-bottom: 3px solid transparent;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── フィルターバー ── */
+    .filter-bar {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-bar input[type="date"], .filter-bar select {
+      padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text); outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    .filter-bar input[type="date"]:focus, .filter-bar select:focus { border-color: var(--primary-light); }
+    .select-wrap-sm { position: relative; }
+    .select-wrap-sm::after { content:'▼'; position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:10px; color:var(--text-soft); pointer-events:none; }
+    .filter-label { font-size: 13px; font-weight: 700; color: var(--text-mid); white-space: nowrap; }
+    .btn-today {
+      padding: 10px 14px; background: var(--primary); color: #fff; border: none; border-radius: 8px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .realtime-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; margin-left: auto; flex-shrink: 0; }
+    .realtime-dot.connected { background: #4CAF50; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+    .realtime-label { font-size: 11px; color: var(--text-soft); }
+
+    /* ── 統計バー ── */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 12px; text-align: center;
+    }
+    .stat-num { font-size: 24px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+    .stat-card.green .stat-num { color: var(--accent); }
+    .stat-card.gray .stat-num { color: var(--gray); }
+
+    /* ── 予約カード ── */
+    .reservation-list { display: flex; flex-direction: column; gap: 10px; }
+    .res-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px var(--shadow);
+    }
+    .res-card:hover { border-color: var(--primary-light); box-shadow: 0 3px 10px var(--shadow); }
+    .res-card.cancelled { opacity: 0.6; }
+    .res-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .res-time { font-size: 20px; font-weight: 700; color: var(--primary); min-width: 54px; }
+    .res-pet { font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+    .res-course { font-size: 12px; color: var(--text-soft); }
+    .status-badge {
+      display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; white-space: nowrap;
+    }
+    .status-badge.booked { background: var(--warn-bg); color: var(--primary); border: 1px solid #F0C4B0; }
+    .status-badge.visited { background: #E8F5E9; color: var(--accent); border: 1px solid #C8E0DB; }
+    .status-badge.cancelled { background: var(--gray-bg); color: var(--gray); border: 1px solid #ddd; }
+    .res-info { display: flex; gap: 16px; font-size: 12px; color: var(--text-soft); flex-wrap: wrap; }
+    .res-memo-preview { font-size: 12px; color: var(--accent); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); }
+    .no-reservations { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 14px; }
+
+    /* ── モーダル ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-width: 640px;
+      max-height: 90vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @media (min-width: 700px) {
+      .modal-overlay { align-items: center; }
+      .modal { border-radius: 20px; max-height: 85vh; }
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary); }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg);
+      cursor: pointer; font-size: 16px; color: var(--text-soft); display: flex; align-items: center; justify-content: center;
+    }
+    .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .detail-table tr { border-bottom: 1px solid var(--border); }
+    .detail-table tr:last-child { border-bottom: none; }
+    .detail-table th { padding: 9px 10px; font-size: 12px; color: var(--text-soft); font-weight: 500; text-align: left; width: 38%; }
+    .detail-table td { padding: 9px 10px; font-size: 13px; color: var(--text); font-weight: 500; }
+
+    .section-label { font-size: 12px; font-weight: 700; color: var(--text-mid); margin-bottom: 8px; }
+
+    .status-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+    .status-btn {
+      flex: 1; padding: 12px 8px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface);
+      font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+      color: var(--text-mid);
+    }
+    .status-btn:hover { border-color: var(--primary-light); }
+    .status-btn.active-booked { border-color: var(--primary); background: var(--warn-bg); color: var(--primary); }
+    .status-btn.active-visited { border-color: var(--accent); background: #E8F5E9; color: var(--accent); }
+    .status-btn.active-cancelled { border-color: var(--gray); background: var(--gray-bg); color: var(--gray); }
+
+    .memo-area {
+      width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text); resize: vertical;
+      min-height: 80px; outline: none;
+    }
+    .memo-area:focus { border-color: var(--primary-light); }
+    .save-btn {
+      width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 12px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer;
+      margin-top: 12px; transition: opacity 0.2s;
+    }
+    .save-btn:hover { opacity: 0.9; }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .save-ok { text-align: center; font-size: 13px; color: var(--accent); margin-top: 8px; display: none; }
+    .save-ok.active { display: block; }
+
+    /* ── ブロック設定 ── */
+    .block-form-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .block-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .block-input {
+      padding: 11px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text); outline: none;
+      appearance: none; -webkit-appearance: none; width: 100%;
+    }
+    .block-input:focus { border-color: var(--primary-light); }
+    .add-block-btn {
+      padding: 11px 20px; background: var(--primary); color: #fff; border: none; border-radius: 8px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .block-list { display: flex; flex-direction: column; gap: 8px; }
+    .block-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--warn-bg); border: 1px solid #F0C4B0; border-radius: 10px; padding: 12px 14px;
+    }
+    .block-item-info { font-size: 14px; font-weight: 700; color: var(--text); }
+    .block-item-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+    .del-block-btn {
+      padding: 6px 12px; background: none; border: 1px solid #F0C4B0; border-radius: 6px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 12px; color: var(--warn); cursor: pointer;
+    }
+    .del-block-btn:hover { background: var(--warn-bg); }
+    .no-blocks { text-align: center; color: var(--text-soft); font-size: 13px; padding: 20px; }
+
+    /* ── ローディング ── */
+    .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(253,246,238,0.8); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
+    .loading-overlay.active { display: flex; }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .block-form-grid { grid-template-columns: 1fr 1fr; }
+      .res-info { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+</div>
+
+<!-- ===== ログイン画面 ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">ANELLA CAFE</div>
+    <div class="login-sub">スタッフ管理画面</div>
+    <div class="login-field">
+      <label>メールアドレス</label>
+      <input type="email" id="loginEmail" placeholder="anellacafeoita@gmail.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>パスワード</label>
+      <input type="password" id="loginPassword" placeholder="パスワード" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ===== メイン画面 ===== -->
+<div id="mainScreen">
+  <div class="admin-header">
+    <div class="admin-header-logo">ANELLA Admin</div>
+    <div class="admin-header-right">
+      <span class="admin-user" id="adminUserLabel"></span>
+      <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab1" onclick="switchTab(1)">📋 予約一覧</button>
+    <button class="tab-btn" id="tab2" onclick="switchTab(2)">🚫 ブロック設定</button>
+  </div>
+
+  <div class="container">
+
+    <!-- ===== 予約一覧タブ ===== -->
+    <div class="tab-panel active" id="panel1">
+      <div class="filter-bar">
+        <span class="filter-label">日付</span>
+        <input type="date" id="filterDate" onchange="loadReservations()">
+        <button class="btn-today" onclick="setToday()">今日</button>
+        <span class="filter-label">担当</span>
+        <div class="select-wrap-sm">
+          <select id="filterStaff" onchange="loadReservations()">
+            <option value="">全員</option>
+            <option value="スタッフA">スタッフA</option>
+            <option value="スタッフB">スタッフB</option>
+            <option value="どちらでも可">どちらでも可</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:5px; margin-left:auto;">
+          <div class="realtime-dot" id="realtimeDot"></div>
+          <span class="realtime-label" id="realtimeLabel">接続中...</span>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotal">0</div>
+          <div class="stat-label">合計</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statBooked">0</div>
+          <div class="stat-label">予約済み</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-num" id="statVisited">0</div>
+          <div class="stat-label">来店済み</div>
+        </div>
+        <div class="stat-card gray">
+          <div class="stat-num" id="statCancelled">0</div>
+          <div class="stat-label">キャンセル</div>
+        </div>
+      </div>
+
+      <div class="reservation-list" id="reservationList">
+        <div class="no-reservations">読み込み中...</div>
+      </div>
+    </div>
+
+    <!-- ===== ブロック設定タブ ===== -->
+    <div class="tab-panel" id="panel2">
+      <div class="block-form-card">
+        <div class="section-label" style="margin-bottom:14px;">ブロック時間を追加</div>
+        <div class="filter-bar" style="margin-bottom:12px;">
+          <span class="filter-label">日付</span>
+          <input type="date" id="blockFilterDate" onchange="loadBlocks()">
+          <button class="btn-today" onclick="setBlockToday()">今日</button>
+        </div>
+        <div class="block-form-grid">
+          <div class="select-wrap-sm">
+            <select id="blockStaff" class="block-input">
+              <option value="スタッフA">スタッフA</option>
+              <option value="スタッフB">スタッフB</option>
+              <option value="両名">両名</option>
+            </select>
+          </div>
+          <div class="select-wrap-sm">
+            <select id="blockTime" class="block-input">
+              <option value="10:00">10:00</option>
+              <option value="11:00">11:00</option>
+              <option value="12:00">12:00</option>
+              <option value="13:00">13:00</option>
+              <option value="14:00">14:00</option>
+              <option value="15:00">15:00</option>
+            </select>
+          </div>
+          <input type="text" id="blockReason" class="block-input" placeholder="理由（例：休憩）" maxlength="30">
+        </div>
+        <button class="add-block-btn" onclick="addBlock()">ブロックを追加</button>
+      </div>
+
+      <div class="block-form-card">
+        <div class="section-label" id="blockListLabel">ブロック一覧</div>
+        <div class="block-list" id="blockList">
+          <div class="no-blocks">日付を選択してください</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /mainScreen -->
+
+<!-- ===== 予約詳細モーダル ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">予約詳細</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+
+    <div class="section-label">ステータス変更</div>
+    <div class="status-btns">
+      <button class="status-btn" id="sbBooked"  onclick="changeStatus('予約済み')">予約済み</button>
+      <button class="status-btn" id="sbVisited" onclick="changeStatus('来店済み')">来店済み</button>
+      <button class="status-btn" id="sbCancelled" onclick="changeStatus('キャンセル')">キャンセル</button>
+    </div>
+
+    <div class="section-label">予約詳細</div>
+    <table class="detail-table" id="detailTable"></table>
+
+    <div class="section-label" style="margin-top:16px;">スタッフメモ</div>
+    <textarea class="memo-area" id="memoArea" placeholder="スタッフ内部メモ（お客様には非表示）" maxlength="500"></textarea>
+    <button class="save-btn" id="saveBtn" onclick="saveMemo()">メモを保存する</button>
+    <div class="save-ok" id="saveOk">✅ 保存しました</div>
+  </div>
+</div>
+
+<script>
+// ── 状態 ──────────────────────────────────────────
+let currentResId = null;
+let currentResData = null;
+let realtimeChannel = null;
+
+// ── 認証 ──────────────────────────────────────────
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    showMain(session.user.email);
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+
+  if (!email || !password) { showLoginErr('メールとパスワードを入力してください'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'ログイン中...';
+  err.classList.remove('active');
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  btn.disabled = false;
+  btn.textContent = 'ログイン';
+
+  if (error) {
+    showLoginErr('メールまたはパスワードが正しくありません');
+    return;
+  }
+  showMain(data.user.email);
+}
+
+async function doLogout() {
+  await supabase.auth.signOut();
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPassword').value = '';
+}
+
+function showLoginErr(msg) {
+  const el = document.getElementById('loginErr');
+  el.textContent = msg;
+  el.classList.add('active');
+}
+
+function showMain(email) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'block';
+  document.getElementById('adminUserLabel').textContent = email;
+  setToday();
+  setBlockToday();
+  loadReservations();
+  setupRealtime();
+}
+
+// ── リアルタイム ──────────────────────────────────
+function setupRealtime() {
+  realtimeChannel = supabase
+    .channel('admin-reservations')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'trimming_reservations' }, () => {
+      loadReservations();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'blocked_times' }, () => {
+      loadBlocks();
+    })
+    .subscribe((status) => {
+      const dot = document.getElementById('realtimeDot');
+      const label = document.getElementById('realtimeLabel');
+      if (status === 'SUBSCRIBED') {
+        dot.classList.add('connected');
+        label.textContent = 'リアルタイム';
+      } else {
+        dot.classList.remove('connected');
+        label.textContent = '再接続中...';
+      }
+    });
+}
+
+// ── タブ切替 ─────────────────────────────────────
+function switchTab(n) {
+  [1, 2].forEach(i => {
+    document.getElementById('tab' + i).classList.toggle('active', i === n);
+    document.getElementById('panel' + i).classList.toggle('active', i === n);
+  });
+}
+
+// ── 予約一覧 ──────────────────────────────────────
+function setToday() {
+  const d = new Date().toISOString().slice(0, 10);
+  document.getElementById('filterDate').value = d;
+  loadReservations();
+}
+
+async function loadReservations() {
+  const date = document.getElementById('filterDate').value;
+  const staff = document.getElementById('filterStaff').value;
+  if (!date) return;
+
+  let query = supabase
+    .from('trimming_reservations')
+    .select('*')
+    .eq('visit_date', date)
+    .order('visit_time', { ascending: true });
+
+  if (staff) query = query.eq('staff', staff);
+
+  const { data, error } = await query;
+  if (error) { console.error(error); return; }
+
+  renderStats(data || []);
+  renderReservations(data || []);
+}
+
+function renderStats(list) {
+  document.getElementById('statTotal').textContent = list.length;
+  document.getElementById('statBooked').textContent = list.filter(r => r.status === '予約済み').length;
+  document.getElementById('statVisited').textContent = list.filter(r => r.status === '来店済み').length;
+  document.getElementById('statCancelled').textContent = list.filter(r => r.status === 'キャンセル').length;
+}
+
+function renderReservations(list) {
+  const container = document.getElementById('reservationList');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="no-reservations">この日の予約はありません</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  list.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'res-card' + (r.status === 'キャンセル' ? ' cancelled' : '');
+    card.innerHTML = `
+      <div class="res-header">
+        <span class="res-time">${r.visit_time.slice(0,5)}</span>
+        <div style="flex:1;">
+          <div class="res-pet">${r.pet_name} <span style="font-size:13px; font-weight:400; color:var(--text-soft);">${r.breed}</span></div>
+          <div class="res-course">${r.course}${r.options && r.options.length > 0 ? ' + オプション' + r.options.length + '点' : ''}</div>
+        </div>
+        <span class="status-badge ${statusClass(r.status)}">${r.status}</span>
+      </div>
+      <div class="res-info">
+        <span>👤 ${r.owner_name}</span>
+        <span>📞 ${r.phone}</span>
+        <span>💰 ${r.total_price > 0 ? '¥' + r.total_price.toLocaleString() : '要確認'}</span>
+        <span>👤 ${r.staff}</span>
+        <span style="font-size:11px; color:var(--text-soft);">No.${r.reservation_number}</span>
+      </div>
+      ${r.staff_memo ? `<div class="res-memo-preview">📝 ${r.staff_memo}</div>` : ''}
+    `;
+    card.onclick = () => openModal(r);
+    container.appendChild(card);
+  });
+}
+
+function statusClass(s) {
+  if (s === '予約済み') return 'booked';
+  if (s === '来店済み') return 'visited';
+  return 'cancelled';
+}
+
+// ── モーダル ──────────────────────────────────────
+function openModal(r) {
+  currentResId = r.id;
+  currentResData = r;
+  document.getElementById('modalTitle').textContent = `${r.visit_time.slice(0,5)} ${r.pet_name}`;
+
+  // ステータスボタン
+  document.getElementById('sbBooked').className = 'status-btn' + (r.status === '予約済み' ? ' active-booked' : '');
+  document.getElementById('sbVisited').className = 'status-btn' + (r.status === '来店済み' ? ' active-visited' : '');
+  document.getElementById('sbCancelled').className = 'status-btn' + (r.status === 'キャンセル' ? ' active-cancelled' : '');
+
+  // 詳細テーブル
+  const rows = [
+    ['予約番号', r.reservation_number],
+    ['来店日時', r.visit_date + ' ' + r.visit_time.slice(0,5)],
+    ['担当者', r.staff],
+    ['コース', r.course],
+    ['犬種', r.breed],
+    ['オプション', r.options && r.options.length > 0 ? r.options.map(o => o.name).join('、') : 'なし'],
+    ['合計', r.total_price > 0 ? '¥' + r.total_price.toLocaleString() : '要確認'],
+    ['ペット名', r.pet_name],
+    ['性別', r.gender],
+    ['体重', r.weight],
+    ['年齢', r.pet_age],
+    ['毛玉', r.matting],
+    ['ワクチン', r.vaccine_status],
+    ['スタッフへの伝言', r.staff_note || 'なし'],
+    ['飼い主', r.owner_name],
+    ['電話', r.phone],
+    ['LINE', r.line_name || 'なし'],
+    ['メール', r.email || 'なし'],
+  ];
+  document.getElementById('detailTable').innerHTML =
+    rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+
+  document.getElementById('memoArea').value = r.staff_memo || '';
+  document.getElementById('saveOk').classList.remove('active');
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+async function changeStatus(status) {
+  if (!currentResId) return;
+  const { error } = await supabase
+    .from('trimming_reservations')
+    .update({ status })
+    .eq('id', currentResId);
+  if (!error) {
+    currentResData.status = status;
+    document.getElementById('sbBooked').className = 'status-btn' + (status === '予約済み' ? ' active-booked' : '');
+    document.getElementById('sbVisited').className = 'status-btn' + (status === '来店済み' ? ' active-visited' : '');
+    document.getElementById('sbCancelled').className = 'status-btn' + (status === 'キャンセル' ? ' active-cancelled' : '');
+    loadReservations();
+  }
+}
+
+async function saveMemo() {
+  if (!currentResId) return;
+  const memo = document.getElementById('memoArea').value.trim();
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+
+  const { error } = await supabase
+    .from('trimming_reservations')
+    .update({ staff_memo: memo || null })
+    .eq('id', currentResId);
+
+  btn.disabled = false;
+  if (!error) {
+    document.getElementById('saveOk').classList.add('active');
+    setTimeout(() => document.getElementById('saveOk').classList.remove('active'), 2000);
+    loadReservations();
+  }
+}
+
+// ── ブロック設定 ──────────────────────────────────
+function setBlockToday() {
+  document.getElementById('blockFilterDate').value = new Date().toISOString().slice(0, 10);
+  loadBlocks();
+}
+
+async function loadBlocks() {
+  const date = document.getElementById('blockFilterDate').value;
+  const label = document.getElementById('blockListLabel');
+  if (!date) return;
+  label.textContent = `${date} のブロック一覧`;
+
+  const { data, error } = await supabase
+    .from('blocked_times')
+    .select('*')
+    .eq('block_date', date)
+    .order('block_time', { ascending: true });
+
+  const list = document.getElementById('blockList');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div class="no-blocks">この日のブロックはありません</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  data.forEach(b => {
+    const item = document.createElement('div');
+    item.className = 'block-item';
+    item.innerHTML = `
+      <div>
+        <div class="block-item-info">${b.block_time.slice(0,5)} — ${b.staff}</div>
+        <div class="block-item-sub">${b.reason || '理由なし'}</div>
+      </div>
+      <button class="del-block-btn" onclick="deleteBlock('${b.id}')">削除</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+async function addBlock() {
+  const date = document.getElementById('blockFilterDate').value;
+  const staff = document.getElementById('blockStaff').value;
+  const time = document.getElementById('blockTime').value;
+  const reason = document.getElementById('blockReason').value.trim();
+
+  if (!date) { alert('日付を選択してください'); return; }
+
+  if (staff === '両名') {
+    await supabase.from('blocked_times').insert([
+      { block_date: date, block_time: time + ':00', staff: 'スタッフA', reason },
+      { block_date: date, block_time: time + ':00', staff: 'スタッフB', reason },
+    ]);
+  } else {
+    await supabase.from('blocked_times').insert({
+      block_date: date, block_time: time + ':00', staff, reason: reason || null,
+    });
+  }
+  document.getElementById('blockReason').value = '';
+  loadBlocks();
+}
+
+async function deleteBlock(id) {
+  if (!confirm('このブロックを削除しますか？')) return;
+  await supabase.from('blocked_times').delete().eq('id', id);
+  loadBlocks();
+}
+
+// ── キーボード Enter でログイン ───────────────────
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── 初期化 ────────────────────────────────────────
+checkAuth();
+</script>
+
+</body>
+</html>

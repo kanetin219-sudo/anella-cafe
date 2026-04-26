@@ -352,20 +352,33 @@
           <div class="select-wrap-sm">
             <select id="blockType" class="block-input" onchange="toggleBlockTime()">
               <option value="終日">終日</option>
-              <option value="午前のみ">午前のみ</option>
-              <option value="午後のみ">午後のみ</option>
               <option value="時間指定">時間指定</option>
             </select>
           </div>
-          <div class="select-wrap-sm" id="blockTimeWrap" style="display:none;">
-            <select id="blockTime" class="block-input">
-              <option value="10:00">10:00</option>
-              <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
-              <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-            </select>
+          <div id="blockTimeWrap" style="display:none; grid-column:1/-1;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="select-wrap-sm" style="flex:1;">
+                <select id="blockTimeFrom" class="block-input">
+                  <option value="10:00">10:00</option>
+                  <option value="11:00">11:00</option>
+                  <option value="12:00">12:00</option>
+                  <option value="13:00">13:00</option>
+                  <option value="14:00">14:00</option>
+                  <option value="15:00">15:00</option>
+                </select>
+              </div>
+              <span style="color:var(--text-soft); font-size:14px;">〜</span>
+              <div class="select-wrap-sm" style="flex:1;">
+                <select id="blockTimeTo" class="block-input">
+                  <option value="10:00">10:00</option>
+                  <option value="11:00">11:00</option>
+                  <option value="12:00">12:00</option>
+                  <option value="13:00">13:00</option>
+                  <option value="14:00">14:00</option>
+                  <option value="15:00" selected>15:00</option>
+                </select>
+              </div>
+            </div>
           </div>
           <input type="text" id="blockReason" class="block-input" placeholder="理由（例：休憩）" maxlength="30">
         </div>
@@ -719,13 +732,18 @@ async function addBlock() {
 
   if (!date) { alert('日付を選択してください'); return; }
 
-  const presets = {
-    '終日':   ['10:00','11:00','12:00','13:00','14:00','15:00'],
-    '午前のみ': ['10:00','11:00'],
-    '午後のみ': ['12:00','13:00','14:00','15:00'],
-    '時間指定': [document.getElementById('blockTime').value],
-  };
-  const times = presets[type];
+  let times;
+  if (type === '終日') {
+    times = ['10:00','11:00','12:00','13:00','14:00','15:00'];
+  } else {
+    const from = parseInt(document.getElementById('blockTimeFrom').value);
+    const to   = parseInt(document.getElementById('blockTimeTo').value);
+    if (from >= to) { alert('終了時間は開始時間より後にしてください'); return; }
+    times = [];
+    for (let h = from; h <= to; h++) {
+      times.push(String(h).padStart(2,'0') + ':00');
+    }
+  }
   const staffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
 
   const rows = [];

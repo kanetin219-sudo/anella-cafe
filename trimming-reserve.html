@@ -988,7 +988,7 @@ async function submitReservation() {
     if (error) throw error;
 
     // GAS Webhook（Gmail通知）※gas-notification.gs をデプロイ後に YOUR_GAS_ID を差し替える
-    const GAS_URL = 'https://script.google.com/macros/s/YOUR_GAS_ID/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyiZc-FUtJRZOL56Y9Mtr1qRPAXK8UjoXQj5qNoWh4KZBCgYppvP9OzKuIrvcIc0fiIA/exec';
     fetch(`${GAS_URL}?token=anella2026secret&data=${encodeURIComponent(JSON.stringify(payload))}`).catch(() => {});
 
     document.getElementById('loadingOverlay').classList.remove('active');

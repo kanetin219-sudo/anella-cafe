@@ -175,6 +175,9 @@
     .summary-value { font-weight: 700; color: var(--text); }
     .line-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; background: #06C755; color: #fff; border: none; border-radius: 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; margin-top: 12px; }
     .line-btn svg { width: 24px; height: 24px; fill: #fff; }
+    .line-redirect-area { margin-top: 16px; }
+    .countdown-badge { display: inline-block; background: #06C755; color: #fff; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; margin-bottom: 10px; }
+    .skip-line-btn { width: 100%; margin-top: 10px; padding: 12px; background: none; border: 1px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--text-soft); cursor: pointer; }
 
     /* ── ナビボタン ── */
     .nav-btns { display: flex; gap: 10px; margin-top: 20px; }
@@ -320,29 +323,11 @@
     </div>
   </div>
 
-  <!-- ===== STEP 4: 担当者・日時 ===== -->
+  <!-- ===== STEP 4: 日時 ===== -->
   <div class="step" id="step4">
-    <div class="step-heading">担当者・日時を選択</div>
-    <div class="step-desc">ご希望の担当者・日付・時間をお選びください</div>
+    <div class="step-heading">日時を選択</div>
+    <div class="step-desc">ご希望の日付・時間をお選びください</div>
     <div class="card">
-      <div class="field">
-        <label class="field-label">担当者 <span class="req">必須</span></label>
-        <div class="staff-grid">
-          <button type="button" class="staff-btn" id="staffA" onclick="selectStaff('スタッフA')">
-            スタッフA
-            <div class="staff-btn-sub">指名</div>
-          </button>
-          <button type="button" class="staff-btn" id="staffB" onclick="selectStaff('スタッフB')">
-            スタッフB
-            <div class="staff-btn-sub">指名</div>
-          </button>
-          <button type="button" class="staff-btn" id="staffAny" onclick="selectStaff('どちらでも可')">
-            どちらでも
-            <div class="staff-btn-sub">おまかせ</div>
-          </button>
-        </div>
-      </div>
-
       <div class="field">
         <label class="field-label">日付 <span class="req">必須</span></label>
         <div class="calendar-nav">
@@ -543,11 +528,15 @@
       <div class="complete-title">ご予約が完了しました！</div>
       <div class="complete-number">予約番号：<br><strong id="reservationNumber"></strong></div>
       <div class="complete-summary" id="completeSummary"></div>
-      <p style="font-size:13px; color:var(--text-soft); margin:12px 0;">LINE公式アカウントを友だち追加すると、リマインドをお送りします</p>
-      <a href="https://lin.ee/anellacafe" class="line-btn" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-        LINE公式アカウントを友だち追加する
-      </a>
+      <div class="line-redirect-area">
+        <p style="font-size:13px; color:var(--text-soft); margin:0 0 8px;">予約内容をLINEで保存・確認できます</p>
+        <div class="countdown-badge" id="countdownBadge">5秒後に自動でLINEに移動します</div>
+        <a id="lineRedirectBtn" href="#" class="line-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+          LINEで予約内容を確認する
+        </a>
+        <button id="skipLineBtn" class="skip-line-btn" onclick="cancelLineRedirect()">スキップ（後で確認する）</button>
+      </div>
     </div>
   </div>
 
@@ -596,7 +585,7 @@ const TIME_SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
 const fd = {
   course: '', breed: '', breedDisplay: '', coursePrice: 0,
   options: [], optionsPrice: 0, totalPrice: 0,
-  staff: '', visitDate: '', visitTime: '',
+  staff: '未定', visitDate: '', visitTime: '',
   gender: '', weight: '', matting: '', visitExperience: '',
   petAge: '', petName: '', vaccineStatus: '', staffNote: '',
   ownerName: '', phone: '', lineName: '', email: ''
@@ -682,7 +671,6 @@ function goNext(step) {
     if (!calYear) { calYear = today.getFullYear(); calMonth = today.getMonth(); }
     renderCalendar();
   } else if (step === 4) {
-    if (!fd.staff) { showErr(4, '担当者を選択してください。'); return; }
     if (!fd.visitDate) { showErr(4, '日付を選択してください。'); return; }
     if (!fd.visitTime) { showErr(4, '時間を選択してください。'); return; }
     showStep(5);
@@ -832,16 +820,7 @@ function selectDate(dateStr, el) {
   fd.visitTime = '';
   document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
-  if (fd.staff) loadTimeSlots();
-}
-
-function selectStaff(staff) {
-  fd.staff = staff;
-  document.getElementById('staffA').classList.toggle('selected', staff === 'スタッフA');
-  document.getElementById('staffB').classList.toggle('selected', staff === 'スタッフB');
-  document.getElementById('staffAny').classList.toggle('selected', staff === 'どちらでも可');
-  fd.visitTime = '';
-  if (fd.visitDate) loadTimeSlots();
+  loadTimeSlots();
 }
 
 async function loadTimeSlots() {
@@ -863,7 +842,10 @@ async function loadTimeSlots() {
   grid.innerHTML = '';
 
   TIME_SLOTS.forEach(t => {
-    const available = isSlotAvailable(t, fd.staff, bookedSlots);
+    // スタッフA・Bどちらも埋まっている時間帯のみ不可
+    const aBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === 'スタッフA');
+    const bBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === 'スタッフB');
+    const available = !aBooked || !bBooked;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'time-btn' + (available ? '' : ' disabled') + (t === fd.visitTime ? ' selected' : '');
@@ -871,18 +853,6 @@ async function loadTimeSlots() {
     if (available) btn.onclick = () => selectTime(t, btn);
     grid.appendChild(btn);
   });
-}
-
-function isSlotAvailable(slotTime, selectedStaff, bookedSlots) {
-  if (selectedStaff === 'どちらでも可') {
-    const aBooked = bookedSlots.some(s => s.slot_time === slotTime &&
-      (s.slot_staff === 'スタッフA' || s.slot_staff === 'どちらでも可'));
-    const bBooked = bookedSlots.some(s => s.slot_time === slotTime &&
-      (s.slot_staff === 'スタッフB' || s.slot_staff === 'どちらでも可'));
-    return !aBooked || !bBooked;
-  }
-  return !bookedSlots.some(s => s.slot_time === slotTime &&
-    (s.slot_staff === selectedStaff || s.slot_staff === 'どちらでも可'));
 }
 
 function selectTime(time, btn) {
@@ -950,7 +920,6 @@ function buildConfirm() {
     ['コース料金', fd.coursePrice > 0 ? '¥' + fd.coursePrice.toLocaleString() : '要確認'],
     ['オプション', fd.options.length > 0 ? fd.options.map(o => o.name).join('、') : 'なし'],
     ['オプション料金', fd.optionsPrice > 0 ? '+¥' + fd.optionsPrice.toLocaleString() : '¥0'],
-    ['担当者', fd.staff],
     ['来店日', fd.visitDate],
     ['時間', fd.visitTime],
     ['ペット名', fd.petName],
@@ -993,7 +962,7 @@ async function submitReservation() {
       reservation_number: reservationNumber,
       visit_date: fd.visitDate,
       visit_time: fd.visitTime + ':00',
-      staff: fd.staff,
+      staff: 'どちらでもいい',
       course: fd.course,
       breed: fd.breedDisplay,
       gender: fd.gender,
@@ -1027,6 +996,7 @@ async function submitReservation() {
     buildCompleteSummary(reservationNumber);
     document.getElementById('progressBar').style.display = 'none';
     showStep(7);
+    startLineRedirect(reservationNumber);
 
   } catch (e) {
     document.getElementById('loadingOverlay').classList.remove('active');
@@ -1038,13 +1008,66 @@ function buildCompleteSummary(num) {
   const rows = [
     ['予約番号', num],
     ['来店日', fd.visitDate + ' ' + fd.visitTime],
-    ['担当者', fd.staff],
     ['コース', fd.course],
     ['ペット名', fd.petName],
     ['合計（目安）', fd.coursePrice > 0 ? '¥' + (fd.coursePrice + fd.optionsPrice).toLocaleString() : '要確認'],
   ];
   document.getElementById('completeSummary').innerHTML =
     rows.map(([k, v]) => `<div class="summary-row"><span class="summary-label">${k}</span><span class="summary-value">${v}</span></div>`).join('');
+}
+
+// ── LINE自動遷移 ──────────────────────────────────
+// LINE公式アカウントの@ID（@なし）を設定してください
+const LINE_ACCOUNT_ID = 'anellacafe';
+
+let lineRedirectTimer = null;
+
+function buildLineMessage(reservationNumber) {
+  const optNames = fd.options && fd.options.length > 0
+    ? fd.options.map(o => o.name).join('、')
+    : 'なし';
+  return [
+    '【ANELLA CAFE 大分店 ご予約確認】',
+    '',
+    '予約番号：' + reservationNumber,
+    '来店日時：' + fd.visitDate + ' ' + fd.visitTime,
+    'ペット名：' + fd.petName + 'ちゃん',
+    'コース　：' + fd.course,
+    'オプション：' + optNames,
+    '合計（目安）：' + (fd.coursePrice > 0 ? '¥' + (fd.coursePrice + fd.optionsPrice).toLocaleString() : '要確認'),
+    '',
+    'この予約内容でよろしければそのまま送信してください。',
+    'ご不明な点もこちらからお気軽にご連絡ください。',
+  ].join('\n');
+}
+
+function startLineRedirect(reservationNumber) {
+  const msg = buildLineMessage(reservationNumber);
+  const lineUrl = 'https://line.me/R/oaMessage/@' + LINE_ACCOUNT_ID + '/?text=' + encodeURIComponent(msg);
+  document.getElementById('lineRedirectBtn').href = lineUrl;
+
+  let count = 5;
+  const badge = document.getElementById('countdownBadge');
+  lineRedirectTimer = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(lineRedirectTimer);
+      lineRedirectTimer = null;
+      badge.textContent = 'LINEに移動しています...';
+      window.open(lineUrl, '_blank');
+    } else {
+      badge.textContent = count + '秒後に自動でLINEに移動します';
+    }
+  }, 1000);
+}
+
+function cancelLineRedirect() {
+  if (lineRedirectTimer) {
+    clearInterval(lineRedirectTimer);
+    lineRedirectTimer = null;
+  }
+  document.getElementById('countdownBadge').style.display = 'none';
+  document.getElementById('skipLineBtn').style.display = 'none';
 }
 
 // ── 初期化 ────────────────────────────────────────

@@ -297,8 +297,8 @@
         <div class="select-wrap-sm">
           <select id="filterStaff" onchange="loadReservations()">
             <option value="">全員</option>
-            <option value="スタッフA">スタッフA</option>
-            <option value="スタッフB">スタッフB</option>
+            <option value="牧">牧</option>
+            <option value="椛田">椛田</option>
             <option value="どちらでも可">どちらでも可</option>
           </select>
         </div>
@@ -344,12 +344,20 @@
         <div class="block-form-grid">
           <div class="select-wrap-sm">
             <select id="blockStaff" class="block-input">
-              <option value="スタッフA">スタッフA</option>
-              <option value="スタッフB">スタッフB</option>
-              <option value="両名">両名</option>
+              <option value="牧">牧</option>
+              <option value="椛田">椛田</option>
+              <option value="どちらでもいい">どちらでもいい</option>
             </select>
           </div>
           <div class="select-wrap-sm">
+            <select id="blockType" class="block-input" onchange="toggleBlockTime()">
+              <option value="終日">終日</option>
+              <option value="午前のみ">午前のみ</option>
+              <option value="午後のみ">午後のみ</option>
+              <option value="時間指定">時間指定</option>
+            </select>
+          </div>
+          <div class="select-wrap-sm" id="blockTimeWrap" style="display:none;">
             <select id="blockTime" class="block-input">
               <option value="10:00">10:00</option>
               <option value="11:00">11:00</option>
@@ -393,9 +401,18 @@
     <div class="section-label">予約詳細</div>
     <table class="detail-table" id="detailTable"></table>
 
-    <div class="section-label" style="margin-top:16px;">スタッフメモ</div>
+    <div class="section-label" style="margin-top:16px;">担当スタッフ割当</div>
+    <div class="select-wrap-sm" style="margin-bottom:12px;">
+      <select id="staffAssign" style="width:100%; padding:11px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; color:var(--text); appearance:none; -webkit-appearance:none; outline:none;">
+        <option value="どちらでもいい">どちらでもいい</option>
+        <option value="牧">牧</option>
+        <option value="椛田">椛田</option>
+      </select>
+    </div>
+
+    <div class="section-label">スタッフメモ</div>
     <textarea class="memo-area" id="memoArea" placeholder="スタッフ内部メモ（お客様には非表示）" maxlength="500"></textarea>
-    <button class="save-btn" id="saveBtn" onclick="saveMemo()">メモを保存する</button>
+    <button class="save-btn" id="saveBtn" onclick="saveMemo()">保存する</button>
     <div class="save-ok" id="saveOk">✅ 保存しました</div>
   </div>
 </div>
@@ -602,6 +619,7 @@ function openModal(r) {
   document.getElementById('detailTable').innerHTML =
     rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
 
+  document.getElementById('staffAssign').value = r.staff || 'どちらでもいい';
   document.getElementById('memoArea').value = r.staff_memo || '';
   document.getElementById('saveOk').classList.remove('active');
   document.getElementById('modalOverlay').classList.add('active');
@@ -631,13 +649,14 @@ async function changeStatus(status) {
 
 async function saveMemo() {
   if (!currentResId) return;
-  const memo = document.getElementById('memoArea').value.trim();
-  const btn = document.getElementById('saveBtn');
+  const memo  = document.getElementById('memoArea').value.trim();
+  const staff = document.getElementById('staffAssign').value;
+  const btn   = document.getElementById('saveBtn');
   btn.disabled = true;
 
   const { error } = await supabase
     .from('trimming_reservations')
-    .update({ staff_memo: memo || null })
+    .update({ staff_memo: memo || null, staff })
     .eq('id', currentResId);
 
   btn.disabled = false;
@@ -687,24 +706,38 @@ async function loadBlocks() {
   });
 }
 
+function toggleBlockTime() {
+  const type = document.getElementById('blockType').value;
+  document.getElementById('blockTimeWrap').style.display = type === '時間指定' ? '' : 'none';
+}
+
 async function addBlock() {
   const date = document.getElementById('blockFilterDate').value;
   const staff = document.getElementById('blockStaff').value;
-  const time = document.getElementById('blockTime').value;
+  const type = document.getElementById('blockType').value;
   const reason = document.getElementById('blockReason').value.trim();
 
   if (!date) { alert('日付を選択してください'); return; }
 
-  if (staff === '両名') {
-    await supabase.from('blocked_times').insert([
-      { block_date: date, block_time: time + ':00', staff: 'スタッフA', reason },
-      { block_date: date, block_time: time + ':00', staff: 'スタッフB', reason },
-    ]);
-  } else {
-    await supabase.from('blocked_times').insert({
-      block_date: date, block_time: time + ':00', staff, reason: reason || null,
+  const presets = {
+    '終日':   ['10:00','11:00','12:00','13:00','14:00','15:00'],
+    '午前のみ': ['10:00','11:00'],
+    '午後のみ': ['12:00','13:00','14:00','15:00'],
+    '時間指定': [document.getElementById('blockTime').value],
+  };
+  const times = presets[type];
+  const staffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
+
+  const rows = [];
+  staffList.forEach(s => {
+    times.forEach(t => {
+      rows.push({ block_date: date, block_time: t + ':00', staff: s, reason: reason || null });
     });
-  }
+  });
+
+  const { error } = await supabase.from('blocked_times').insert(rows);
+  if (error) { alert('追加に失敗しました'); console.error(error); return; }
+
   document.getElementById('blockReason').value = '';
   loadBlocks();
 }

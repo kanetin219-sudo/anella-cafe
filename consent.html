@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -314,6 +315,15 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { font-size: 15px; color: #5C3D1E; }
 
+    /* Twemoji */
+    .rule-icon img, .child-icon img {
+      width: 1em; height: 1em; vertical-align: middle;
+    }
+    .rule-icon { display: flex; align-items: center; justify-content: center; }
+    .child-icon { display: flex; align-items: center; justify-content: center; }
+    .rule-icon img { width: 40px; height: 40px; }
+    .child-icon img { width: 32px; height: 32px; }
+
     @media (max-width: 480px) {
       .rules-grid { grid-template-columns: repeat(2, 1fr); }
       .children-grid { grid-template-columns: repeat(3, 1fr); }
@@ -410,37 +420,37 @@
   <!-- 6ルールカード -->
   <div class="rules-grid">
     <div class="rule-card">
-      <span class="rule-icon">🦝</span>
+      <span class="rule-icon">🐶</span>
       <div class="rule-ja">入退室時は手洗い消毒のご協力を</div>
       <div class="rule-en">Hand washing</div>
       <div class="rule-desc">入室・退室の際は手洗い・消毒のご協力をお願いします。</div>
     </div>
     <div class="rule-card">
-      <span class="rule-icon">🐩</span>
+      <span class="rule-icon">🐕</span>
       <div class="rule-ja">ドアはスタッフが開閉します</div>
       <div class="rule-en">Please Wait</div>
       <div class="rule-desc">動物の脱走防止のため、ドアの開閉はスタッフが行います。</div>
     </div>
     <div class="rule-card">
-      <span class="rule-icon">🐕</span>
+      <span class="rule-icon">🐈</span>
       <div class="rule-ja">いぬねこエリアの移動は自由です</div>
       <div class="rule-en">Feel free to move around</div>
       <div class="rule-desc">犬・猫エリアは自由にご移動いただけます。</div>
     </div>
     <div class="rule-card">
-      <span class="rule-icon">🦊</span>
+      <span class="rule-icon">🙀</span>
       <div class="rule-ja">大声や走り回るのはNG</div>
       <div class="rule-en">Keep it down</div>
       <div class="rule-desc">大声・走り回りは動物がびっくりするのでご遠慮ください。</div>
     </div>
     <div class="rule-card">
-      <span class="rule-icon">🐱</span>
+      <span class="rule-icon">😸</span>
       <div class="rule-ja">抱っこの際は床に座って</div>
       <div class="rule-en">Sit and cuddle</div>
       <div class="rule-desc">抱っこは床に座った状態でお願いします。落下防止のためです。</div>
     </div>
     <div class="rule-card">
-      <span class="rule-icon">🍱</span>
+      <span class="rule-icon">🐾</span>
       <div class="rule-ja">店内へ食べ物の持ち込みはNG</div>
       <div class="rule-en">No outside food allowed</div>
       <div class="rule-desc">外からの食べ物の持ち込みはご遠慮いただいています。</div>
@@ -467,27 +477,27 @@
     <div class="children-title">お子様同伴時の注意点</div>
     <div class="children-grid">
       <div class="child-card">
-        <div class="child-icon">🐈</div>
+        <div class="child-icon">🐱</div>
         <div class="child-rule-title">一緒に遊ぶこと</div>
         <div class="child-rule-desc">お子様のそばから離れないようご協力をお願いします。</div>
       </div>
       <div class="child-card">
-        <div class="child-icon">🪑</div>
+        <div class="child-icon">🐩</div>
         <div class="child-rule-title">椅子の上に立つ</div>
         <div class="child-rule-desc">転倒と怪我の危険性がありますのでご注意ください。</div>
       </div>
       <div class="child-card">
-        <div class="child-icon">🐱</div>
+        <div class="child-icon">😻</div>
         <div class="child-rule-title">抱っこの際は</div>
         <div class="child-rule-desc">怪我防止のためもスタッフにお声がけください。</div>
       </div>
       <div class="child-card">
-        <div class="child-icon">🐕</div>
+        <div class="child-icon">🐶</div>
         <div class="child-rule-title">追いかけない</div>
         <div class="child-rule-desc">逃げたり、暴れたり、場合によっては噛むこともあります。</div>
       </div>
       <div class="child-card">
-        <div class="child-icon">🔊</div>
+        <div class="child-icon">🙀</div>
         <div class="child-rule-title">大声に注意</div>
         <div class="child-rule-desc">わんちゃんもねこちゃんも大きな音が苦手です。</div>
       </div>
@@ -695,6 +705,13 @@
     document.getElementById('completePage').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  // Twemoji でかわいいアイコンに統一
+  twemoji.parse(document.body, {
+    folder: 'svg',
+    ext: '.svg',
+    callback: (icon, options) => `${options.base}${options.size}/${icon}${options.ext}`
+  });
 </script>
 </body>
 </html>

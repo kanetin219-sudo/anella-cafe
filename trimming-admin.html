@@ -911,6 +911,32 @@ async function submitManualReservation() {
   if (!receptionist) { errEl.textContent = '受付担当者を選択してください'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
+  // ブロック時間チェック
+  const time       = document.getElementById('manualTime').value;
+  const staff      = document.getElementById('manualStaff').value;
+  const { data: blocks } = await supabase
+    .from('blocked_times')
+    .select('staff')
+    .eq('block_date', date)
+    .eq('block_time', time + ':00');
+
+  if (blocks && blocks.length > 0) {
+    const blockedStaff = blocks.map(b => b.staff);
+    const makiBlocked   = blockedStaff.includes('牧');
+    const kabataBlocked = blockedStaff.includes('椛田');
+
+    let isBlocked = false;
+    if (staff === '牧' && makiBlocked)              isBlocked = true;
+    if (staff === '椛田' && kabataBlocked)          isBlocked = true;
+    if (staff === 'どちらでもいい' && makiBlocked && kabataBlocked) isBlocked = true;
+
+    if (isBlocked) {
+      errEl.textContent = 'この日時はブロックされているため登録できません。ブロック設定を確認してください。';
+      errEl.style.display = 'block';
+      return;
+    }
+  }
+
   const dateStr = date.replace(/-/g, '');
   const { count } = await supabase
     .from('trimming_reservations')
@@ -918,12 +944,11 @@ async function submitManualReservation() {
     .eq('visit_date', date);
   const reservationNumber = `${dateStr}-${String((count || 0) + 1).padStart(3, '0')}`;
 
-  const time = document.getElementById('manualTime').value;
   const payload = {
     reservation_number: reservationNumber,
     visit_date:  date,
     visit_time:  time + ':00',
-    staff:       document.getElementById('manualStaff').value,
+    staff:       staff,
     course:      course,
     breed:       document.getElementById('manualBreed').value || '不明',
     gender:      '不明',

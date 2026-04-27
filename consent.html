@@ -3,424 +3,323 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>入店同意書 | ANELLA CAFE 大分店</title>
+  <title>ご利用時の注意事項 | ANELLA CAFE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <style>
-    :root {
-      --bg: #FDF6EE;
-      --surface: #FFFAF4;
-      --primary: #C96A3B;
-      --primary-light: #E8946A;
-      --accent: #4A7C6F;
-      --accent-light: #6FA898;
-      --text: #2C1F14;
-      --text-mid: #6B4F3A;
-      --text-soft: #A88870;
-      --border: #E8D5C0;
-      --shadow: rgba(150, 80, 30, 0.12);
-      --warn: #D4502A;
-      --warn-bg: #FFF3EE;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: #FDFBF6;
+      color: #2C1F14;
       font-family: 'Noto Sans JP', sans-serif;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.7;
       min-height: 100vh;
     }
 
-    .header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 24px;
+    /* ── ヘッダー ── */
+    .page-header {
       text-align: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 12px var(--shadow);
+      padding: 28px 20px 16px;
+      border-bottom: 2px solid #8B7355;
+      margin-bottom: 0;
     }
-
-    .header-logo {
+    .page-logo {
       font-family: 'DM Serif Display', serif;
-      font-size: 22px;
-      color: var(--primary);
-      letter-spacing: 0.08em;
+      font-size: 32px;
+      color: #5C3D1E;
+      letter-spacing: 0.1em;
     }
-
-    .header-sub {
-      font-size: 12px;
-      color: var(--text-soft);
-      margin-top: 2px;
-      letter-spacing: 0.05em;
+    .page-logo-dog { font-size: 28px; vertical-align: middle; margin-left: 8px; }
+    .page-subtitle {
+      font-size: 14px;
+      color: #8B7355;
+      margin-top: 4px;
+      letter-spacing: 0.15em;
     }
 
     .container {
-      max-width: 680px;
+      max-width: 720px;
       margin: 0 auto;
-      padding: 28px 20px 60px;
+      padding: 0 16px 60px;
     }
 
-    .section-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      color: var(--primary);
-      margin-bottom: 20px;
+    /* ── 来店情報セクション ── */
+    .info-section {
+      border: 1.5px solid #8B7355;
+      border-top: none;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 24px;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #C8B49A;
       padding-bottom: 10px;
-      border-bottom: 2px solid var(--border);
     }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px var(--shadow);
-    }
-
-    .field {
-      margin-bottom: 20px;
-    }
-
-    .field:last-child {
-      margin-bottom: 0;
-    }
-
-    label {
-      display: block;
-      font-size: 14px;
+    .info-row.full { grid-column: 1 / -1; }
+    .info-label {
+      font-size: 13px;
       font-weight: 700;
-      color: var(--text-mid);
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
+      color: #5C3D1E;
+      white-space: nowrap;
     }
-
-    label .required {
-      color: var(--warn);
-      margin-left: 4px;
-      font-size: 12px;
+    .count-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-
-    label .optional {
-      color: var(--text-soft);
-      margin-left: 4px;
-      font-size: 12px;
-      font-weight: 400;
+    .count-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #5C3D1E;
     }
-
-    .date-display {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--primary);
-      letter-spacing: 0.05em;
-    }
-
-    select, input[type="text"] {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+    .count-item span { font-weight: 700; white-space: nowrap; }
+    select.count-sel {
+      padding: 6px 8px;
+      background: #FDFBF6;
+      border: 1px solid #C8B49A;
+      border-radius: 6px;
       font-family: 'Noto Sans JP', sans-serif;
-      font-size: 16px;
-      color: var(--text);
+      font-size: 14px;
+      color: #2C1F14;
       appearance: none;
       -webkit-appearance: none;
       outline: none;
-      transition: border-color 0.2s;
-    }
-
-    select:focus, input[type="text"]:focus {
-      border-color: var(--primary-light);
-    }
-
-    .select-wrapper {
-      position: relative;
-    }
-
-    .select-wrapper::after {
-      content: '▼';
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 11px;
-      color: var(--text-soft);
-      pointer-events: none;
-    }
-
-    .count-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-
-    .count-item label {
-      font-size: 13px;
+      width: 64px;
       text-align: center;
     }
-
-    .agreement-box {
-      background: var(--warn-bg);
-      border: 1px solid #F0C4B0;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .agreement-text {
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.9;
-      white-space: pre-line;
-    }
-
-    .agreement-note {
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px dashed var(--border);
-      font-size: 12px;
-      color: var(--text-soft);
-      line-height: 1.7;
-    }
-
-    .legal-note {
-      font-size: 12px;
-      color: var(--accent);
-      background: #F0F8F6;
-      border: 1px solid #C8E0DB;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-top: 12px;
-    }
-
-    /* 署名キャンバス */
-    .signature-section {
-      margin-bottom: 20px;
-    }
-
-    .signature-title {
-      font-size: 14px;
+    .visit-date-display {
+      font-size: 15px;
       font-weight: 700;
-      color: var(--text-mid);
-      margin-bottom: 10px;
+      color: #5C3D1E;
+    }
+    .visit-count-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: #5C3D1E;
+      cursor: pointer;
+    }
+    .radio-label input[type="radio"] { accent-color: #8B7355; width: 16px; height: 16px; }
+    .other-count-wrap {
+      display: flex; align-items: center; gap:4px; font-size:13px; color:#5C3D1E;
+    }
+    .other-count-input {
+      width: 48px; padding: 4px 6px; border: none; border-bottom: 1px solid #8B7355;
+      background: transparent; font-family: 'Noto Sans JP', sans-serif; font-size: 14px;
+      color: #2C1F14; outline: none; text-align: center;
+    }
+    .fav-input {
+      flex: 1; padding: 4px 8px; border: none; border-bottom: 1px solid #8B7355;
+      background: transparent; font-family: 'Noto Sans JP', sans-serif; font-size: 14px;
+      color: #2C1F14; outline: none; min-width: 0;
     }
 
-    .signature-number {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #fff;
+    /* ── 6ルールカード ── */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-left: 1.5px solid #8B7355;
+      border-bottom: 1.5px solid #8B7355;
+      margin-bottom: 0;
+    }
+    .rule-card {
+      border-right: 1.5px solid #8B7355;
+      border-top: 1.5px solid #8B7355;
+      padding: 14px 12px;
+      background: #FDFBF6;
+      text-align: center;
+    }
+    .rule-icon { font-size: 36px; margin-bottom: 6px; display: block; }
+    .rule-ja { font-size: 12px; font-weight: 700; color: #5C3D1E; margin-bottom: 2px; }
+    .rule-en { font-size: 11px; font-weight: 700; color: #8B7355; margin-bottom: 6px; }
+    .rule-desc { font-size: 11px; color: #6B4F3A; line-height: 1.6; }
+
+    /* ── 同意文 ── */
+    .agreement-section {
+      border: 1.5px solid #8B7355;
+      border-top: none;
+      padding: 20px;
+    }
+    .agreement-text {
+      font-size: 13px;
+      color: #2C1F14;
+      line-height: 1.9;
+      margin-bottom: 14px;
+    }
+    .agreement-check {
       font-size: 13px;
       font-weight: 700;
-      margin-right: 8px;
+      color: #5C3D1E;
+      padding: 10px 0;
+      border-top: 1px dashed #C8B49A;
+    }
+    .legal-note {
+      font-size: 11px;
+      color: #8B7355;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #F5F0E8;
+      border-radius: 6px;
+      border: 1px solid #C8B49A;
     }
 
+    /* ── 署名 ── */
+    .signature-section {
+      border: 1.5px solid #8B7355;
+      border-top: none;
+      padding: 20px;
+    }
+    .sig-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #5C3D1E;
+      margin-bottom: 16px;
+    }
+    .sig-item { margin-bottom: 20px; }
+    .sig-item-label {
+      font-size: 13px;
+      color: #8B7355;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sig-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #8B7355; color: #fff; font-size: 12px; font-weight: 700;
+    }
     .canvas-wrapper {
-      position: relative;
-      border: 2px solid var(--border);
-      border-radius: 12px;
+      border: 1.5px solid #C8B49A;
+      border-radius: 8px;
       overflow: hidden;
       background: #fff;
       touch-action: none;
     }
-
     .canvas-wrapper canvas {
-      display: block;
-      width: 100%;
-      cursor: crosshair;
-      touch-action: none;
+      display: block; width: 100%; cursor: crosshair; touch-action: none;
     }
-
     .canvas-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: var(--bg);
-      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; background: #F5F0E8; border-top: 1px solid #C8B49A;
     }
-
-    .canvas-hint {
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
+    .canvas-hint { font-size: 11px; color: #8B7355; }
     .btn-clear {
-      font-family: 'Noto Sans JP', sans-serif;
-      font-size: 13px;
-      color: var(--warn);
-      background: none;
-      border: 1px solid #F0C4B0;
-      border-radius: 6px;
-      padding: 5px 12px;
-      cursor: pointer;
-      transition: background 0.2s;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 12px; color: #C96A3B;
+      background: none; border: 1px solid #F0C4B0; border-radius: 6px;
+      padding: 4px 10px; cursor: pointer;
+    }
+    .btn-clear:hover { background: #FFF3EE; }
+    .no-sig-msg {
+      text-align: center; color: #8B7355; font-size: 13px;
+      padding: 16px; background: #F5F0E8; border-radius: 8px;
+      border: 1px dashed #C8B49A;
     }
 
-    .btn-clear:hover {
-      background: var(--warn-bg);
-    }
-
-    #signatureContainer {
-      margin-top: 8px;
-    }
-
-    .no-signature-msg {
-      text-align: center;
-      color: var(--text-soft);
-      font-size: 14px;
+    /* ── お子様セクション ── */
+    .children-section {
+      background: #E2F0EC;
+      border: 1.5px solid #8B7355;
+      border-top: none;
       padding: 20px;
-      background: var(--bg);
-      border-radius: 10px;
-      border: 1px dashed var(--border);
     }
-
-    /* 送信ボタン */
-    .submit-btn {
-      width: 100%;
-      padding: 18px;
-      background: var(--primary);
-      color: #fff;
-      font-family: 'Noto Sans JP', sans-serif;
-      font-size: 17px;
-      font-weight: 700;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      letter-spacing: 0.05em;
-      transition: background 0.2s, transform 0.1s;
-      box-shadow: 0 4px 14px rgba(201, 106, 59, 0.35);
-    }
-
-    .submit-btn:active {
-      transform: scale(0.98);
-    }
-
-    .submit-btn:disabled {
-      background: #D0B49E;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    /* 完了画面 */
-    #completePage {
-      display: none;
+    .children-title {
       text-align: center;
-      padding: 40px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #3D6B5C;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #A8CEC4;
     }
-
-    .complete-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
+    .children-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
     }
+    .child-card { text-align: center; }
+    .child-icon {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: #fff; border: 2px solid #A8CEC4;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 8px;
+    }
+    .child-rule-title { font-size: 12px; font-weight: 700; color: #3D6B5C; margin-bottom: 4px; }
+    .child-rule-desc { font-size: 10px; color: #5C8C7C; line-height: 1.5; }
 
-    .complete-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: 26px;
-      color: var(--accent);
+    /* ── 送信ボタン ── */
+    .submit-wrap {
+      padding: 20px 16px;
+    }
+    .submit-btn {
+      width: 100%; padding: 18px;
+      background: #5C3D1E; color: #fff;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 17px; font-weight: 700;
+      border: none; border-radius: 12px; cursor: pointer;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 12px rgba(92,61,30,0.3);
+      transition: opacity 0.2s;
+    }
+    .submit-btn:hover { opacity: 0.9; }
+    .submit-btn:disabled { background: #C8B49A; box-shadow: none; cursor: not-allowed; }
+    .error-msg {
+      display: none; background: #FFF3EE; border: 1px solid #F0C4B0;
+      border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #C96A3B;
       margin-bottom: 12px;
     }
+    .error-msg.active { display: block; }
 
-    .complete-msg {
-      font-size: 15px;
-      color: var(--text-mid);
-      line-height: 1.8;
+    /* ── 完了画面 ── */
+    #completePage {
+      display: none; text-align: center; padding: 60px 20px;
     }
+    .complete-icon { font-size: 64px; margin-bottom: 20px; }
+    .complete-title {
+      font-family: 'DM Serif Display', serif; font-size: 26px;
+      color: #4A7C6F; margin-bottom: 12px;
+    }
+    .complete-msg { font-size: 15px; color: #5C3D1E; line-height: 1.8; }
 
-    /* ローディング */
+    /* ── ローディング ── */
     .loading-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(253, 246, 238, 0.85);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
+      display: none; position: fixed; inset: 0;
+      background: rgba(253,251,246,0.85); z-index: 200;
+      align-items: center; justify-content: center; flex-direction: column; gap: 16px;
     }
-
-    .loading-overlay.active {
-      display: flex;
-    }
-
+    .loading-overlay.active { display: flex; }
     .spinner {
-      width: 44px;
-      height: 44px;
-      border: 4px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
+      width: 44px; height: 44px; border: 4px solid #C8B49A;
+      border-top-color: #8B7355; border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-      font-size: 15px;
-      color: var(--text-mid);
-    }
-
-    /* エラーメッセージ */
-    .error-msg {
-      display: none;
-      background: var(--warn-bg);
-      border: 1px solid #F0C4B0;
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-size: 14px;
-      color: var(--warn);
-      margin-top: 12px;
-    }
-
-    .error-msg.active {
-      display: block;
-    }
-
-    /* オフライン警告 */
-    .offline-banner {
-      display: none;
-      background: #FFF8E1;
-      border: 1px solid #FFD54F;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #795548;
-      margin-bottom: 16px;
-    }
-
-    .offline-banner.active {
-      display: block;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 15px; color: #5C3D1E; }
 
     @media (max-width: 480px) {
-      .count-row {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-      }
+      .rules-grid { grid-template-columns: repeat(2, 1fr); }
+      .children-grid { grid-template-columns: repeat(3, 1fr); }
+      .info-section { grid-template-columns: 1fr; }
+      .info-row.full { grid-column: 1; }
+      .page-logo { font-size: 26px; }
     }
   </style>
 </head>
@@ -431,160 +330,194 @@
   <div class="loading-text">送信中...</div>
 </div>
 
-<div class="header">
-  <div class="header-logo">ANELLA CAFE</div>
-  <div class="header-sub">大分店 — 入店同意書</div>
+<div class="page-header">
+  <div class="page-logo">ANELLA CAFE <span class="page-logo-dog">🐾</span></div>
+  <div class="page-subtitle">— ご利用時の注意事項 —</div>
 </div>
 
 <div class="container">
+<form id="consentForm">
 
-  <!-- フォーム -->
-  <form id="consentForm">
-
-    <!-- 来店情報 -->
-    <div class="card">
-      <p class="section-title">来店情報</p>
-
-      <div class="field">
-        <label>来店日</label>
-        <div class="date-display" id="todayDisplay"></div>
-      </div>
-
-      <div class="field">
-        <label>来店人数 <span class="required">必須</span></label>
-        <div class="count-row">
-          <div class="count-item">
-            <label>大人</label>
-            <div class="select-wrapper">
-              <select id="adults" name="adults">
-                <option value="0">0名</option>
-                <option value="1" selected>1名</option>
-                <option value="2">2名</option>
-                <option value="3">3名</option>
-                <option value="4">4名</option>
-                <option value="5">5名</option>
-                <option value="6">6名</option>
-                <option value="7">7名</option>
-                <option value="8">8名</option>
-                <option value="9">9名</option>
-                <option value="10">10名</option>
-              </select>
-            </div>
-          </div>
-          <div class="count-item">
-            <label>小学生以上</label>
-            <div class="select-wrapper">
-              <select id="children" name="children">
-                <option value="0" selected>0名</option>
-                <option value="1">1名</option>
-                <option value="2">2名</option>
-                <option value="3">3名</option>
-                <option value="4">4名</option>
-                <option value="5">5名</option>
-                <option value="6">6名</option>
-                <option value="7">7名</option>
-                <option value="8">8名</option>
-                <option value="9">9名</option>
-                <option value="10">10名</option>
-              </select>
-            </div>
-          </div>
-          <div class="count-item">
-            <label>未就学</label>
-            <div class="select-wrapper">
-              <select id="preschool" name="preschool">
-                <option value="0" selected>0名</option>
-                <option value="1">1名</option>
-                <option value="2">2名</option>
-                <option value="3">3名</option>
-                <option value="4">4名</option>
-                <option value="5">5名</option>
-                <option value="6">6名</option>
-                <option value="7">7名</option>
-                <option value="8">8名</option>
-                <option value="9">9名</option>
-                <option value="10">10名</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>ご利用回数 <span class="required">必須</span></label>
-        <div class="select-wrapper">
-          <select id="visitCount" name="visitCount">
-            <option value="">選択してください</option>
-            <option value="初回">初回</option>
-            <option value="2回目">2回目</option>
-            <option value="3回目">3回目</option>
-            <option value="4回目以上">4回目以上</option>
+  <!-- 来店情報 -->
+  <div class="info-section">
+    <div class="info-row">
+      <span class="info-label">来店人数</span>
+      <div class="count-group">
+        <div class="count-item">
+          <span>大人</span>
+          <select id="adults" class="count-sel">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
           </select>
+          <span>人</span>
+        </div>
+        <div class="count-item">
+          <span>小学生以上</span>
+          <select id="children" class="count-sel">
+            <option value="0" selected>0</option>
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option>
+          </select>
+          <span>人</span>
+        </div>
+        <div class="count-item">
+          <span>未就学</span>
+          <select id="preschool" class="count-sel">
+            <option value="0" selected>0</option>
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option>
+          </select>
+          <span>人</span>
         </div>
       </div>
-
-      <div class="field">
-        <label>お気に入りの子 <span class="optional">任意</span></label>
-        <input type="text" id="favoritePet" name="favoritePet" placeholder="例：もふもふのうさぎ" maxlength="50">
-      </div>
     </div>
 
-    <!-- 同意事項 -->
-    <div class="card">
-      <p class="section-title">同意事項</p>
+    <div class="info-row">
+      <span class="info-label">来店日</span>
+      <span class="visit-date-display" id="todayDisplay"></span>
+    </div>
 
-      <div class="agreement-box">
-        <div class="agreement-text">店内での噛みつきや引っ掻きによる怪我や事故、または衣類の損傷等（犬猫の粗相含む）が発生した場合は、一切の責任が負えないことをあらかじめご了承ください。滞在中・帰宅後のアレルギーの発症等も同様となります。靴や上着類、貴重品等はご自身で管理していただき、盗難・紛失等は一切の責任を追いかねます。</div>
-        <div class="agreement-note">
-          ▼ ご利用時の注意事項［お子様同伴時の注意点も含む］に同意します。<br>
-          ※ 入場者全員のご署名をお願いします
+    <div class="info-row">
+      <span class="info-label">ご利用回数</span>
+      <div class="visit-count-group">
+        <label class="radio-label"><input type="radio" name="visitCount" value="初回"> 初回</label>
+        <label class="radio-label"><input type="radio" name="visitCount" value="2回目"> 2回目</label>
+        <div class="other-count-wrap">
+          <label class="radio-label"><input type="radio" name="visitCount" value="other"> それ以上（</label>
+          <input type="number" id="otherCount" class="other-count-input" min="3" max="99" placeholder="3">
+          <span style="font-size:13px; color:#5C3D1E;">）回目</span>
         </div>
       </div>
-
-      <div class="legal-note">
-        本同意書への電子署名は、自筆署名と同等の法的効力を持つものとします。署名日時・端末情報は記録・保管されます。
-      </div>
     </div>
 
-    <!-- 署名 -->
-    <div class="card">
-      <p class="section-title">電子署名</p>
-      <p style="font-size:13px; color:var(--text-soft); margin-bottom:16px;">人数分の署名欄が表示されます。枠内に指またはペンでご署名ください。</p>
-
-      <div id="signatureContainer">
-        <div class="no-signature-msg">上の来店人数を選択すると署名欄が表示されます</div>
-      </div>
-    </div>
-
-    <div class="offline-banner" id="offlineBanner">
-      ⚠ オフライン状態です。送信はローカルに保存され、復旧後に自動送信されます。
-    </div>
-
-    <div class="error-msg" id="errorMsg"></div>
-
-    <button type="submit" class="submit-btn" id="submitBtn">同意して送信する</button>
-  </form>
-
-  <!-- 完了画面 -->
-  <div id="completePage">
-    <div class="complete-icon">✅</div>
-    <div class="complete-title">ご署名ありがとうございます</div>
-    <div class="complete-msg">
-      同意書を受け付けました。<br>
-      ごゆっくりお楽しみください。
+    <div class="info-row">
+      <span class="info-label">お気に入りの子</span>
+      <input type="text" id="favoritePet" class="fav-input" placeholder="例：もふもふのうさぎ" maxlength="50">
     </div>
   </div>
+
+  <!-- 6ルールカード -->
+  <div class="rules-grid">
+    <div class="rule-card">
+      <span class="rule-icon">🦝</span>
+      <div class="rule-ja">入退室時は手洗い消毒のご協力を</div>
+      <div class="rule-en">Hand washing</div>
+      <div class="rule-desc">入室・退室の際は手洗い・消毒のご協力をお願いします。</div>
+    </div>
+    <div class="rule-card">
+      <span class="rule-icon">🐩</span>
+      <div class="rule-ja">ドアはスタッフが開閉します</div>
+      <div class="rule-en">Please Wait</div>
+      <div class="rule-desc">動物の脱走防止のため、ドアの開閉はスタッフが行います。</div>
+    </div>
+    <div class="rule-card">
+      <span class="rule-icon">🐕</span>
+      <div class="rule-ja">いぬねこエリアの移動は自由です</div>
+      <div class="rule-en">Feel free to move around</div>
+      <div class="rule-desc">犬・猫エリアは自由にご移動いただけます。</div>
+    </div>
+    <div class="rule-card">
+      <span class="rule-icon">🦊</span>
+      <div class="rule-ja">大声や走り回るのはNG</div>
+      <div class="rule-en">Keep it down</div>
+      <div class="rule-desc">大声・走り回りは動物がびっくりするのでご遠慮ください。</div>
+    </div>
+    <div class="rule-card">
+      <span class="rule-icon">🐱</span>
+      <div class="rule-ja">抱っこの際は床に座って</div>
+      <div class="rule-en">Sit and cuddle</div>
+      <div class="rule-desc">抱っこは床に座った状態でお願いします。落下防止のためです。</div>
+    </div>
+    <div class="rule-card">
+      <span class="rule-icon">🍱</span>
+      <div class="rule-ja">店内へ食べ物の持ち込みはNG</div>
+      <div class="rule-en">No outside food allowed</div>
+      <div class="rule-desc">外からの食べ物の持ち込みはご遠慮いただいています。</div>
+    </div>
+  </div>
+
+  <!-- 同意文 -->
+  <div class="agreement-section">
+    <p class="agreement-text">店内での噛みつきや引っ掻きによる怪我や事故、または衣類の損傷等（犬猫の粗相含む）が発生した場合は、一切の責任が負えないことをあらかじめご了承ください。滞在中・帰宅後のアレルギーの発症等も同様となります。靴や上着類、貴重品等はご自身で管理していただき、盗難・紛失等は一切の責任を追いかねます。</p>
+    <div class="agreement-check">▼ ご利用時の注意事項［お子様同伴時の注意点も含む］に同意します。&nbsp;&nbsp;※ 入場者全員のご署名をお願いします</div>
+    <div class="legal-note">本同意書への電子署名は、自筆署名と同等の法的効力を持つものとします。署名日時・端末情報は記録・保管されます。</div>
+  </div>
+
+  <!-- 署名 -->
+  <div class="signature-section">
+    <div class="sig-title">署名</div>
+    <div id="signatureContainer">
+      <div class="no-sig-msg">上の来店人数を選択すると署名欄が表示されます</div>
+    </div>
+  </div>
+
+  <!-- お子様同伴時の注意点 -->
+  <div class="children-section">
+    <div class="children-title">お子様同伴時の注意点</div>
+    <div class="children-grid">
+      <div class="child-card">
+        <div class="child-icon">🐈</div>
+        <div class="child-rule-title">一緒に遊ぶこと</div>
+        <div class="child-rule-desc">お子様のそばから離れないようご協力をお願いします。</div>
+      </div>
+      <div class="child-card">
+        <div class="child-icon">🪑</div>
+        <div class="child-rule-title">椅子の上に立つ</div>
+        <div class="child-rule-desc">転倒と怪我の危険性がありますのでご注意ください。</div>
+      </div>
+      <div class="child-card">
+        <div class="child-icon">🐱</div>
+        <div class="child-rule-title">抱っこの際は</div>
+        <div class="child-rule-desc">怪我防止のためもスタッフにお声がけください。</div>
+      </div>
+      <div class="child-card">
+        <div class="child-icon">🐕</div>
+        <div class="child-rule-title">追いかけない</div>
+        <div class="child-rule-desc">逃げたり、暴れたり、場合によっては噛むこともあります。</div>
+      </div>
+      <div class="child-card">
+        <div class="child-icon">🔊</div>
+        <div class="child-rule-title">大声に注意</div>
+        <div class="child-rule-desc">わんちゃんもねこちゃんも大きな音が苦手です。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-wrap">
+    <div class="error-msg" id="errorMsg"></div>
+    <button type="submit" class="submit-btn" id="submitBtn">同意して送信する</button>
+  </div>
+
+</form>
+
+<!-- 完了画面 -->
+<div id="completePage">
+  <div class="complete-icon">✅</div>
+  <div class="complete-title">ご署名ありがとうございます</div>
+  <div class="complete-msg">同意書を受け付けました。<br>ごゆっくりお楽しみください。</div>
+</div>
 
 </div><!-- /container -->
 
 <script>
-  // ── 日付表示 ──────────────────────────────────────
-  const today = new Date();
-  const todayStr = today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  // 来店日
+  const today    = new Date();
   const todayISO = today.toISOString().slice(0, 10);
-  document.getElementById('todayDisplay').textContent = todayStr;
+  document.getElementById('todayDisplay').textContent =
+    today.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
 
-  // ── 署名キャンバス管理 ────────────────────────────
+  // 署名キャンバス
   const canvases = [];
 
   function getTotalCount() {
@@ -594,238 +527,160 @@
   }
 
   function renderSignatures() {
-    const total = getTotalCount();
+    const total     = getTotalCount();
     const container = document.getElementById('signatureContainer');
     container.innerHTML = '';
     canvases.length = 0;
 
     if (total === 0) {
-      container.innerHTML = '<div class="no-signature-msg">来店人数を1名以上選択してください</div>';
+      container.innerHTML = '<div class="no-sig-msg">来店人数を1名以上選択してください</div>';
       return;
     }
 
     for (let i = 0; i < total; i++) {
-      const section = document.createElement('div');
-      section.className = 'signature-section';
+      const item = document.createElement('div');
+      item.className = 'sig-item';
 
-      const titleEl = document.createElement('div');
-      titleEl.className = 'signature-title';
-      titleEl.innerHTML = `<span class="signature-number">${i + 1}</span>${i === 0 ? '代表者' : `${i + 1}人目`}の署名`;
-      section.appendChild(titleEl);
+      const lbl = document.createElement('div');
+      lbl.className = 'sig-item-label';
+      lbl.innerHTML = `<span class="sig-num">${i + 1}</span>${i === 0 ? '代表者' : `${i + 1}人目`}の署名`;
+      item.appendChild(lbl);
 
       const wrapper = document.createElement('div');
       wrapper.className = 'canvas-wrapper';
 
-      const canvas = document.createElement('canvas');
-      const W = Math.min(window.innerWidth - 80, 640);
-      canvas.width = W * 2;
-      canvas.height = 160 * 2;
-      canvas.style.height = '160px';
+      const canvas   = document.createElement('canvas');
+      const W        = Math.min(window.innerWidth - 64, 688);
+      canvas.width   = W * 2;
+      canvas.height  = 160 * 2;
+      canvas.style.height     = '160px';
       canvas.style.touchAction = 'none';
 
-      const toolbar = document.createElement('div');
+      const toolbar  = document.createElement('div');
       toolbar.className = 'canvas-toolbar';
-      const hint = document.createElement('span');
+      const hint     = document.createElement('span');
       hint.className = 'canvas-hint';
-      hint.textContent = '指またはペンで署名';
+      hint.textContent = '指またはペンで署名してください';
       const clearBtn = document.createElement('button');
-      clearBtn.type = 'button';
+      clearBtn.type  = 'button';
       clearBtn.className = 'btn-clear';
       clearBtn.textContent = 'クリア';
-      clearBtn.addEventListener('click', () => clearCanvas(canvas));
+      clearBtn.addEventListener('click', () => {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
       toolbar.appendChild(hint);
       toolbar.appendChild(clearBtn);
 
       wrapper.appendChild(canvas);
       wrapper.appendChild(toolbar);
-      section.appendChild(wrapper);
-      container.appendChild(section);
+      item.appendChild(wrapper);
+      container.appendChild(item);
 
       initCanvas(canvas);
       canvases.push(canvas);
     }
   }
 
-  function clearCanvas(canvas) {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
   function initCanvas(canvas) {
     const ctx = canvas.getContext('2d');
     ctx.strokeStyle = '#2C1F14';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineWidth   = 3;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
     ctx.scale(2, 2);
 
     let drawing = false;
-    let lastX = 0, lastY = 0;
 
     function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / 2 / rect.width;
+      const rect   = canvas.getBoundingClientRect();
+      const scaleX = canvas.width  / 2 / rect.width;
       const scaleY = canvas.height / 2 / rect.height;
-      if (e.touches) {
-        return {
-          x: (e.touches[0].clientX - rect.left) * scaleX,
-          y: (e.touches[0].clientY - rect.top) * scaleY
-        };
-      }
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
-      };
+      const src    = e.touches ? e.touches[0] : e;
+      return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
     }
 
-    function start(e) {
-      e.preventDefault();
-      drawing = true;
-      const pos = getPos(e);
-      lastX = pos.x;
-      lastY = pos.y;
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-    }
-
-    function move(e) {
-      if (!drawing) return;
-      e.preventDefault();
-      const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      lastX = pos.x;
-      lastY = pos.y;
-    }
-
-    function end(e) {
-      drawing = false;
-    }
-
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
-    canvas.addEventListener('mouseup', end);
-    canvas.addEventListener('mouseleave', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove', move, { passive: false });
-    canvas.addEventListener('touchend', end);
+    canvas.addEventListener('mousedown',  e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove',  e => { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    canvas.addEventListener('mouseup',    () => { drawing = false; });
+    canvas.addEventListener('mouseleave', () => { drawing = false; });
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, { passive: false });
+    canvas.addEventListener('touchmove',  e => { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }, { passive: false });
+    canvas.addEventListener('touchend',   () => { drawing = false; });
   }
 
-  function isCanvasBlank(canvas) {
-    const ctx = canvas.getContext('2d');
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    return !data.some(v => v !== 0);
+  function isBlank(canvas) {
+    return !canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(v => v !== 0);
   }
 
-  function getSignatures() {
-    return canvases.map(c => c.toDataURL('image/png'));
-  }
-
-  // 人数変更で署名欄を再描画
-  ['adults', 'children', 'preschool'].forEach(id => {
-    document.getElementById(id).addEventListener('change', renderSignatures);
-  });
-
+  ['adults','children','preschool'].forEach(id =>
+    document.getElementById(id).addEventListener('change', renderSignatures)
+  );
   renderSignatures();
 
-  // ── オフライン検知 ────────────────────────────────
-  function updateOnlineStatus() {
-    document.getElementById('offlineBanner').classList.toggle('active', !navigator.onLine);
-  }
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  updateOnlineStatus();
+  // ご利用回数 「それ以上」ラジオ連動
+  document.querySelectorAll('input[name="visitCount"]').forEach(r => {
+    r.addEventListener('change', () => {
+      document.getElementById('otherCount').disabled = r.value !== 'other';
+    });
+  });
+  document.getElementById('otherCount').disabled = true;
 
-  // ── ローカルストレージ バックアップ ───────────────
-  const LS_KEY = 'anella_consent_backup';
-
-  function saveToLocalStorage(data) {
-    try {
-      const list = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-      list.push(data);
-      localStorage.setItem(LS_KEY, JSON.stringify(list));
-    } catch (e) {}
-  }
-
-  async function flushBackup() {
-    try {
-      const list = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-      if (list.length === 0) return;
-      const remaining = [];
-      for (const item of list) {
-        const { error } = await supabase.from('consent_forms').insert(item);
-        if (error) remaining.push(item);
-      }
-      localStorage.setItem(LS_KEY, JSON.stringify(remaining));
-    } catch (e) {}
-  }
-
-  window.addEventListener('online', flushBackup);
-
-  // ── 送信処理 ──────────────────────────────────────
-  document.getElementById('consentForm').addEventListener('submit', async (e) => {
+  // 送信
+  document.getElementById('consentForm').addEventListener('submit', async e => {
     e.preventDefault();
 
     const errorEl = document.getElementById('errorMsg');
     errorEl.classList.remove('active');
 
-    const visitCount = document.getElementById('visitCount').value;
-    if (!visitCount) {
-      showError('ご利用回数を選択してください。');
-      return;
+    // バリデーション
+    const visitRadio = document.querySelector('input[name="visitCount"]:checked');
+    if (!visitRadio) { showError('ご利用回数を選択してください。'); return; }
+
+    let visitCountValue = visitRadio.value;
+    if (visitRadio.value === 'other') {
+      const n = parseInt(document.getElementById('otherCount').value);
+      if (!n || n < 3) { showError('ご利用回数（回数）を入力してください。'); return; }
+      visitCountValue = n + '回目';
     }
 
     const total = getTotalCount();
-    if (total === 0) {
-      showError('来店人数を1名以上選択してください。');
-      return;
-    }
+    if (total === 0) { showError('来店人数を1名以上選択してください。'); return; }
 
     for (let i = 0; i < canvases.length; i++) {
-      if (isCanvasBlank(canvases[i])) {
+      if (isBlank(canvases[i])) {
         showError(`${i + 1}人目の署名がありません。全員のご署名をお願いします。`);
         return;
       }
     }
 
-    const deviceInfo = {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      submittedAt: new Date().toISOString()
-    };
-
     const payload = {
-      visit_date: todayISO,
-      adults: parseInt(document.getElementById('adults').value),
-      children: parseInt(document.getElementById('children').value),
-      preschool: parseInt(document.getElementById('preschool').value),
-      visit_count: visitCount,
+      visit_date:   todayISO,
+      adults:       parseInt(document.getElementById('adults').value),
+      children:     parseInt(document.getElementById('children').value),
+      preschool:    parseInt(document.getElementById('preschool').value),
+      visit_count:  visitCountValue,
       favorite_pet: document.getElementById('favoritePet').value || null,
-      signatures: getSignatures(),
-      device_info: JSON.stringify(deviceInfo),
+      signatures:   canvases.map(c => c.toDataURL('image/png')),
+      device_info:  JSON.stringify({ userAgent: navigator.userAgent, platform: navigator.platform }),
       submitted_at: new Date().toISOString()
     };
 
     document.getElementById('loadingOverlay').classList.add('active');
     document.getElementById('submitBtn').disabled = true;
 
-    if (!navigator.onLine) {
-      saveToLocalStorage(payload);
-      document.getElementById('loadingOverlay').classList.remove('active');
-      showComplete();
-      return;
-    }
-
     const { error } = await supabase.from('consent_forms').insert(payload);
-
     document.getElementById('loadingOverlay').classList.remove('active');
 
     if (error) {
-      saveToLocalStorage(payload);
-      showComplete();
-    } else {
-      showComplete();
+      // ローカル保存してから完了
+      try {
+        const ls = JSON.parse(localStorage.getItem('anella_consent_backup') || '[]');
+        ls.push(payload);
+        localStorage.setItem('anella_consent_backup', JSON.stringify(ls));
+      } catch (_) {}
     }
+    showComplete();
   });
 
   function showError(msg) {
@@ -841,6 +696,5 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
-
 </body>
 </html>

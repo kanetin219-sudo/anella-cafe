@@ -912,23 +912,23 @@ async function submitManualReservation() {
   errEl.style.display = 'none';
 
   // ブロック時間チェック
-  const time       = document.getElementById('manualTime').value;
-  const staff      = document.getElementById('manualStaff').value;
-  const { data: blocks } = await supabase
+  const time  = document.getElementById('manualTime').value;
+  const staff = document.getElementById('manualStaff').value;
+  const { data: allBlocks } = await supabase
     .from('blocked_times')
-    .select('staff')
-    .eq('block_date', date)
-    .eq('block_time', time + ':00');
+    .select('staff, block_time')
+    .eq('block_date', date);
 
-  if (blocks && blocks.length > 0) {
-    const blockedStaff = blocks.map(b => b.staff);
+  if (allBlocks && allBlocks.length > 0) {
+    const matchedBlocks = allBlocks.filter(b => b.block_time.slice(0, 5) === time);
+    const blockedStaff  = matchedBlocks.map(b => b.staff);
     const makiBlocked   = blockedStaff.includes('牧');
     const kabataBlocked = blockedStaff.includes('椛田');
 
     let isBlocked = false;
-    if (staff === '牧' && makiBlocked)              isBlocked = true;
-    if (staff === '椛田' && kabataBlocked)          isBlocked = true;
-    if (staff === 'どちらでもいい' && makiBlocked && kabataBlocked) isBlocked = true;
+    if (staff === '牧'          && makiBlocked)                      isBlocked = true;
+    if (staff === '椛田'        && kabataBlocked)                    isBlocked = true;
+    if (staff === 'どちらでもいい' && makiBlocked && kabataBlocked)  isBlocked = true;
 
     if (isBlocked) {
       errEl.textContent = 'この日時はブロックされているため登録できません。ブロック設定を確認してください。';

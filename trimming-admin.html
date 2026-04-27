@@ -327,6 +327,10 @@
         </div>
       </div>
 
+      <div style="margin-bottom:12px; text-align:right;">
+        <button class="add-block-btn" style="margin:0;" onclick="openManualModal()">＋ 手動予約登録</button>
+      </div>
+
       <div class="reservation-list" id="reservationList">
         <div class="no-reservations">読み込み中...</div>
       </div>
@@ -427,6 +431,91 @@
     <textarea class="memo-area" id="memoArea" placeholder="スタッフ内部メモ（お客様には非表示）" maxlength="500"></textarea>
     <button class="save-btn" id="saveBtn" onclick="saveMemo()">保存する</button>
     <div class="save-ok" id="saveOk">✅ 保存しました</div>
+  </div>
+</div>
+
+<!-- ===== 手動予約登録モーダル ===== -->
+<div class="modal-overlay" id="manualModalOverlay" onclick="closeManualModal(event)">
+  <div class="modal" id="manualModal" style="max-height:90vh; overflow-y:auto;">
+    <div class="modal-header">
+      <div class="modal-title">手動予約登録</div>
+      <button class="modal-close" onclick="closeManualModalDirect()">✕</button>
+    </div>
+
+    <div class="section-label">来店日時・担当 <span style="color:var(--warn); font-size:11px;">必須</span></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">来店日</div>
+        <input type="date" id="manualDate" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">来店時間</div>
+        <div class="select-wrap-sm">
+          <select id="manualTime" style="width:100%;">
+            <option value="10:00">10:00</option>
+            <option value="11:00">11:00</option>
+            <option value="12:00">12:00</option>
+            <option value="13:00">13:00</option>
+            <option value="14:00">14:00</option>
+            <option value="15:00">15:00</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">担当スタッフ</div>
+      <div class="select-wrap-sm">
+        <select id="manualStaff" style="width:100%;">
+          <option value="どちらでもいい">どちらでもいい</option>
+          <option value="牧">牧</option>
+          <option value="椛田">椛田</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-label">コース <span style="color:var(--warn); font-size:11px;">必須</span></div>
+    <div class="select-wrap-sm" style="margin-bottom:14px;">
+      <select id="manualCourse" style="width:100%;">
+        <option value="">選択してください</option>
+        <option value="シャンプーコース">シャンプーコース</option>
+        <option value="カットコース">カットコース</option>
+      </select>
+    </div>
+
+    <div class="section-label">ペット情報 <span style="color:var(--text-soft); font-size:11px;">任意</span></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">ペット名</div>
+        <input type="text" id="manualPetName" placeholder="例：ぽち" maxlength="20" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">犬種</div>
+        <input type="text" id="manualBreed" placeholder="例：トイプードル" maxlength="30" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
+      </div>
+    </div>
+
+    <div class="section-label">お客様情報 <span style="color:var(--text-soft); font-size:11px;">任意</span></div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">お客様名</div>
+      <input type="text" id="manualOwnerName" placeholder="例：山田 太郎" maxlength="30" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">電話番号</div>
+        <input type="tel" id="manualPhone" placeholder="09012345678" maxlength="15" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">メールアドレス</div>
+        <input type="email" id="manualEmail" placeholder="example@email.com" maxlength="100" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
+      </div>
+    </div>
+
+    <div class="section-label">スタッフメモ <span style="color:var(--text-soft); font-size:11px;">任意</span></div>
+    <textarea id="manualMemo" class="memo-area" placeholder="電話予約メモなど" maxlength="500" style="margin-bottom:14px;"></textarea>
+
+    <div class="save-ok" id="manualSaveOk" style="display:none;">✅ 予約を登録しました</div>
+    <div style="color:var(--warn); font-size:13px; margin-bottom:10px; display:none;" id="manualErr"></div>
+    <button class="save-btn" onclick="submitManualReservation()" style="width:100%;">予約を登録する</button>
   </div>
 </div>
 
@@ -764,6 +853,83 @@ async function deleteBlock(id) {
   if (!confirm('このブロックを削除しますか？')) return;
   await supabase.from('blocked_times').delete().eq('id', id);
   loadBlocks();
+}
+
+// ── 手動予約登録 ──────────────────────────────────
+function openManualModal() {
+  const d = document.getElementById('filterDate').value || new Date().toISOString().slice(0,10);
+  document.getElementById('manualDate').value = d;
+  document.getElementById('manualTime').value = '10:00';
+  document.getElementById('manualStaff').value = 'どちらでもいい';
+  document.getElementById('manualCourse').value = '';
+  document.getElementById('manualPetName').value = '';
+  document.getElementById('manualBreed').value = '';
+  document.getElementById('manualOwnerName').value = '';
+  document.getElementById('manualPhone').value = '';
+  document.getElementById('manualEmail').value = '';
+  document.getElementById('manualMemo').value = '';
+  document.getElementById('manualSaveOk').style.display = 'none';
+  document.getElementById('manualErr').style.display = 'none';
+  document.getElementById('manualModalOverlay').classList.add('active');
+}
+
+function closeManualModal(e) {
+  if (e.target === document.getElementById('manualModalOverlay')) closeManualModalDirect();
+}
+
+function closeManualModalDirect() {
+  document.getElementById('manualModalOverlay').classList.remove('active');
+}
+
+async function submitManualReservation() {
+  const date   = document.getElementById('manualDate').value;
+  const course = document.getElementById('manualCourse').value;
+  const errEl  = document.getElementById('manualErr');
+
+  if (!date)   { errEl.textContent = '来店日を入力してください'; errEl.style.display = 'block'; return; }
+  if (!course) { errEl.textContent = 'コースを選択してください'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  const dateStr = date.replace(/-/g, '');
+  const { count } = await supabase
+    .from('trimming_reservations')
+    .select('*', { count: 'exact', head: true })
+    .eq('visit_date', date);
+  const reservationNumber = `${dateStr}-${String((count || 0) + 1).padStart(3, '0')}`;
+
+  const time = document.getElementById('manualTime').value;
+  const payload = {
+    reservation_number: reservationNumber,
+    visit_date:  date,
+    visit_time:  time + ':00',
+    staff:       document.getElementById('manualStaff').value,
+    course:      course,
+    breed:       document.getElementById('manualBreed').value || '不明',
+    gender:      '不明',
+    weight:      '不明',
+    matting:     '不明',
+    visit_experience: '不明',
+    pet_age:     '不明',
+    pet_name:    document.getElementById('manualPetName').value || '不明',
+    vaccine_status: '不明',
+    owner_name:  document.getElementById('manualOwnerName').value || '不明',
+    phone:       document.getElementById('manualPhone').value || null,
+    email:       document.getElementById('manualEmail').value || null,
+    staff_note:  document.getElementById('manualMemo').value || null,
+    options:     [],
+    course_price: 0,
+    options_price: 0,
+    total_price:  0,
+  };
+
+  const { error } = await supabase.from('trimming_reservations').insert(payload);
+  if (error) { errEl.textContent = '登録に失敗しました: ' + error.message; errEl.style.display = 'block'; return; }
+
+  document.getElementById('manualSaveOk').style.display = 'block';
+  setTimeout(() => {
+    closeManualModalDirect();
+    loadReservations();
+  }, 1200);
 }
 
 // ── キーボード Enter でログイン ───────────────────

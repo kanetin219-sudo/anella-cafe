@@ -335,6 +335,15 @@
         <div class="calendar-grid" id="calGrid"></div>
       </div>
 
+      <div class="field" id="staffSelectWrap" style="display:none;">
+        <label class="field-label">担当スタッフ <span class="opt">任意</span></label>
+        <div class="time-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px;">
+          <button type="button" class="time-btn selected" id="staffBtn_any"    onclick="selectStaff('どちらでもいい', this)">どちらでもいい</button>
+          <button type="button" class="time-btn"          id="staffBtn_maki"   onclick="selectStaff('牧', this)">牧</button>
+          <button type="button" class="time-btn"          id="staffBtn_kabata" onclick="selectStaff('椛田', this)">椛田</button>
+        </div>
+      </div>
+
       <div class="time-slots" id="timeSlotWrap" style="display:none;">
         <div class="time-slots-title">時間を選択 <span class="req">必須</span></div>
         <div class="time-loading" id="timeLoading">読み込み中...</div>
@@ -578,7 +587,7 @@ const TIME_SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
 const fd = {
   course: '', breed: '', breedDisplay: '', coursePrice: 0,
   options: [], optionsPrice: 0, totalPrice: 0,
-  staff: '未定', visitDate: '', visitTime: '',
+  staff: 'どちらでもいい', visitDate: '', visitTime: '',
   gender: '', weight: '', matting: '', visitExperience: '',
   petAge: '', petName: '', vaccineStatus: '', staffNote: '',
   ownerName: '', phone: '', lineName: '', email: ''
@@ -813,7 +822,18 @@ function selectDate(dateStr, el) {
   fd.visitTime = '';
   document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
+  document.getElementById('staffSelectWrap').style.display = 'block';
   loadTimeSlots();
+}
+
+function selectStaff(staffName, el) {
+  fd.staff = staffName;
+  fd.visitTime = '';
+  ['staffBtn_any','staffBtn_maki','staffBtn_kabata'].forEach(id => {
+    document.getElementById(id).classList.remove('selected');
+  });
+  el.classList.add('selected');
+  if (fd.visitDate) loadTimeSlots();
 }
 
 async function loadTimeSlots() {
@@ -835,10 +855,12 @@ async function loadTimeSlots() {
   grid.innerHTML = '';
 
   TIME_SLOTS.forEach(t => {
-    // 牧・椛田どちらも埋まっている時間帯のみ不可
-    const aBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '牧');
-    const bBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '椛田');
-    const available = !aBooked || !bBooked;
+    const makiBooked   = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '牧');
+    const kabataBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '椛田');
+    let available;
+    if (fd.staff === '牧')         available = !makiBooked;
+    else if (fd.staff === '椛田')  available = !kabataBooked;
+    else                           available = !makiBooked || !kabataBooked;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'time-btn' + (available ? '' : ' disabled') + (t === fd.visitTime ? ' selected' : '');
@@ -956,7 +978,7 @@ async function submitReservation() {
       reservation_number: reservationNumber,
       visit_date: fd.visitDate,
       visit_time: fd.visitTime + ':00',
-      staff: 'どちらでもいい',
+      staff: fd.staff,
       course: fd.course,
       breed: fd.breedDisplay,
       gender: fd.gender,

@@ -510,6 +510,24 @@
       </div>
     </div>
 
+    <div class="section-label">予約受付担当者 <span style="color:var(--warn); font-size:11px;">必須</span></div>
+    <div class="select-wrap-sm" style="margin-bottom:14px;">
+      <select id="manualReceptionist" style="width:100%;">
+        <option value="">選択してください</option>
+        <option value="平迫">平迫</option>
+        <option value="名倉">名倉</option>
+        <option value="須崎">須崎</option>
+        <option value="池田">池田</option>
+        <option value="牧">牧</option>
+        <option value="三浦">三浦</option>
+        <option value="篠田">篠田</option>
+        <option value="末光">末光</option>
+        <option value="今本">今本</option>
+        <option value="後藤">後藤</option>
+        <option value="椛田">椛田</option>
+      </select>
+    </div>
+
     <div class="section-label">スタッフメモ <span style="color:var(--text-soft); font-size:11px;">任意</span></div>
     <textarea id="manualMemo" class="memo-area" placeholder="電話予約メモなど" maxlength="500" style="margin-bottom:14px;"></textarea>
 
@@ -868,6 +886,7 @@ function openManualModal() {
   document.getElementById('manualPhone').value = '';
   document.getElementById('manualEmail').value = '';
   document.getElementById('manualMemo').value = '';
+  document.getElementById('manualReceptionist').value = '';
   document.getElementById('manualSaveOk').style.display = 'none';
   document.getElementById('manualErr').style.display = 'none';
   document.getElementById('manualModalOverlay').classList.add('active');
@@ -882,12 +901,14 @@ function closeManualModalDirect() {
 }
 
 async function submitManualReservation() {
-  const date   = document.getElementById('manualDate').value;
-  const course = document.getElementById('manualCourse').value;
-  const errEl  = document.getElementById('manualErr');
+  const date          = document.getElementById('manualDate').value;
+  const course        = document.getElementById('manualCourse').value;
+  const receptionist  = document.getElementById('manualReceptionist').value;
+  const errEl         = document.getElementById('manualErr');
 
-  if (!date)   { errEl.textContent = '来店日を入力してください'; errEl.style.display = 'block'; return; }
-  if (!course) { errEl.textContent = 'コースを選択してください'; errEl.style.display = 'block'; return; }
+  if (!date)         { errEl.textContent = '来店日を入力してください'; errEl.style.display = 'block'; return; }
+  if (!course)       { errEl.textContent = 'コースを選択してください'; errEl.style.display = 'block'; return; }
+  if (!receptionist) { errEl.textContent = '受付担当者を選択してください'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
   const dateStr = date.replace(/-/g, '');
@@ -915,7 +936,7 @@ async function submitManualReservation() {
     owner_name:  document.getElementById('manualOwnerName').value || '不明',
     phone:       document.getElementById('manualPhone').value || null,
     email:       document.getElementById('manualEmail').value || null,
-    staff_note:  document.getElementById('manualMemo').value || null,
+    staff_note:  `【受付担当：${receptionist}】` + (document.getElementById('manualMemo').value ? '\n' + document.getElementById('manualMemo').value : ''),
     options:     [],
     course_price: 0,
     options_price: 0,

@@ -835,9 +835,9 @@ async function loadTimeSlots() {
   grid.innerHTML = '';
 
   TIME_SLOTS.forEach(t => {
-    // スタッフA・Bどちらも埋まっている時間帯のみ不可
-    const aBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === 'スタッフA');
-    const bBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === 'スタッフB');
+    // 牧・椛田どちらも埋まっている時間帯のみ不可
+    const aBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '牧');
+    const bBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '椛田');
     const available = !aBooked || !bBooked;
     const btn = document.createElement('button');
     btn.type = 'button';

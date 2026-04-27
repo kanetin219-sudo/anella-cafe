@@ -175,9 +175,6 @@
     .summary-value { font-weight: 700; color: var(--text); }
     .line-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 16px; background: #06C755; color: #fff; border: none; border-radius: 12px; font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; margin-top: 12px; }
     .line-btn svg { width: 24px; height: 24px; fill: #fff; }
-    .line-redirect-area { margin-top: 16px; }
-    .countdown-badge { display: inline-block; background: #06C755; color: #fff; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; margin-bottom: 10px; }
-    .skip-line-btn { width: 100%; margin-top: 10px; padding: 12px; background: none; border: 1px solid var(--border); border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--text-soft); cursor: pointer; }
 
     /* ── ナビボタン ── */
     .nav-btns { display: flex; gap: 10px; margin-top: 20px; }
@@ -529,12 +526,9 @@
       <div class="complete-title">ご予約が完了しました！</div>
       <div class="complete-number">予約番号：<br><strong id="reservationNumber"></strong></div>
       <div class="complete-summary" id="completeSummary"></div>
-      <div class="line-redirect-area">
-        <p style="font-size:13px; color:var(--text-soft); margin:0 0 8px;">LINEに移動しています...</p>
-        <a id="lineRedirectBtn" href="#" class="line-btn" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
-          自動で開かない場合はここをタップ
-        </a>
+      <div style="margin-top:16px; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; font-size:13px; color:var(--text-soft); text-align:center;">
+        📧 ご登録のメールアドレスに予約確認メールをお送りしました<br>
+        <span style="font-size:12px;">前日・当日にもリマインドメールをお送りします</span>
       </div>
     </div>
   </div>
@@ -786,7 +780,7 @@ function renderCalendar() {
 
   for (let d = 1; d <= lastDate; d++) {
     const date = new Date(calYear, calMonth, d);
-    const dateStr = date.toISOString().slice(0, 10);
+    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const el = document.createElement('div');
     const dow = date.getDay();
     let cls = 'cal-day';
@@ -996,7 +990,6 @@ async function submitReservation() {
     buildCompleteSummary(reservationNumber);
     document.getElementById('progressBar').style.display = 'none';
     showStep(7);
-    startLineRedirect(reservationNumber);
 
   } catch (e) {
     document.getElementById('loadingOverlay').classList.remove('active');
@@ -1016,46 +1009,6 @@ function buildCompleteSummary(num) {
     rows.map(([k, v]) => `<div class="summary-row"><span class="summary-label">${k}</span><span class="summary-value">${v}</span></div>`).join('');
 }
 
-// ── LINE自動遷移 ──────────────────────────────────
-// LINE公式アカウントの@ID（@なし）を設定してください
-const LINE_ACCOUNT_ID = '246aqyui';
-
-let lineRedirectTimer = null;
-
-function buildLineMessage(reservationNumber) {
-  const optNames = fd.options && fd.options.length > 0
-    ? fd.options.map(o => o.name).join('、')
-    : 'なし';
-  return [
-    '【ANELLA CAFE 大分店 ご予約確認】',
-    '',
-    '予約番号：' + reservationNumber,
-    '来店日時：' + fd.visitDate + ' ' + fd.visitTime,
-    'ペット名：' + fd.petName + 'ちゃん',
-    'コース　：' + fd.course,
-    'オプション：' + optNames,
-    '合計（目安）：' + (fd.coursePrice > 0 ? '¥' + (fd.coursePrice + fd.optionsPrice).toLocaleString() : '要確認'),
-    '',
-    'この予約内容でよろしければそのまま送信してください。',
-    'ご不明な点もこちらからお気軽にご連絡ください。',
-  ].join('\n');
-}
-
-function startLineRedirect(reservationNumber) {
-  const msg = buildLineMessage(reservationNumber);
-  const lineUrl = 'https://line.me/R/oaMessage/@' + LINE_ACCOUNT_ID + '/?text=' + encodeURIComponent(msg);
-  document.getElementById('lineRedirectBtn').href = lineUrl;
-  window.location.href = lineUrl;
-}
-
-function cancelLineRedirect() {
-  if (lineRedirectTimer) {
-    clearInterval(lineRedirectTimer);
-    lineRedirectTimer = null;
-  }
-  document.getElementById('countdownBadge').style.display = 'none';
-  document.getElementById('skipLineBtn').style.display = 'none';
-}
 
 // ── 初期化 ────────────────────────────────────────
 buildBreedOptions();

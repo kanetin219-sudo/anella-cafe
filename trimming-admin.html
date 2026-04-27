@@ -233,6 +233,37 @@
     .del-block-btn:hover { background: var(--warn-bg); }
     .no-blocks { text-align: center; color: var(--text-soft); font-size: 13px; padding: 20px; }
 
+    /* ── 同意書 ── */
+    .consent-filter-bar {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    }
+    .consent-list { display: flex; flex-direction: column; gap: 10px; }
+    .consent-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px var(--shadow);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .consent-card:hover { border-color: var(--accent-light); box-shadow: 0 3px 10px var(--shadow); }
+    .consent-date-badge {
+      background: var(--accent); color: #fff; border-radius: 10px; padding: 8px 12px;
+      font-size: 13px; font-weight: 700; white-space: nowrap; text-align: center; min-width: 64px;
+    }
+    .consent-info { flex: 1; }
+    .consent-info-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .consent-info-sub { font-size: 12px; color: var(--text-soft); }
+    .consent-sig-count {
+      background: var(--warn-bg); border: 1px solid #F0C4B0; border-radius: 8px;
+      padding: 5px 10px; font-size: 12px; font-weight: 700; color: var(--primary); white-space: nowrap;
+    }
+    .no-consent { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 14px; }
+    .consent-modal-sig { margin-top: 14px; }
+    .consent-modal-sig-img {
+      border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 400px;
+      display: block; margin: 8px auto; background: #fff;
+    }
+    .consent-sig-label { font-size: 12px; color: var(--text-soft); margin-top: 8px; margin-bottom: 4px; }
+
     /* ── ローディング ── */
     .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(253,246,238,0.8); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
     .loading-overlay.active { display: flex; }
@@ -283,6 +314,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" id="tab1" onclick="switchTab(1)">📋 予約一覧</button>
     <button class="tab-btn" id="tab2" onclick="switchTab(2)">🚫 ブロック設定</button>
+    <button class="tab-btn" id="tab3" onclick="switchTab(3)">📝 同意書</button>
   </div>
 
   <div class="container">
@@ -333,6 +365,19 @@
 
       <div class="reservation-list" id="reservationList">
         <div class="no-reservations">読み込み中...</div>
+      </div>
+    </div>
+
+    <!-- ===== 同意書タブ ===== -->
+    <div class="tab-panel" id="panel3">
+      <div class="consent-filter-bar">
+        <span class="filter-label">日付</span>
+        <input type="date" id="consentFilterDate" onchange="loadConsentForms()">
+        <button class="btn-today" onclick="setConsentToday()">今日</button>
+        <button class="btn-today" style="background:var(--accent);" onclick="clearConsentFilter()">全件表示</button>
+      </div>
+      <div class="consent-list" id="consentList">
+        <div class="no-consent">読み込み中...</div>
       </div>
     </div>
 
@@ -431,6 +476,22 @@
     <textarea class="memo-area" id="memoArea" placeholder="スタッフ内部メモ（お客様には非表示）" maxlength="500"></textarea>
     <button class="save-btn" id="saveBtn" onclick="saveMemo()">保存する</button>
     <div class="save-ok" id="saveOk">✅ 保存しました</div>
+  </div>
+</div>
+
+<!-- ===== 同意書詳細モーダル ===== -->
+<div class="modal-overlay" id="consentModalOverlay" onclick="closeConsentModal(event)">
+  <div class="modal" id="consentModal">
+    <div class="modal-header">
+      <div class="modal-title" id="consentModalTitle">同意書詳細</div>
+      <button class="modal-close" onclick="closeConsentModalDirect()">✕</button>
+    </div>
+    <div class="section-label">基本情報</div>
+    <table class="detail-table" id="consentDetailTable"></table>
+    <div class="consent-modal-sig">
+      <div class="section-label" style="margin-top:16px;">署名</div>
+      <div id="consentSigContainer"></div>
+    </div>
   </div>
 </div>
 
@@ -624,10 +685,11 @@ function setupRealtime() {
 
 // ── タブ切替 ─────────────────────────────────────
 function switchTab(n) {
-  [1, 2].forEach(i => {
+  [1, 2, 3].forEach(i => {
     document.getElementById('tab' + i).classList.toggle('active', i === n);
     document.getElementById('panel' + i).classList.toggle('active', i === n);
   });
+  if (n === 3) loadConsentForms();
 }
 
 // ── 予約一覧 ──────────────────────────────────────
@@ -976,6 +1038,118 @@ async function submitManualReservation() {
     closeManualModalDirect();
     loadReservations();
   }, 1200);
+}
+
+// ── 同意書 ────────────────────────────────────────
+function setConsentToday() {
+  const d = new Date().toISOString().slice(0, 10);
+  document.getElementById('consentFilterDate').value = d;
+  loadConsentForms();
+}
+
+function clearConsentFilter() {
+  document.getElementById('consentFilterDate').value = '';
+  loadConsentForms();
+}
+
+async function loadConsentForms() {
+  const date = document.getElementById('consentFilterDate').value;
+  const listEl = document.getElementById('consentList');
+  listEl.innerHTML = '<div class="no-consent">読み込み中...</div>';
+
+  let query = supabase
+    .from('consent_forms')
+    .select('*')
+    .order('submitted_at', { ascending: false });
+
+  if (date) query = query.eq('visit_date', date);
+
+  const { data, error } = await query;
+  if (error) {
+    listEl.innerHTML = '<div class="no-consent">読み込みに失敗しました</div>';
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    listEl.innerHTML = '<div class="no-consent">該当する同意書はありません</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  data.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'consent-card';
+    const sigCount = Array.isArray(f.signatures) ? f.signatures.length : 0;
+    const submittedAt = f.submitted_at
+      ? new Date(f.submitted_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })
+      : '不明';
+    const attendees = [
+      f.adults > 0 ? `大人${f.adults}名` : null,
+      f.children > 0 ? `子ども${f.children}名` : null,
+      f.preschool > 0 ? `未就学児${f.preschool}名` : null,
+    ].filter(Boolean).join(' / ') || '不明';
+
+    card.innerHTML = `
+      <div class="consent-date-badge">${f.visit_date ? f.visit_date.slice(5) : '--'}</div>
+      <div class="consent-info">
+        <div class="consent-info-title">${f.visit_date || '日付不明'} — ${f.visit_count || '来店回数不明'}</div>
+        <div class="consent-info-sub">${attendees}　提出: ${submittedAt}</div>
+      </div>
+      <div class="consent-sig-count">署名 ${sigCount}件</div>
+    `;
+    card.onclick = () => openConsentModal(f);
+    listEl.appendChild(card);
+  });
+}
+
+function openConsentModal(f) {
+  document.getElementById('consentModalTitle').textContent = `同意書 — ${f.visit_date || '日付不明'}`;
+
+  const attendees = (f.adults || 0) + (f.children || 0) + (f.preschool || 0);
+  const submittedAt = f.submitted_at
+    ? new Date(f.submitted_at).toLocaleString('ja-JP')
+    : '不明';
+  const rows = [
+    ['来店日', f.visit_date || '不明'],
+    ['来店回数', f.visit_count || '不明'],
+    ['大人', f.adults != null ? f.adults + '名' : '不明'],
+    ['子ども（小学生以下）', f.children != null ? f.children + '名' : '不明'],
+    ['未就学児', f.preschool != null ? f.preschool + '名' : '不明'],
+    ['合計来場者', attendees + '名'],
+    ['好きなペット', f.favorite_pet || '不明'],
+    ['提出日時', submittedAt],
+  ];
+  document.getElementById('consentDetailTable').innerHTML =
+    rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+
+  const sigContainer = document.getElementById('consentSigContainer');
+  sigContainer.innerHTML = '';
+  const sigs = Array.isArray(f.signatures) ? f.signatures : [];
+  if (sigs.length === 0) {
+    sigContainer.innerHTML = '<div style="color:var(--text-soft); font-size:13px; padding:12px 0;">署名データなし</div>';
+  } else {
+    sigs.forEach((src, i) => {
+      const label = document.createElement('div');
+      label.className = 'consent-sig-label';
+      label.textContent = `署名 ${i + 1}`;
+      const img = document.createElement('img');
+      img.className = 'consent-modal-sig-img';
+      img.src = src;
+      img.alt = `署名${i + 1}`;
+      sigContainer.appendChild(label);
+      sigContainer.appendChild(img);
+    });
+  }
+
+  document.getElementById('consentModalOverlay').classList.add('active');
+}
+
+function closeConsentModal(e) {
+  if (e.target === document.getElementById('consentModalOverlay')) closeConsentModalDirect();
+}
+function closeConsentModalDirect() {
+  document.getElementById('consentModalOverlay').classList.remove('active');
 }
 
 // ── キーボード Enter でログイン ───────────────────

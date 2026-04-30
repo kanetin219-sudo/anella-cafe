@@ -196,6 +196,19 @@
     .err-msg { display: none; background: var(--warn-bg); border: 1px solid #F0C4B0; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--warn); margin-top: 10px; }
     .err-msg.active { display: block; }
 
+    /* ── 来店回数選択 ── */
+    .visit-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .visit-type-btn { border: 2px solid var(--border); border-radius: 14px; padding: 28px 14px; background: var(--surface); cursor: pointer; text-align: center; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; width: 100%; }
+    .visit-type-btn:hover { border-color: var(--primary-light); }
+    .visit-type-btn.selected { border-color: var(--primary); background: var(--warn-bg); }
+    .visit-type-icon { font-size: 36px; margin-bottom: 8px; }
+    .visit-type-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .visit-type-sub { font-size: 11px; color: var(--accent); background: #F0F8F6; border-radius: 4px; padding: 2px 8px; display: inline-block; margin-top: 4px; }
+    .lookup-result { background: #F0F8F6; border: 1px solid #C8E0DB; border-radius: 10px; padding: 14px; margin-top: 14px; font-size: 13px; display: none; }
+    .lookup-result.active { display: block; }
+    .returning-banner { background: #F0F8F6; border: 1px solid #C8E0DB; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: var(--accent); display: none; }
+    .returning-banner.active { display: block; }
+
     @media (max-width: 420px) {
       .course-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .option-grid { grid-template-columns: 1fr; }
@@ -250,6 +263,40 @@
 
 <div class="container">
 
+  <!-- ===== STEP 0: 来店回数選択 ===== -->
+  <div class="step active" id="step0">
+    <div class="step-heading">はじめに教えてください</div>
+    <div class="step-desc">2回目以降の方は過去の情報を自動入力できます</div>
+    <div class="visit-type-grid">
+      <button type="button" class="visit-type-btn" id="btnNew" onclick="selectVisitType('new')">
+        <div class="visit-type-icon">🐾</div>
+        <div class="visit-type-name">初めての方</div>
+      </button>
+      <button type="button" class="visit-type-btn" id="btnReturn" onclick="selectVisitType('return')">
+        <div class="visit-type-icon">✨</div>
+        <div class="visit-type-name">2回目以降の方</div>
+        <div class="visit-type-sub">情報を自動入力</div>
+      </button>
+    </div>
+
+    <div id="returnLookup" style="display:none;">
+      <div class="card">
+        <div class="field">
+          <label class="field-label">ご登録の電話番号 <span class="req">必須</span></label>
+          <input type="tel" id="lookupPhone" placeholder="例：09012345678" maxlength="13">
+        </div>
+        <button type="button" class="btn-next full" id="lookupBtn" onclick="lookupPastReservation()" style="margin-top:0;">履歴を検索する 🔍</button>
+        <div class="err-msg" id="errLookup"></div>
+        <div class="lookup-result" id="lookupResult"></div>
+      </div>
+    </div>
+
+    <div class="err-msg" id="err0"></div>
+    <div class="nav-btns" id="step0Next" style="display:none;">
+      <button type="button" class="btn-next full" onclick="goNext(0)">次へ →</button>
+    </div>
+  </div>
+
   <!-- ===== STEP 1: コース選択 ===== -->
   <div class="step active" id="step1">
     <div class="step-heading">コースを選択</div>
@@ -270,7 +317,8 @@
     </div>
     <div class="err-msg" id="err1"></div>
     <div class="nav-btns">
-      <button type="button" class="btn-next full" onclick="goNext(1)">次へ →</button>
+      <button type="button" class="btn-back" onclick="goBack(1)">← 戻る</button>
+      <button type="button" class="btn-next" onclick="goNext(1)">次へ →</button>
     </div>
   </div>
 
@@ -361,6 +409,11 @@
   <div class="step" id="step5">
     <div class="step-heading">ペット・お客様情報</div>
     <div class="step-desc">必要事項をご入力ください</div>
+
+    <div class="returning-banner" id="returningBanner">
+      ✅ 前回のご利用情報を自動入力しました。内容をご確認の上、変更がある場合は修正してください。<br>
+      <span style="color:var(--text-soft);">毛玉の有無・スタッフへの伝言は毎回ご入力ください。</span>
+    </div>
 
     <div class="card">
       <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:14px;">🐾 ペット情報</div>
@@ -626,6 +679,11 @@ const OPTIONS_LIST = [
 
 const TIME_SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
 
+// ── リピーター状態 ───────────────────────────────
+let visitType = '';
+let isReturning = false;
+let returnedData = null;
+
 // ── フォーム状態 ──────────────────────────────────
 const fd = {
   course: '', breed: '', breedDisplay: '', coursePrice: 0,
@@ -662,7 +720,15 @@ function showStep(n) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
   document.getElementById('step' + n).classList.add('active');
   currentStep = n;
-  updateProgress(n);
+  if (n === 0) {
+    document.getElementById('progressBar').style.display = 'none';
+  } else {
+    document.getElementById('progressBar').style.display = 'flex';
+    updateProgress(n);
+  }
+  if (n === 5) {
+    document.getElementById('returningBanner').classList.toggle('active', isReturning);
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   clearErr(n);
 }
@@ -679,6 +745,81 @@ function clearErr(n) {
   if (el) el.classList.remove('active');
 }
 
+// ── STEP 0: 来店回数選択 ──────────────────────────
+function selectVisitType(type) {
+  visitType = type;
+  document.getElementById('btnNew').classList.toggle('selected', type === 'new');
+  document.getElementById('btnReturn').classList.toggle('selected', type === 'return');
+  if (type === 'return') {
+    document.getElementById('returnLookup').style.display = 'block';
+    document.getElementById('step0Next').style.display = 'none';
+  } else {
+    document.getElementById('returnLookup').style.display = 'none';
+    document.getElementById('step0Next').style.display = 'flex';
+    isReturning = false;
+    returnedData = null;
+  }
+}
+
+async function lookupPastReservation() {
+  const phone = document.getElementById('lookupPhone').value.trim();
+  const errEl = document.getElementById('errLookup');
+  const resultEl = document.getElementById('lookupResult');
+  const btn = document.getElementById('lookupBtn');
+
+  errEl.classList.remove('active');
+  resultEl.classList.remove('active');
+
+  if (!phone) {
+    errEl.textContent = '⚠ 電話番号を入力してください。';
+    errEl.classList.add('active');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '検索中...';
+
+  const { data, error } = await supabase.rpc('lookup_reservation_by_phone', { p_phone: phone });
+
+  btn.disabled = false;
+  btn.textContent = '履歴を検索する 🔍';
+
+  if (error || !data) {
+    errEl.textContent = '⚠ 該当する予約履歴が見つかりませんでした。電話番号を確認するか「初めての方」を選択してください。';
+    errEl.classList.add('active');
+    return;
+  }
+
+  returnedData = data;
+  isReturning = true;
+  resultEl.innerHTML = `
+    <div style="font-weight:700; color:var(--accent); margin-bottom:8px;">✅ 前回のご利用情報が見つかりました</div>
+    <div>🐾 ${data.pet_name}ちゃん（${data.breed}・${data.gender}）</div>
+    <div>👤 ${data.owner_name} 様</div>
+    <div style="font-size:12px; color:var(--text-soft); margin-top:4px;">前回来店：${data.visit_date}</div>
+  `;
+  resultEl.classList.add('active');
+  document.getElementById('step0Next').style.display = 'flex';
+}
+
+function prefillStep5() {
+  if (!returnedData) return;
+  const r = returnedData;
+  document.getElementById('petName').value = r.pet_name || '';
+  document.getElementById('gender').value = r.gender || '';
+  document.getElementById('weight').value = r.weight || '';
+  document.getElementById('petAge').value = r.pet_age || '';
+  document.getElementById('matting').value = '';
+  document.getElementById('visitExperience').value = '';
+  document.getElementById('vaccineRabies').value = r.vaccine_rabies || '';
+  document.getElementById('vaccine5mix').value = r.vaccine_5mix || '';
+  document.getElementById('ownerName').value = r.owner_name || '';
+  document.getElementById('phone').value = r.phone || '';
+  document.getElementById('lineName').value = r.line_name || '';
+  document.getElementById('email').value = r.email || '';
+  document.getElementById('staffNote').value = '';
+}
+
 // ── STEP 1: コース選択 ─────────────────────────────
 function selectCourse(course) {
   fd.course = course;
@@ -688,7 +829,12 @@ function selectCourse(course) {
 }
 
 function goNext(step) {
-  if (step === 1) {
+  if (step === 0) {
+    if (!visitType) { showErr(0, 'ご利用回数を選択してください。'); return; }
+    if (visitType === 'return' && !isReturning) { showErr(0, '電話番号で履歴を検索してください。'); return; }
+    if (isReturning) prefillStep5();
+    showStep(1);
+  } else if (step === 1) {
     if (!fd.course) { showErr(1, 'コースを選択してください。'); return; }
     showStep(2);
   } else if (step === 2) {
@@ -727,7 +873,11 @@ function goNext(step) {
 }
 
 function goBack(step) {
-  showStep(step - 1);
+  if (step === 1) {
+    showStep(0);
+  } else {
+    showStep(step - 1);
+  }
 }
 
 // ── STEP 2: 犬種 ───────────────────────────────────

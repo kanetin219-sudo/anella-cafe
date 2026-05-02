@@ -1182,6 +1182,7 @@ async function submitReservation() {
       visit_experience: fd.visitExperience,
       pet_age: fd.petAge,
       pet_name: fd.petName,
+      vaccine_status: `狂犬病:${fd.vaccineRabies} / 5種:${fd.vaccine5mix}`,
       vaccine_rabies: fd.vaccineRabies,
       vaccine_5mix: fd.vaccine5mix,
       staff_note: fd.staffNote || null,

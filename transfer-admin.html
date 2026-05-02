@@ -680,8 +680,8 @@
       <div class="form-group">
         <label class="form-label">担当車</label>
         <select class="form-select" id="userModalCar">
+          <option value="社用車">社用車</option>
           <option value="車1">車1</option>
-          <option value="車2">車2</option>
         </select>
       </div>
       <div class="form-group">
@@ -726,8 +726,8 @@
       <div class="form-group">
         <label class="form-label">車</label>
         <select class="form-select" id="addRiderCar">
+          <option value="社用車">社用車</option>
           <option value="車1">車1</option>
-          <option value="車2">車2</option>
         </select>
       </div>
     </div>
@@ -1037,7 +1037,7 @@ async function generateMonthSchedule() {
         status: '出席',
         pickup_time: def.pickup_time,
         dropoff_time: def.dropoff_time,
-        car: def.transfer_users?.car || '車1',
+        car: def.transfer_users?.car || '社用車',
         pickup_order: def.pickup_order,
         dropoff_order: def.dropoff_order,
         updated_by: currentUser?.email || '',
@@ -1097,7 +1097,7 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
 
   const container = document.getElementById('transferGroups');
   container.innerHTML = groups.map(g => {
-    const dd = dailyDrivers.find(d => d.car === '車1') || {};
+    const dd = dailyDrivers.find(d => d.car === '社用車') || {};
     const driverVal = dd[g.driverKey] || '';
     return `
     <div class="group-card">
@@ -1201,11 +1201,11 @@ async function toggleAbsent(id, currentlyAbsent) {
 }
 
 async function saveDriver(date, driverKey, driverName) {
-  const { data: existing } = await supabase.from('transfer_daily_drivers').select('*').eq('drive_date', date).eq('car', '車1');
+  const { data: existing } = await supabase.from('transfer_daily_drivers').select('*').eq('drive_date', date).eq('car', '社用車');
   if (existing && existing.length > 0) {
-    await supabase.from('transfer_daily_drivers').update({ [driverKey]: driverName }).eq('drive_date', date).eq('car', '車1');
+    await supabase.from('transfer_daily_drivers').update({ [driverKey]: driverName }).eq('drive_date', date).eq('car', '社用車');
   } else {
-    await supabase.from('transfer_daily_drivers').insert({ drive_date: date, car: '車1', [driverKey]: driverName });
+    await supabase.from('transfer_daily_drivers').insert({ drive_date: date, car: '社用車', [driverKey]: driverName });
   }
   toast('ドライバーを保存しました', 'success');
 }
@@ -1288,7 +1288,7 @@ function openUserModal(userId) {
   document.getElementById('userModalTitle').textContent = userId ? '利用者を編集' : '利用者を追加';
   if (!userId) {
     ['userModalName','userModalKana','userModalAddress','userModalPhone','userModalFamilyPhone','userModalNote'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('userModalCar').value = '車1';
+    document.getElementById('userModalCar').value = '社用車';
     document.getElementById('userModalActive').value = 'true';
     openModal('userModal');
     return;
@@ -1300,7 +1300,7 @@ function openUserModal(userId) {
     document.getElementById('userModalAddress').value = u.address || '';
     document.getElementById('userModalPhone').value = u.phone || '';
     document.getElementById('userModalFamilyPhone').value = u.family_phone || '';
-    document.getElementById('userModalCar').value = u.car || '車1';
+    document.getElementById('userModalCar').value = u.car || '社用車';
     document.getElementById('userModalActive').value = u.is_active ? 'true' : 'false';
     document.getElementById('userModalNote').value = u.note || '';
     openModal('userModal');

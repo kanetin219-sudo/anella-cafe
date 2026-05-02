@@ -1414,6 +1414,7 @@ async function saveDefaultSchedule() {
   const existMap = {};
   (existing||[]).forEach(e => { existMap[e.day_of_week] = e.id; });
 
+  const scheduleByDow = {};
   for (let i = 0; i < 7; i++) {
     const isAttend = document.getElementById(`dowChk_${i}`)?.checked || false;
     const pickupTime = document.getElementById(`schedPickup_${i}`)?.value;
@@ -1421,13 +1422,73 @@ async function saveDefaultSchedule() {
     const pickupOrder = parseInt(document.getElementById(`schedPickupOrder_${i}`)?.value) || 1;
     const dropoffOrder = parseInt(document.getElementById(`schedDropoffOrder_${i}`)?.value) || 1;
     const payload = { user_id: selectedUserId, day_of_week: i, is_attend: isAttend, pickup_time: pickupTime, dropoff_time: dropoffTime, pickup_order: pickupOrder, dropoff_order: dropoffOrder };
+    scheduleByDow[i] = { is_attend: isAttend, pickup_time: pickupTime, dropoff_time: dropoffTime, pickup_order: pickupOrder, dropoff_order: dropoffOrder };
     if (existMap[i]) {
       await supabase.from('transfer_default_schedules').update(payload).eq('id', existMap[i]);
     } else {
       await supabase.from('transfer_default_schedules').insert(payload);
     }
   }
-  toast('基本スケジュールを保存しました', 'success');
+
+  const count = await autoGenerateForUser(selectedUserId, scheduleByDow);
+  if (count > 0) {
+    toast(`基本スケジュールを保存し、${count}件を自動反映しました`, 'success');
+  } else {
+    toast('基本スケジュールを保存しました（新規反映なし）', 'success');
+  }
+}
+
+async function autoGenerateForUser(userId, scheduleByDow) {
+  const { data: user } = await supabase.from('transfer_users').select('car').eq('id', userId).single();
+  const car = user?.car || '社用車';
+
+  const today = new Date();
+  const endDate = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+
+  const todayDateStr = toDateStr(today);
+  const endDateStr = toDateStr(endDate);
+
+  const { data: existing } = await supabase
+    .from('transfer_schedules')
+    .select('schedule_date')
+    .eq('user_id', userId)
+    .gte('schedule_date', todayDateStr)
+    .lte('schedule_date', endDateStr);
+
+  const existSet = new Set((existing || []).map(e => e.schedule_date));
+
+  const inserts = [];
+  const cur = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  while (cur <= endDate) {
+    const dow = cur.getDay();
+    const dateStr = toDateStr(cur);
+    const sched = scheduleByDow[dow];
+    if (sched?.is_attend && !existSet.has(dateStr)) {
+      inserts.push({
+        user_id: userId,
+        schedule_date: dateStr,
+        status: '出席',
+        pickup_time: sched.pickup_time,
+        dropoff_time: sched.dropoff_time,
+        car,
+        pickup_order: sched.pickup_order,
+        dropoff_order: sched.dropoff_order,
+        updated_by: currentUser?.email || '',
+        updated_at: new Date().toISOString()
+      });
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  if (inserts.length > 0) {
+    const { error } = await supabase.from('transfer_schedules').insert(inserts);
+    if (error) { console.error('自動反映エラー:', error); return 0; }
+  }
+  return inserts.length;
+}
+
+function toDateStr(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
 
 // ============================================================

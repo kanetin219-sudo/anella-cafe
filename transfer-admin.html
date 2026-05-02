@@ -1079,14 +1079,16 @@ async function loadTransferPage() {
 }
 
 function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
-  const go = schedules.filter(s => s.pickup_time && s.pickup_time < '13:00').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
+  const go10 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
+  const go11 = schedules.filter(s => s.pickup_time && s.pickup_time >= '10:30' && s.pickup_time < '13:00').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
   const ret15 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '14:30' && s.dropoff_time < '15:30').sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
   const ret16 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '15:30').sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
 
   const groups = [
-    { key: 'go', label: '🌅 行き', items: go, driverKey: 'pickup_driver', badge: 'badge-primary' },
-    { key: 'return15', label: '🌇 帰り 15:00', items: ret15, driverKey: 'dropoff_driver', badge: 'badge-accent' },
-    { key: 'return16', label: '🌙 帰り 16:00', items: ret16, driverKey: 'dropoff_driver', badge: 'badge-green' },
+    { key: 'go10', label: '🌅 行き 10:00', items: go10, driverKey: 'pickup_driver', badge: 'badge-primary' },
+    { key: 'go11', label: '🌅 行き 11:00', items: go11, driverKey: 'pickup_driver', badge: 'badge-primary' },
+    { key: 'return15', label: '🌇 帰り 15:00', items: ret15, driverKey: 'dropoff_driver_15', badge: 'badge-accent' },
+    { key: 'return16', label: '🌙 帰り 16:00', items: ret16, driverKey: 'dropoff_driver_16', badge: 'badge-green' },
   ];
 
   const container = document.getElementById('transferGroups');

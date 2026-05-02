@@ -409,6 +409,27 @@
       .page-content { margin-left: 72px; }
     }
 
+    /* ===== タブバー ===== */
+    .tab-bar { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .tab-btn { flex: 1; padding: 9px 4px; font-size: 12px; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-soft); font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s; }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+    /* ===== ドライバー管理 ===== */
+    .driver-mgmt-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .driver-mgmt-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+    .driver-mgmt-name { font-weight: 700; font-size: 14px; }
+    /* ===== 週間予定グリッド ===== */
+    .week-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; }
+    .week-table { width: 100%; border-collapse: collapse; min-width: 520px; }
+    .week-table th { background: var(--bg); padding: 8px 3px; text-align: center; font-weight: 700; border: 1px solid var(--border); color: var(--text-mid); font-size: 11px; }
+    .week-table td { padding: 4px 2px; border: 1px solid var(--border); text-align: center; vertical-align: middle; }
+    .week-name-cell { text-align: left !important; padding: 6px 8px !important; font-weight: 700; font-size: 12px; min-width: 70px; position: sticky; left: 0; background: var(--surface); z-index: 1; white-space: nowrap; }
+    .week-cell { min-height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; border-radius: 6px; padding: 4px 2px; transition: background 0.15s; }
+    .week-cell:hover { background: rgba(201,106,59,0.1); }
+    .week-cell.attend { background: rgba(74,124,111,0.08); }
+    .week-cell-time { font-size: 11px; font-weight: 700; color: var(--primary); line-height: 1.3; }
+    .week-cell-dropoff { font-size: 10px; color: var(--accent); }
+    .week-cell.off { color: var(--text-soft); font-size: 10px; }
+
     /* ===== ローディング ===== */
     .loading-overlay {
       position: fixed; inset: 0; background: rgba(253,246,238,0.8); z-index: 9000;
@@ -537,33 +558,72 @@
 
     <!-- ===== 利用者管理 ===== -->
     <div class="page" id="pageUsers">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="section-title" style="margin:0;border:none;">利用者一覧</div>
-        <button class="btn btn-primary btn-sm" onclick="openUserModal()">＋ 新規追加</button>
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabBtnUsers" onclick="switchUserTab('users')">👥 利用者</button>
+        <button class="tab-btn" id="tabBtnWeekly" onclick="switchUserTab('weekly')">📅 週間予定</button>
+        <button class="tab-btn" id="tabBtnDrivers" onclick="switchUserTab('drivers')">🚗 ドライバー</button>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div style="overflow-x:auto;">
-          <table class="user-list-table" id="userTable">
+
+      <!-- 利用者一覧 -->
+      <div id="userTabContent">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="section-title" style="margin:0;border:none;">利用者一覧</div>
+          <button class="btn btn-primary btn-sm" onclick="openUserModal()">＋ 新規追加</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="overflow-x:auto;">
+            <table class="user-list-table" id="userTable">
+              <thead>
+                <tr>
+                  <th>名前</th>
+                  <th>よみ</th>
+                  <th>担当車</th>
+                  <th>状態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody">
+                <tr><td colspan="5" class="empty-state">読み込み中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="schedule-panel" id="schedulePanel" style="display:none;">
+          <div class="schedule-panel-title" id="schedulePanelTitle">基本スケジュール設定</div>
+          <div class="dow-grid" id="dowGrid"></div>
+          <div id="schedDetailRows"></div>
+          <button class="btn btn-primary btn-sm" onclick="saveDefaultSchedule()">保存</button>
+        </div>
+      </div>
+
+      <!-- 週間予定表 -->
+      <div id="weeklyTabContent" style="display:none;">
+        <div class="section-title">週間スケジュール（基本設定）</div>
+        <div class="week-grid">
+          <table class="week-table">
             <thead>
               <tr>
-                <th>名前</th>
-                <th>よみ</th>
-                <th>担当車</th>
-                <th>状態</th>
-                <th>操作</th>
+                <th class="week-name-cell">名前</th>
+                <th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th>
               </tr>
             </thead>
-            <tbody id="userTableBody">
-              <tr><td colspan="5" class="empty-state">読み込み中...</td></tr>
+            <tbody id="weeklyTableBody">
+              <tr><td colspan="8" class="empty-state">読み込み中...</td></tr>
             </tbody>
           </table>
         </div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:8px;">※ セルをタップして編集。保存すると今日から来月末まで自動反映されます。</div>
       </div>
-      <div class="schedule-panel" id="schedulePanel" style="display:none;">
-        <div class="schedule-panel-title" id="schedulePanelTitle">基本スケジュール設定</div>
-        <div class="dow-grid" id="dowGrid"></div>
-        <div id="schedDetailRows"></div>
-        <button class="btn btn-primary btn-sm" onclick="saveDefaultSchedule()">保存</button>
+
+      <!-- ドライバー管理 -->
+      <div id="driversTabContent" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="section-title" style="margin:0;border:none;">ドライバー一覧</div>
+          <button class="btn btn-primary btn-sm" onclick="openDriverEditModal()">＋ 新規追加</button>
+        </div>
+        <div class="driver-mgmt-list" id="driverMgmtList">
+          <div class="empty-state">読み込み中...</div>
+        </div>
       </div>
     </div>
 
@@ -717,8 +777,8 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">グループ</label>
-        <select class="form-select" id="addRiderGroup">
-          <option value="go">行き</option>
+        <select class="form-select" id="addRiderGroup" onchange="onAddGroupChange(this.value)">
+          <option value="go">行き（帰りも自動設定）</option>
           <option value="return15">帰り 15:00</option>
           <option value="return16">帰り 16:00</option>
         </select>
@@ -731,9 +791,94 @@
         </select>
       </div>
     </div>
+    <div class="form-group" id="addRiderTimeRow" style="display:block;">
+      <label class="form-label">行き時間</label>
+      <select class="form-select" id="addRiderPickupTime">
+        <option value="10:00">10:00（帰り15:00自動）</option>
+        <option value="11:00">11:00（帰り16:00自動）</option>
+        <option value="12:00">12:00（帰り15:00自動）</option>
+      </select>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="addRiderToSchedule()">追加</button>
       <button class="btn btn-ghost" onclick="closeModal('addRiderModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: ドライバー追加/編集 ===== -->
+<div class="modal-overlay" id="driverEditModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="driverEditModalTitle">ドライバーを追加</span>
+      <button class="modal-close" onclick="closeModal('driverEditModal')">✕</button>
+    </div>
+    <input type="hidden" id="driverEditId">
+    <div class="form-group">
+      <label class="form-label">名前 *</label>
+      <input type="text" class="form-input" id="driverEditName" placeholder="例：坂本">
+    </div>
+    <div class="form-group">
+      <label class="form-label">状態</label>
+      <select class="form-select" id="driverEditActive">
+        <option value="true">有効</option>
+        <option value="false">無効</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveDriverEdit()">保存</button>
+      <button class="btn btn-ghost" onclick="closeModal('driverEditModal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル: 週間予定セル編集 ===== -->
+<div class="modal-overlay" id="weekCellModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="weekCellModalTitle">スケジュール編集</span>
+      <button class="modal-close" onclick="closeModal('weekCellModal')">✕</button>
+    </div>
+    <input type="hidden" id="weekCellUserId">
+    <input type="hidden" id="weekCellDow">
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="weekCellAttend" style="width:18px;height:18px;">
+        <span class="form-label" style="margin:0;">出席する</span>
+      </label>
+    </div>
+    <div id="weekCellTimeFields">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">行き時間</label>
+          <select class="form-select" id="weekCellPickup">
+            <option value="10:00">10:00</option>
+            <option value="11:00">11:00</option>
+            <option value="12:00">12:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">帰り時間</label>
+          <select class="form-select" id="weekCellDropoff">
+            <option value="15:00">15:00</option>
+            <option value="16:00">16:00</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">送迎順(行)</label>
+          <input type="number" class="form-input" id="weekCellPickupOrder" value="1" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">送迎順(帰)</label>
+          <input type="number" class="form-input" id="weekCellDropoffOrder" value="1" min="1" max="20">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveWeekCell()">保存・自動反映</button>
+      <button class="btn btn-ghost" onclick="closeModal('weekCellModal')">キャンセル</button>
     </div>
   </div>
 </div>
@@ -1245,9 +1390,18 @@ async function addRiderToSchedule() {
   const userId = document.getElementById('addRiderSelect').value;
   const group = document.getElementById('addRiderGroup').value;
   const car = document.getElementById('addRiderCar').value;
-  const isGo = group === 'go';
-  const pickupTime = isGo ? '09:00' : null;
-  const dropoffTime = group === 'return15' ? '15:00' : group === 'return16' ? '16:00' : null;
+
+  let pickupTime = null;
+  let dropoffTime = null;
+
+  if (group === 'go') {
+    pickupTime = document.getElementById('addRiderPickupTime').value;
+    dropoffTime = pickupTime < '10:30' ? '15:00' : '16:00';
+  } else if (group === 'return15') {
+    dropoffTime = '15:00';
+  } else {
+    dropoffTime = '16:00';
+  }
 
   const { error } = await supabase.from('transfer_schedules').insert({
     user_id: userId,
@@ -1265,6 +1419,10 @@ async function addRiderToSchedule() {
   toast('追加しました', 'success');
   closeModal('addRiderModal');
   loadTransferPage();
+}
+
+function onAddGroupChange(val) {
+  document.getElementById('addRiderTimeRow').style.display = val === 'go' ? 'block' : 'none';
 }
 
 // ============================================================
@@ -1489,6 +1647,158 @@ async function autoGenerateForUser(userId, scheduleByDow) {
 
 function toDateStr(date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+// ============================================================
+//  ユーザータブ切り替え
+// ============================================================
+function switchUserTab(tab) {
+  ['users','weekly','drivers'].forEach(t => {
+    document.getElementById(`${t}TabContent`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`tabBtn${capitalize(t)}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'weekly') loadWeeklySchedule();
+  if (tab === 'drivers') loadDriversTab();
+}
+
+// ============================================================
+//  週間予定表
+// ============================================================
+async function loadWeeklySchedule() {
+  const tbody = document.getElementById('weeklyTableBody');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty-state">読み込み中...</td></tr>';
+
+  const { data: users } = await supabase.from('transfer_users').select('id, name').eq('is_active', true).order('kana');
+  const { data: defaults } = await supabase.from('transfer_default_schedules').select('*');
+
+  if (!users || users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">利用者がいません</td></tr>';
+    return;
+  }
+
+  const defMap = {};
+  (defaults || []).forEach(d => {
+    if (!defMap[d.user_id]) defMap[d.user_id] = {};
+    defMap[d.user_id][d.day_of_week] = d;
+  });
+
+  tbody.innerHTML = users.map(u => {
+    const cells = [1,2,3,4,5,6,0].map(dow => {
+      const d = defMap[u.id]?.[dow];
+      if (!d || !d.is_attend) {
+        return `<td><div class="week-cell off" onclick="openWeekCellModal('${u.id}','${u.name.replace(/'/g,"\\'")}',${dow})">休</div></td>`;
+      }
+      return `<td><div class="week-cell attend" onclick="openWeekCellModal('${u.id}','${u.name.replace(/'/g,"\\'")}',${dow})">
+        <div class="week-cell-time">${d.pickup_time||''}</div>
+        <div class="week-cell-dropoff">${d.dropoff_time||''}</div>
+      </div></td>`;
+    }).join('');
+    return `<tr><td class="week-name-cell">${u.name}</td>${cells}</tr>`;
+  }).join('');
+}
+
+async function openWeekCellModal(userId, userName, dow) {
+  const DOW_LABEL = ['日','月','火','水','木','金','土'];
+  document.getElementById('weekCellUserId').value = userId;
+  document.getElementById('weekCellDow').value = dow;
+  document.getElementById('weekCellModalTitle').textContent = `${userName}（${DOW_LABEL[dow]}曜日）`;
+
+  const { data: existing } = await supabase.from('transfer_default_schedules')
+    .select('*').eq('user_id', userId).eq('day_of_week', dow).single();
+
+  const isAttend = existing?.is_attend || false;
+  document.getElementById('weekCellAttend').checked = isAttend;
+  document.getElementById('weekCellPickup').value = existing?.pickup_time || '10:00';
+  document.getElementById('weekCellDropoff').value = existing?.dropoff_time || '15:00';
+  document.getElementById('weekCellPickupOrder').value = existing?.pickup_order || 1;
+  document.getElementById('weekCellDropoffOrder').value = existing?.dropoff_order || 1;
+
+  openModal('weekCellModal');
+}
+
+async function saveWeekCell() {
+  const userId = document.getElementById('weekCellUserId').value;
+  const dow = parseInt(document.getElementById('weekCellDow').value);
+  const isAttend = document.getElementById('weekCellAttend').checked;
+  const pickupTime = document.getElementById('weekCellPickup').value;
+  const dropoffTime = document.getElementById('weekCellDropoff').value;
+  const pickupOrder = parseInt(document.getElementById('weekCellPickupOrder').value) || 1;
+  const dropoffOrder = parseInt(document.getElementById('weekCellDropoffOrder').value) || 1;
+
+  const payload = { user_id: userId, day_of_week: dow, is_attend: isAttend, pickup_time: pickupTime, dropoff_time: dropoffTime, pickup_order: pickupOrder, dropoff_order: dropoffOrder };
+
+  const { data: existing } = await supabase.from('transfer_default_schedules').select('id').eq('user_id', userId).eq('day_of_week', dow).single();
+  if (existing?.id) {
+    await supabase.from('transfer_default_schedules').update(payload).eq('id', existing.id);
+  } else {
+    await supabase.from('transfer_default_schedules').insert(payload);
+  }
+
+  const scheduleByDow = { [dow]: { is_attend: isAttend, pickup_time: pickupTime, dropoff_time: dropoffTime, pickup_order: pickupOrder, dropoff_order: dropoffOrder } };
+  const count = await autoGenerateForUser(userId, scheduleByDow);
+
+  closeModal('weekCellModal');
+  loadWeeklySchedule();
+  toast(count > 0 ? `保存・${count}件を自動反映しました` : '保存しました（新規反映なし）', 'success');
+}
+
+// ============================================================
+//  ドライバー管理タブ
+// ============================================================
+async function loadDriversTab() {
+  const list = document.getElementById('driverMgmtList');
+  list.innerHTML = '<div class="empty-state">読み込み中...</div>';
+  const { data: drivers } = await supabase.from('transfer_drivers').select('*').order('name');
+  if (!drivers || drivers.length === 0) {
+    list.innerHTML = '<div class="empty-state">ドライバーがいません</div>';
+    return;
+  }
+  list.innerHTML = drivers.map(d => `
+    <div class="driver-mgmt-item">
+      <div>
+        <div class="driver-mgmt-name">${d.name}</div>
+        <div class="driver-mgmt-status">${d.is_active ? '✅ 有効' : '⛔ 無効'}</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline btn-sm" onclick="openDriverEditModal('${d.id}','${d.name}',${d.is_active})">編集</button>
+        <button class="btn btn-warn btn-sm" onclick="deleteDriverFromList('${d.id}','${d.name}')">削除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openDriverEditModal(id, name, isActive) {
+  document.getElementById('driverEditId').value = id || '';
+  document.getElementById('driverEditModalTitle').textContent = id ? 'ドライバーを編集' : 'ドライバーを追加';
+  document.getElementById('driverEditName').value = name || '';
+  document.getElementById('driverEditActive').value = isActive === false ? 'false' : 'true';
+  openModal('driverEditModal');
+}
+
+async function saveDriverEdit() {
+  const id = document.getElementById('driverEditId').value;
+  const name = document.getElementById('driverEditName').value.trim();
+  const isActive = document.getElementById('driverEditActive').value === 'true';
+  if (!name) { toast('名前を入力してください', 'warn'); return; }
+
+  if (id) {
+    const { error } = await supabase.from('transfer_drivers').update({ name, is_active: isActive }).eq('id', id);
+    if (error) { toast('更新失敗: ' + error.message, 'warn'); return; }
+  } else {
+    const { error } = await supabase.from('transfer_drivers').insert({ name, is_active: isActive });
+    if (error) { toast('追加失敗: ' + error.message, 'warn'); return; }
+  }
+  toast('保存しました', 'success');
+  closeModal('driverEditModal');
+  loadDriversTab();
+}
+
+async function deleteDriverFromList(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  const { error } = await supabase.from('transfer_drivers').delete().eq('id', id);
+  if (error) { toast('削除失敗: ' + error.message, 'warn'); return; }
+  toast('削除しました', '');
+  loadDriversTab();
 }
 
 // ============================================================

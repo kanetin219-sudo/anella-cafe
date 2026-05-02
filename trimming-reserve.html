@@ -671,9 +671,7 @@ const OPTIONS_LIST = [
   { name: '肛門腺絞り',         price: 500 },
   { name: '部分カット',         price: 700 },
   { name: '毛玉カット',         price: 700 },
-  { name: 'マイクロバブル',     price: 1000 },
   { name: '顔カット',           price: 1500 },
-  { name: 'ハーブパック',       price: 2000 },
   { name: '3点ケアセット',      price: 1200 },
 ];
 
@@ -1065,7 +1063,7 @@ async function loadTimeSlots() {
 
 function selectTime(time, btn) {
   fd.visitTime = time;
-  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#timeGrid .time-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
 

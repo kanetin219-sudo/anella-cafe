@@ -1283,13 +1283,11 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
 function renderRiderItem(s, order, group) {
   const name = s.transfer_users?.name || '不明';
   const isAbsent = s.status === '欠席';
-  const time = group === 'go' ? (s.pickup_time || '') : (s.dropoff_time || '');
   return `
   <div class="rider-item ${isAbsent?'absent':''}" draggable="true" data-id="${s.id}" data-group="${group}">
     <span class="drag-handle">⠿</span>
     <div class="rider-order">${order}</div>
     <div class="rider-name">${name}</div>
-    <div class="rider-time">${time}</div>
     <button class="rider-absent-btn ${isAbsent?'active':''}" onclick="toggleAbsent('${s.id}','${isAbsent}')">
       ${isAbsent ? '出席に戻す' : '欠席'}
     </button>
@@ -1699,22 +1697,20 @@ async function loadWeeklySchedule() {
       const d = defMap[u.id]?.[dow];
       const nameEsc = u.name.replace(/"/g, '&quot;');
       if (!d || !d.is_attend) {
-        return `<td><div class="week-cell off" data-uid="${u.id}" data-dow="${dow}" data-name="${nameEsc}">休</div></td>`;
+        return `<td><div class="week-cell off" data-uid="${u.id}" data-dow="${dow}" data-name="${nameEsc}" onclick="handleWeekCellClick(this)">休</div></td>`;
       }
-      return `<td><div class="week-cell attend" data-uid="${u.id}" data-dow="${dow}" data-name="${nameEsc}">
-        <div class="week-cell-time">${d.pickup_time||''}</div>
-        <div class="week-cell-dropoff">${d.dropoff_time||''}</div>
+      return `<td><div class="week-cell attend" data-uid="${u.id}" data-dow="${dow}" data-name="${nameEsc}" onclick="handleWeekCellClick(this)">
+        <div class="week-cell-time" style="pointer-events:none;">${d.pickup_time||''}</div>
+        <div class="week-cell-dropoff" style="pointer-events:none;">${d.dropoff_time||''}</div>
       </div></td>`;
     }).join('');
-    const selfBadge = u.needs_transfer === false ? '<br><span style="font-size:9px;color:var(--accent);font-weight:700;">🚶自力</span>' : '';
+    const selfBadge = u.needs_transfer === false ? '<br><span style="font-size:9px;color:var(--accent);font-weight:700;pointer-events:none;">🚶自力</span>' : '';
     return `<tr><td class="week-name-cell">${u.name}${selfBadge}</td>${cells}</tr>`;
   }).join('');
+}
 
-  tbody.querySelectorAll('.week-cell').forEach(el => {
-    el.addEventListener('click', () => {
-      openWeekCellModal(el.dataset.uid, el.dataset.name, parseInt(el.dataset.dow));
-    });
-  });
+function handleWeekCellClick(el) {
+  openWeekCellModal(el.dataset.uid, el.dataset.name, parseInt(el.dataset.dow));
 }
 
 async function openWeekCellModal(userId, userName, dow) {

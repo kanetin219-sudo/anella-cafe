@@ -565,7 +565,7 @@
       </div>
 
       <!-- 利用者一覧 -->
-      <div id="userTabContent">
+      <div id="usersTabContent">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <div class="section-title" style="margin:0;border:none;">利用者一覧</div>
           <button class="btn btn-primary btn-sm" onclick="openUserModal()">＋ 新規追加</button>
@@ -1018,11 +1018,11 @@ async function loadHomePage() {
   const today = todayStr();
   const { data: schedules } = await supabase
     .from('transfer_schedules')
-    .select('status')
+    .select('status, transfer_users!inner(needs_transfer)')
     .eq('schedule_date', today);
 
-  const attend = (schedules || []).filter(s => s.status === '出席' || s.status === '追加').length;
-  const absent = (schedules || []).filter(s => s.status === '欠席').length;
+  const attend = (schedules || []).filter(s => (s.status === '出席' || s.status === '追加') && s.transfer_users?.needs_transfer !== false).length;
+  const absent = (schedules || []).filter(s => s.status === '欠席' && s.transfer_users?.needs_transfer !== false).length;
   document.getElementById('statAttend').textContent = attend;
   document.getElementById('statAbsent').textContent = absent;
 
@@ -1085,13 +1085,13 @@ async function loadCalendar() {
   const endDate = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(lastDate).padStart(2,'0')}`;
   const { data: scheds } = await supabase
     .from('transfer_schedules')
-    .select('schedule_date, status')
+    .select('schedule_date, status, transfer_users!inner(needs_transfer)')
     .gte('schedule_date', startDate)
     .lte('schedule_date', endDate)
     .in('status', ['出席','追加']);
 
   const countMap = {};
-  (scheds || []).forEach(s => {
+  (scheds || []).filter(s => s.transfer_users?.needs_transfer !== false).forEach(s => {
     countMap[s.schedule_date] = (countMap[s.schedule_date] || 0) + 1;
   });
 
@@ -1121,15 +1121,15 @@ async function openCalDayModal(dateStr) {
   document.getElementById('calDayModalTitle').textContent = formatDate(dateStr);
   const { data } = await supabase
     .from('transfer_schedules')
-    .select('status, transfer_users(name)')
+    .select('status, transfer_users(name, needs_transfer)')
     .eq('schedule_date', dateStr);
 
   const body = document.getElementById('calDayModalBody');
   if (!data || data.length === 0) {
     body.innerHTML = '<div class="empty-state">スケジュールデータがありません</div>';
   } else {
-    const attend = data.filter(s => s.status === '出席' || s.status === '追加');
-    const absent = data.filter(s => s.status === '欠席');
+    const attend = data.filter(s => (s.status === '出席' || s.status === '追加') && s.transfer_users?.needs_transfer !== false);
+    const absent = data.filter(s => s.status === '欠席' && s.transfer_users?.needs_transfer !== false);
     body.innerHTML = `
       <div style="margin-bottom:12px;">
         <span class="badge badge-green">出席 ${attend.length}名</span>

@@ -79,6 +79,7 @@
     .course-btn-name { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .course-btn-price { font-size: 12px; color: var(--text-soft); }
     .course-btn-tag { display: inline-block; font-size: 11px; background: var(--accent-light); color: #fff; border-radius: 4px; padding: 1px 6px; margin-top: 4px; }
+    .course-btn-includes { margin-top: 10px; text-align: left; font-size: 11px; color: var(--text-mid); line-height: 1.8; border-top: 1px solid var(--border); padding-top: 8px; }
 
     /* ── 料金表示 ── */
     .price-display { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 10px; display: none; }
@@ -307,12 +308,29 @@
         <div class="course-btn-name">シャンプー</div>
         <div class="course-btn-price">コース</div>
         <div class="course-btn-tag">全犬種・猫対応</div>
+        <div class="course-btn-includes">
+          ✓ シャンプー<br>
+          ✓ 足切り<br>
+          ✓ 足回りカット<br>
+          ✓ 耳掃除<br>
+          ✓ 肛門腺絞り<br>
+          ✓ 足裏バリカン
+        </div>
       </button>
       <button type="button" class="course-btn" id="btnCut" onclick="selectCourse('カットコース')">
         <div class="course-btn-icon">✂️</div>
         <div class="course-btn-name">カット</div>
         <div class="course-btn-price">コース</div>
         <div class="course-btn-tag">対応犬種あり</div>
+        <div class="course-btn-includes">
+          ✓ シャンプー<br>
+          ✓ 全身カット<br>
+          ✓ 足切り<br>
+          ✓ 足回りカット<br>
+          ✓ 耳掃除<br>
+          ✓ 肛門腺絞り<br>
+          ✓ 足裏バリカン
+        </div>
       </button>
     </div>
     <div class="err-msg" id="err1"></div>

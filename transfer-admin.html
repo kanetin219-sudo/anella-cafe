@@ -753,6 +753,13 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label">送迎</label>
+      <select class="form-select" id="userModalTransfer">
+        <option value="true">送迎あり</option>
+        <option value="false">🚶 自力（送迎不要）</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label class="form-label">備考</label>
       <textarea class="form-textarea" id="userModalNote" placeholder="特記事項など"></textarea>
     </div>
@@ -1155,7 +1162,7 @@ async function generateMonthSchedule() {
 
   const { data: defaults } = await supabase
     .from('transfer_default_schedules')
-    .select('*, transfer_users(id, name, car, is_active)')
+    .select('*, transfer_users(id, name, car, is_active, needs_transfer)')
     .eq('is_attend', true);
 
   const { data: existing } = await supabase
@@ -1174,6 +1181,7 @@ async function generateMonthSchedule() {
     (defaults||[]).forEach(def => {
       if (def.day_of_week !== dow) return;
       if (!def.transfer_users?.is_active) return;
+      if (def.transfer_users?.needs_transfer === false) return;
       const key = `${dateStr}_${def.user_id}`;
       if (existSet.has(key)) return;
       inserts.push({
@@ -1439,7 +1447,7 @@ async function loadUsersPage() {
     <tr class="${!u.is_active?'inactive-row':''}">
       <td><b>${u.name}</b></td>
       <td style="color:var(--text-soft);">${u.kana||''}</td>
-      <td>${u.car||''}</td>
+      <td>${u.needs_transfer === false ? '🚶 自力' : (u.car||'')}</td>
       <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'有効':'無効'}</span></td>
       <td>
         <div class="actions">
@@ -1459,6 +1467,7 @@ function openUserModal(userId) {
     ['userModalName','userModalKana','userModalAddress','userModalPhone','userModalFamilyPhone','userModalNote'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('userModalCar').value = '社用車';
     document.getElementById('userModalActive').value = 'true';
+    document.getElementById('userModalTransfer').value = 'true';
     openModal('userModal');
     return;
   }
@@ -1471,6 +1480,7 @@ function openUserModal(userId) {
     document.getElementById('userModalFamilyPhone').value = u.family_phone || '';
     document.getElementById('userModalCar').value = u.car || '社用車';
     document.getElementById('userModalActive').value = u.is_active ? 'true' : 'false';
+    document.getElementById('userModalTransfer').value = u.needs_transfer === false ? 'false' : 'true';
     document.getElementById('userModalNote').value = u.note || '';
     openModal('userModal');
   });
@@ -1486,6 +1496,7 @@ async function saveUser() {
     family_phone: document.getElementById('userModalFamilyPhone').value.trim(),
     car: document.getElementById('userModalCar').value,
     is_active: document.getElementById('userModalActive').value === 'true',
+    needs_transfer: document.getElementById('userModalTransfer').value !== 'false',
     note: document.getElementById('userModalNote').value.trim()
   };
   if (!data.name) { toast('名前を入力してください', 'warn'); return; }
@@ -1597,7 +1608,8 @@ async function saveDefaultSchedule() {
 }
 
 async function autoGenerateForUser(userId, scheduleByDow) {
-  const { data: user } = await supabase.from('transfer_users').select('car').eq('id', userId).single();
+  const { data: user } = await supabase.from('transfer_users').select('car, needs_transfer').eq('id', userId).single();
+  if (user?.needs_transfer === false) return 0;
   const car = user?.car || '社用車';
 
   const today = new Date();
@@ -1668,7 +1680,7 @@ async function loadWeeklySchedule() {
   const tbody = document.getElementById('weeklyTableBody');
   tbody.innerHTML = '<tr><td colspan="8" class="empty-state">読み込み中...</td></tr>';
 
-  const { data: users } = await supabase.from('transfer_users').select('id, name').eq('is_active', true).order('kana');
+  const { data: users } = await supabase.from('transfer_users').select('id, name, needs_transfer').eq('is_active', true).order('kana');
   const { data: defaults } = await supabase.from('transfer_default_schedules').select('*');
 
   if (!users || users.length === 0) {
@@ -1694,7 +1706,8 @@ async function loadWeeklySchedule() {
         <div class="week-cell-dropoff">${d.dropoff_time||''}</div>
       </div></td>`;
     }).join('');
-    return `<tr><td class="week-name-cell">${u.name}</td>${cells}</tr>`;
+    const selfBadge = u.needs_transfer === false ? '<br><span style="font-size:9px;color:var(--accent);font-weight:700;">🚶自力</span>' : '';
+    return `<tr><td class="week-name-cell">${u.name}${selfBadge}</td>${cells}</tr>`;
   }).join('');
 
   tbody.querySelectorAll('.week-cell').forEach(el => {

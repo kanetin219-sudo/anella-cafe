@@ -318,6 +318,12 @@
     }
     .rider-absent-btn:hover { border-color: var(--warn); color: var(--warn); }
     .rider-absent-btn.active { background: var(--warn); color: #fff; border-color: var(--warn); }
+    .rider-delete-btn {
+      padding: 5px 8px; border-radius: 8px; font-size: 13px;
+      border: 1px solid var(--border); background: transparent; cursor: pointer;
+      color: var(--text-soft); transition: all 0.2s; white-space: nowrap; line-height: 1;
+    }
+    .rider-delete-btn:hover { border-color: var(--warn); color: var(--warn); background: var(--warn-bg); }
     .add-rider-btn { width: 100%; text-align: center; padding: 12px; margin: 8px 0; }
 
     /* ===== 利用者管理 ===== */
@@ -1134,6 +1140,7 @@ function renderRiderItem(s, order, group) {
     <button class="rider-absent-btn ${isAbsent?'active':''}" onclick="toggleAbsent('${s.id}','${isAbsent}')">
       ${isAbsent ? '出席に戻す' : '欠席'}
     </button>
+    <button class="rider-delete-btn" onclick="deleteRiderFromSchedule('${s.id}')">🗑</button>
   </div>`;
 }
 
@@ -1193,6 +1200,14 @@ async function toggleAbsent(id, currentlyAbsent) {
   }).eq('id', id);
   if (error) { toast('更新失敗: ' + error.message, 'warn'); return; }
   toast(`${newStatus}に変更しました`, 'success');
+  loadTransferPage();
+}
+
+async function deleteRiderFromSchedule(id) {
+  if (!confirm('この利用者を今日の送迎表から削除しますか？')) return;
+  const { error } = await supabase.from('transfer_schedules').delete().eq('id', id);
+  if (error) { toast('削除失敗: ' + error.message, 'warn'); return; }
+  toast('削除しました', '');
   loadTransferPage();
 }
 

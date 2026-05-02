@@ -1685,16 +1685,23 @@ async function loadWeeklySchedule() {
   tbody.innerHTML = users.map(u => {
     const cells = [1,2,3,4,5,6,0].map(dow => {
       const d = defMap[u.id]?.[dow];
+      const nameEsc = u.name.replace(/"/g, '&quot;');
       if (!d || !d.is_attend) {
-        return `<td><div class="week-cell off" onclick="openWeekCellModal('${u.id}','${u.name.replace(/'/g,"\\'")}',${dow})">休</div></td>`;
+        return `<td><div class="week-cell off" data-uid="${u.id}" data-dow="${dow}" data-name="${nameEsc}">休</div></td>`;
       }
-      return `<td><div class="week-cell attend" onclick="openWeekCellModal('${u.id}','${u.name.replace(/'/g,"\\'")}',${dow})">
+      return `<td><div class="week-cell attend" data-uid="${u.id}" data-dow="${dow}" data-name="${nameEsc}">
         <div class="week-cell-time">${d.pickup_time||''}</div>
         <div class="week-cell-dropoff">${d.dropoff_time||''}</div>
       </div></td>`;
     }).join('');
     return `<tr><td class="week-name-cell">${u.name}</td>${cells}</tr>`;
   }).join('');
+
+  tbody.querySelectorAll('.week-cell').forEach(el => {
+    el.addEventListener('click', () => {
+      openWeekCellModal(el.dataset.uid, el.dataset.name, parseInt(el.dataset.dow));
+    });
+  });
 }
 
 async function openWeekCellModal(userId, userName, dow) {
@@ -1704,7 +1711,7 @@ async function openWeekCellModal(userId, userName, dow) {
   document.getElementById('weekCellModalTitle').textContent = `${userName}（${DOW_LABEL[dow]}曜日）`;
 
   const { data: existing } = await supabase.from('transfer_default_schedules')
-    .select('*').eq('user_id', userId).eq('day_of_week', dow).single();
+    .select('*').eq('user_id', userId).eq('day_of_week', dow).maybeSingle();
 
   const isAttend = existing?.is_attend || false;
   document.getElementById('weekCellAttend').checked = isAttend;

@@ -350,10 +350,6 @@
 
   <!-- 来店情報 -->
   <div class="info-section">
-    <div class="info-row full">
-      <span class="info-label">お名前</span>
-      <input type="text" id="repName" class="fav-input" placeholder="例：田中 太郎" autocomplete="name">
-    </div>
     <div class="info-row">
       <span class="info-label">来店人数</span>
       <div class="count-group">
@@ -652,9 +648,6 @@
     errorEl.classList.remove('active');
 
     // バリデーション
-    const repName = document.getElementById('repName').value.trim();
-    if (!repName) { showError('お名前を入力してください。'); return; }
-
     const visitCountValue = document.getElementById('visitCountSel').value;
     if (!visitCountValue) { showError('ご利用回数を選択してください。'); return; }
 
@@ -669,7 +662,6 @@
     }
 
     const payload = {
-      name:         repName,
       visit_date:   todayISO,
       adults:       parseInt(document.getElementById('adults').value),
       children:     parseInt(document.getElementById('children').value),

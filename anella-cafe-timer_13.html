@@ -620,10 +620,9 @@ async function loadWaitingForms() {
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from('consent_forms')
-      .select('id, name, adults, children, preschool, visit_count, submitted_at')
+      .select('id, adults, children, preschool, visit_count, submitted_at')
       .eq('visit_date', today)
       .eq('checked_in', false)
-      .not('name', 'is', null)
       .order('submitted_at', { ascending: true });
     if (!error && data) {
       waitingForms = data;
@@ -644,19 +643,20 @@ function renderWaiting() {
   section.style.display = 'block';
   badge.textContent = waitingForms.length;
 
-  list.innerHTML = waitingForms.map(f => {
-    const sub = [];
-    if ((f.adults||0) > 0) sub.push(`大人${f.adults}名`);
-    if ((f.children||0) > 0) sub.push(`子供${f.children}名`);
-    if ((f.preschool||0) > 0) sub.push(`未就学${f.preschool}名`);
-    if (f.visit_count) sub.push(f.visit_count);
+  list.innerHTML = waitingForms.map((f, idx) => {
+    const pax = [];
+    if ((f.adults||0) > 0) pax.push(`大人${f.adults}名`);
+    if ((f.children||0) > 0) pax.push(`子供${f.children}名`);
+    if ((f.preschool||0) > 0) pax.push(`未就学${f.preschool}名`);
     const t = f.submitted_at
       ? new Date(f.submitted_at).toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' })
       : '';
+    const label = pax.join('・') || '来場者';
+    const sub = [f.visit_count, t ? `提出: ${t}` : ''].filter(Boolean).join('　');
     return `<div class="waiting-item">
       <div class="waiting-item-info">
-        <div class="waiting-item-name">${f.name}</div>
-        <div class="waiting-item-sub">${sub.join(' / ')}${t ? `　提出: ${t}` : ''}</div>
+        <div class="waiting-item-name">${label}</div>
+        <div class="waiting-item-sub">${sub}</div>
       </div>
       <button class="waiting-checkin-btn" onclick="openCheckinFromConsent('${f.id}')">入場登録 →</button>
     </div>`;
@@ -673,7 +673,7 @@ function openCheckinFromConsent(id) {
   mVisit    = mapVisitCount(f.visit_count);
   document.getElementById('mAdult').textContent  = mAdults;
   document.getElementById('mChild').textContent  = mChildren;
-  document.getElementById('mName').value          = f.name || '';
+  document.getElementById('mName').value          = '';
   document.getElementById('mVisitSelect').value   = mVisit;
   document.getElementById('mDiscSenior').classList.remove('active');
   document.getElementById('mDiscDisability').classList.remove('active');

@@ -148,6 +148,17 @@
   }
   .waiting-checkin-btn:active { opacity: 0.8; }
 
+  /* カード署名 */
+  .card-sig {
+    width: 88px;
+    height: 40px;
+    object-fit: contain;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
   /* 新規入場ボタン */
   .add-btn {
     width: 100%;
@@ -609,6 +620,7 @@ let mDisc = { senior: false, disability: false, review: false };
 let mVisit = '';
 let checkoutTargetId = null;
 let pendingConsentId = null;
+let pendingSignature = null;
 
 // 日次連番の同期（ページ再読み込み対応）
 (function syncDailySeq() {
@@ -678,6 +690,7 @@ function openCheckinFromConsent(id) {
   const f = waitingForms.find(x => x.id === id);
   if (!f) return;
   pendingConsentId = id;
+  pendingSignature = Array.isArray(f.signatures) && f.signatures.length > 0 ? f.signatures[0] : null;
   mAdults   = f.adults || 0;
   mChildren = (f.children || 0) + (f.preschool || 0);
   mDisc     = { senior: false, disability: false, review: false };
@@ -786,6 +799,7 @@ function render() {
     return `<div class="group-card ${warn?'warn-card':''}">
       <div class="card-header ${warn?'warn-header':''}">
         <div class="group-label">🐾 <span class="seq-num">${seq}</span>${g.label}　${summary.join('・')}${warn?'<span class="warn-badge">延長中</span>':''}</div>
+        ${g.sig ? `<img class="card-sig" src="${g.sig}" alt="署名">` : ''}
         <div class="checkin-info">入場 ${fmtShort(new Date(g.checkinAt))}</div>
       </div>
       <div class="card-body">
@@ -818,6 +832,7 @@ render();
 // ── 入場モーダル ──
 function openCheckinModal() {
   pendingConsentId = null;
+  pendingSignature = null;
   mAdults=1; mChildren=0; mDisc={senior:false,disability:false,review:false};
   document.getElementById('mAdult').textContent=1;
   document.getElementById('mChild').textContent=0;
@@ -873,8 +888,10 @@ function doCheckin() {
     disc: {...mDisc},
     visit: mVisit,
     checkinAt: Date.now(),
-    consentId: cid || null
+    consentId: cid || null,
+    sig: pendingSignature || null
   });
+  pendingSignature = null;
   saveData();
 
   // 同意書を入場済みにマーク
@@ -902,6 +919,7 @@ function openCheckout(id) {
   const seq = g.daySeq ? seqLabel(g.daySeq) : '';
 
   let html = `
+    ${g.sig ? `<div style="text-align:center;margin-bottom:12px;"><img src="${g.sig}" alt="署名" style="max-width:200px;height:60px;object-fit:contain;border:1px solid var(--border);border-radius:10px;background:#fff;"></div>` : ''}
     <div class="result-row"><span>グループ</span><strong>${seq} ${g.label}</strong></div>
     <div class="result-row"><span>入場時刻</span><strong>${fmt(new Date(g.checkinAt))}</strong></div>
     <div class="result-row"><span>退場時刻</span><strong>${fmt(new Date(now))}</strong></div>

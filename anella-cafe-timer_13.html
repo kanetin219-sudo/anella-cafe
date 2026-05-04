@@ -964,8 +964,16 @@ function doCheckin() {
     supabase.from('consent_forms')
       .update({ checked_in: true })
       .eq('id', cid)
-      .then(() => loadWaitingForms())
-      .catch(() => {});
+      .then(({ error }) => {
+        if (error) showToast('⚠️ 同意書更新エラー: ' + error.message);
+        loadWaitingForms();
+      })
+      .catch((e) => {
+        showToast('⚠️ 通信エラー');
+        loadWaitingForms();
+      });
+  } else {
+    loadWaitingForms();
   }
   pendingConsentId  = null;
   pendingConsentSeq = null;

@@ -657,6 +657,23 @@ let pendingSignature  = null;
 // ── 待機リスト（Supabase） ──
 let waitingForms = [];
 
+// 処理済みIDをlocalStorageで管理（DBの更新に依存しない）
+function getDismissedIds() {
+  try {
+    const d = JSON.parse(localStorage.getItem('anella_dismissed_consents') || '{}');
+    const today = new Date().toISOString().slice(0, 10);
+    return d.date === today ? (d.ids || []) : [];
+  } catch(e) { return []; }
+}
+function addDismissedId(id) {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const d = JSON.parse(localStorage.getItem('anella_dismissed_consents') || '{}');
+    const ids = d.date === today ? [...new Set([...(d.ids || []), id])] : [id];
+    localStorage.setItem('anella_dismissed_consents', JSON.stringify({ date: today, ids }));
+  } catch(e) {}
+}
+
 async function loadWaitingForms() {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -667,7 +684,8 @@ async function loadWaitingForms() {
       .eq('checked_in', false)
       .order('submitted_at', { ascending: true });
     if (!error && data) {
-      waitingForms = data;
+      const dismissed = getDismissedIds();
+      waitingForms = data.filter(f => !dismissed.includes(f.id));
       renderWaiting();
     }
   } catch(e) {}
@@ -709,18 +727,10 @@ function renderWaiting() {
 }
 
 async function skipConsent(id) {
-  supabase.from('consent_forms')
-    .update({ checked_in: true })
-    .eq('id', id)
-    .then(() => loadWaitingForms())
-    .catch(() => {
-      // 失敗しても画面からは除外
-      waitingForms = waitingForms.filter(f => f.id !== id);
-      renderWaiting();
-    });
-  // 即座にローカルからも削除
+  addDismissedId(id);
   waitingForms = waitingForms.filter(f => f.id !== id);
   renderWaiting();
+  supabase.from('consent_forms').update({ checked_in: true }).eq('id', id).then(() => {}).catch(() => {});
 }
 
 async function openCheckinFromConsent(id) {
@@ -983,14 +993,10 @@ function doCheckin() {
 
   // 同意書を入場済みにマーク
   if (cid) {
-    // 即座にローカルからも削除
+    addDismissedId(cid);
     waitingForms = waitingForms.filter(f => f.id !== cid);
     renderWaiting();
-    supabase.from('consent_forms')
-      .update({ checked_in: true })
-      .eq('id', cid)
-      .then(() => loadWaitingForms())
-      .catch(() => {});
+    supabase.from('consent_forms').update({ checked_in: true }).eq('id', cid).then(() => {}).catch(() => {});
   } else {
     loadWaitingForms();
   }

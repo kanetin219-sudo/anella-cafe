@@ -703,8 +703,24 @@ function renderWaiting() {
         <div class="waiting-item-sub">${sub}</div>
       </div>
       <button class="waiting-checkin-btn" onclick="openCheckinFromConsent('${f.id}')">入場登録 →</button>
+      <button onclick="skipConsent('${f.id}')" style="padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-soft);font-size:13px;cursor:pointer;margin-left:6px;white-space:nowrap;">✕</button>
     </div>`;
   }).join('');
+}
+
+async function skipConsent(id) {
+  supabase.from('consent_forms')
+    .update({ checked_in: true })
+    .eq('id', id)
+    .then(() => loadWaitingForms())
+    .catch(() => {
+      // 失敗しても画面からは除外
+      waitingForms = waitingForms.filter(f => f.id !== id);
+      renderWaiting();
+    });
+  // 即座にローカルからも削除
+  waitingForms = waitingForms.filter(f => f.id !== id);
+  renderWaiting();
 }
 
 async function openCheckinFromConsent(id) {

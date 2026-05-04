@@ -373,6 +373,14 @@
   document.getElementById('f-date').value = toDateStr(now);
   document.getElementById('f-time').value = toTimeStr(now);
 
+  // URLパラメータで日付指定があれば一覧タブを開いてフィルター
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramDate = urlParams.get('date');
+  if (paramDate) {
+    document.getElementById('filter-date').value = paramDate;
+    document.querySelectorAll('.tab-btn')[1].click();
+  }
+
   /* ===== タブ切替 ===== */
   function switchTab(name, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -561,7 +569,7 @@
     if (general) lines.push(`\n📢 全体連絡\n${general}`);
     if (users)   lines.push(`\n👥 利用者報告\n${users}`);
     if (next)    lines.push(`\n🔁 引き継ぎ\n${next}`);
-    lines.push(`\n▶ https://kanetin219-sudo.github.io/anella-cafe/handover.html`);
+    lines.push(`\n▶ 申し送りを確認する\nhttps://kanetin219-sudo.github.io/anella-cafe/handover.html?date=${date}`);
 
     await fetch('https://abeekodehorlwsmnhoza.supabase.co/functions/v1/line-notify', {
       method: 'POST',

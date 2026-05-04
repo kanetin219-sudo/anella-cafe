@@ -373,17 +373,20 @@
   document.getElementById('f-date').value = toDateStr(now);
   document.getElementById('f-time').value = toTimeStr(now);
 
-  // URLパラメータで日付指定があれば一覧タブを開いてフィルター
-  const urlParams = new URLSearchParams(window.location.search);
-  const paramDate = urlParams.get('date');
-  if (paramDate) {
-    document.getElementById('filter-date').value = paramDate;
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-list').classList.add('active');
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-    loadList();
+  // URLパラメータで日付指定があれば一覧タブを開いてフィルター（LINE内ブラウザ対応）
+  function initFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramDate = urlParams.get('date');
+    if (paramDate) {
+      document.getElementById('filter-date').value = paramDate;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-list').classList.add('active');
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      loadList();
+    }
   }
+  window.addEventListener('load', initFromUrl);
 
   /* ===== タブ切替 ===== */
   function switchTab(name, btn) {

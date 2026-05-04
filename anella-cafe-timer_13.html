@@ -767,8 +767,10 @@ async function openCheckinFromConsent(id) {
         body: JSON.stringify({ image: pendingSignature })
       });
       const { name } = await res.json();
-      if (name) {
-        document.getElementById('mName').value       = name;
+      // 長い文章（10文字超）はOCRエラーとみなす
+      const validName = name && name.length <= 10 ? name : null;
+      if (validName) {
+        document.getElementById('mName').value       = validName;
         document.getElementById('mName').placeholder = '例：田中さん、山田ファミリー';
         preview.querySelector('.guest-row-label').textContent = '📝 署名';
         updateStartBtn();
@@ -981,17 +983,14 @@ function doCheckin() {
 
   // 同意書を入場済みにマーク
   if (cid) {
+    // 即座にローカルからも削除
+    waitingForms = waitingForms.filter(f => f.id !== cid);
+    renderWaiting();
     supabase.from('consent_forms')
       .update({ checked_in: true })
       .eq('id', cid)
-      .then(({ error }) => {
-        if (error) showToast('⚠️ 同意書更新エラー: ' + error.message);
-        loadWaitingForms();
-      })
-      .catch((e) => {
-        showToast('⚠️ 通信エラー');
-        loadWaitingForms();
-      });
+      .then(() => loadWaitingForms())
+      .catch(() => {});
   } else {
     loadWaitingForms();
   }

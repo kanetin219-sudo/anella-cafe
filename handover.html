@@ -378,7 +378,11 @@
   const paramDate = urlParams.get('date');
   if (paramDate) {
     document.getElementById('filter-date').value = paramDate;
-    document.querySelectorAll('.tab-btn')[1].click();
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-list').classList.add('active');
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    loadList();
   }
 
   /* ===== タブ切替 ===== */

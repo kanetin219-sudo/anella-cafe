@@ -592,6 +592,21 @@ function assignSeq() {
   return next;
 }
 
+// signatures フィールドから最初の署名データURLを安全に取り出す
+function extractSig(raw) {
+  if (!raw) return null;
+  let arr = raw;
+  if (typeof arr === 'string') {
+    try { arr = JSON.parse(arr); } catch(e) { return null; }
+  }
+  if (Array.isArray(arr)) return arr.length > 0 ? arr[0] : null;
+  if (typeof arr === 'object') {
+    const vals = Object.values(arr);
+    return vals.length > 0 ? vals[0] : null;
+  }
+  return null;
+}
+
 // visit_count マッピング（同意書 → タイマー）
 function mapVisitCount(v) {
   if (!v) return '';
@@ -674,7 +689,7 @@ function renderWaiting() {
       : '';
     const label = pax.join('・') || '来場者';
     const sub = [f.visit_count, t ? `提出: ${t}` : ''].filter(Boolean).join('　');
-    const sigSrc = Array.isArray(f.signatures) && f.signatures.length > 0 ? f.signatures[0] : null;
+    const sigSrc = extractSig(f.signatures);
     return `<div class="waiting-item">
       ${sigSrc ? `<img class="waiting-sig" src="${sigSrc}" alt="署名">` : ''}
       <div class="waiting-item-info">
@@ -690,7 +705,7 @@ function openCheckinFromConsent(id) {
   const f = waitingForms.find(x => x.id === id);
   if (!f) return;
   pendingConsentId = id;
-  pendingSignature = Array.isArray(f.signatures) && f.signatures.length > 0 ? f.signatures[0] : null;
+  pendingSignature = extractSig(f.signatures);
   mAdults   = f.adults || 0;
   mChildren = (f.children || 0) + (f.preschool || 0);
   mDisc     = { senior: false, disability: false, review: false };

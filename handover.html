@@ -420,6 +420,8 @@
       showToast('投稿失敗: ' + error.message, 'error');
     } else {
       showToast('申し送りを投稿したっちゃ！ ✓', 'success');
+      // LINE通知を送信
+      sendLineNotification(author, date, time, general, users, next);
       document.getElementById('f-general').value = '';
       document.getElementById('f-users').value   = '';
       document.getElementById('f-next').value    = '';
@@ -551,6 +553,21 @@
     const countEl   = card.querySelector('.card-read-count');
     countEl.textContent = `既読 ${readChips.length}/${STAFF.length}`;
     countEl.className   = `card-read-count ${readChips.length >= STAFF.length ? 'all-read' : ''}`;
+  }
+
+  /* ===== LINE通知 ===== */
+  async function sendLineNotification(author, date, time, general, users, next) {
+    const lines = [`📋 【申し送り】${formatDate(date)} ${time}`, `記入者：${author}`];
+    if (general) lines.push(`\n📢 全体連絡\n${general}`);
+    if (users)   lines.push(`\n👥 利用者報告\n${users}`);
+    if (next)    lines.push(`\n🔁 引き継ぎ\n${next}`);
+    lines.push(`\n▶ https://kanetin219-sudo.github.io/anella-cafe/handover.html`);
+
+    await fetch('https://abeekodehorlwsmnhoza.supabase.co/functions/v1/line-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: lines.join('\n') })
+    }).catch(() => {});
   }
 
   /* ===== ユーティリティ ===== */

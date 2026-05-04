@@ -276,6 +276,25 @@
       border-color: var(--primary-light);
       color: var(--primary);
     }
+    .note-btn {
+      padding: 10px 14px;
+      background: transparent;
+      border: 1px solid var(--primary-light);
+      border-radius: 10px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      white-space: nowrap;
+      min-height: 44px;
+      touch-action: manipulation;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .note-btn:active {
+      background: rgba(201,106,59,0.1);
+    }
 
     /* ===== 空状態 ===== */
     .empty-section {
@@ -513,6 +532,19 @@
 <div id="toast"></div>
 
 <!-- 住所モーダル -->
+<!-- 備考モーダル -->
+<div class="modal-overlay" id="noteModal" onclick="handleNoteOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-user-name" id="noteModalUserName"></div>
+      <button class="modal-close" onclick="closeNoteModal()">✕</button>
+    </div>
+    <div class="modal-addr-label">備考</div>
+    <div id="noteModalContent" style="font-size:15px;line-height:1.7;white-space:pre-wrap;color:var(--text-main);min-height:60px;padding:4px 0;"></div>
+    <button class="modal-cancel-btn" onclick="closeNoteModal()">閉じる</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="addrModal" onclick="handleOverlayClick(event)">
   <div class="modal-sheet">
     <div class="modal-header">
@@ -592,11 +624,11 @@ async function loadUsers() {
   try {
     const { data, error } = await supabase
       .from('transfer_users')
-      .select('id, name, address');
+      .select('id, name, address, note');
     if (error) throw error;
     usersCache = {};
     (data || []).forEach(u => {
-      usersCache[u.id] = { name: u.name || '', address: u.address || '' };
+      usersCache[u.id] = { name: u.name || '', address: u.address || '', note: u.note || '' };
     });
   } catch (e) {
     console.error('利用者読み込みエラー:', e);
@@ -724,6 +756,7 @@ function renderSection(type, label, items, driverName, timeField) {
             <div class="rider-name-text">${escapeHtml(user.name)} さん</div>
             ${timeDisplay ? `<div class="rider-time-text">${timeDisplay}</div>` : ''}
           </div>
+          <button class="note-btn" onclick="showNote('${escapeAttr(s.user_id)}')">詳細</button>
           <button class="addr-btn" onclick="showAddress('${escapeAttr(s.user_id)}')">住所を見る</button>
         </div>
       `;
@@ -793,6 +826,23 @@ function closeAddrModal() {
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('addrModal')) {
     closeAddrModal();
+  }
+}
+
+function showNote(userId) {
+  const user = usersCache[userId] || { name: '(不明)', note: '' };
+  document.getElementById('noteModalUserName').textContent = user.name + ' さん';
+  document.getElementById('noteModalContent').textContent = user.note || '（備考なし）';
+  document.getElementById('noteModal').classList.add('active');
+}
+
+function closeNoteModal() {
+  document.getElementById('noteModal').classList.remove('active');
+}
+
+function handleNoteOverlayClick(e) {
+  if (e.target === document.getElementById('noteModal')) {
+    closeNoteModal();
   }
 }
 

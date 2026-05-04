@@ -757,12 +757,14 @@ async function openCheckinFromConsent(id) {
         preview.querySelector('.guest-row-label').textContent = '📝 署名';
         updateStartBtn();
       } else {
-        document.getElementById('mName').placeholder = 'お名前を入力してください';
+        document.getElementById('mName').placeholder = '任意（空白のまま登録可）';
         preview.querySelector('.guest-row-label').textContent = '📝 署名（読み取れませんでした）';
+        updateStartBtn();
         setTimeout(() => document.getElementById('mName').focus(), 100);
       }
     } catch(e) {
-      document.getElementById('mName').placeholder = 'お名前を入力してください';
+      document.getElementById('mName').placeholder = '任意（空白のまま登録可）';
+      updateStartBtn();
       setTimeout(() => document.getElementById('mName').focus(), 100);
     }
   } else {
@@ -920,7 +922,9 @@ function mToggleDisc(type) {
 }
 function updateStartBtn() {
   const name = document.getElementById('mName')?.value.trim() || '';
-  document.getElementById('mStartBtn').disabled = (mAdults+mChildren)===0 || name==='' || mVisit==='';
+  // 同意書からの場合は名前なしでもOK（第N組として登録される）
+  const needName = !pendingConsentId;
+  document.getElementById('mStartBtn').disabled = (mAdults+mChildren)===0 || (needName && name==='') || mVisit==='';
 }
 
 function selectVisit(v) {

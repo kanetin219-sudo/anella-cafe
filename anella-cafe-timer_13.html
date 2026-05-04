@@ -502,9 +502,14 @@
       <div class="modal-sub">お名前と人数を入力してください</div>
     </div>
     <div class="modal-body">
+      <!-- 署名プレビュー（同意書からの場合のみ表示） -->
+      <div id="mSigPreview" style="display:none;margin-bottom:14px;background:#FDF6EE;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;">
+        <div class="guest-row-label" style="margin-bottom:6px;font-size:11px;color:var(--text-soft);">📝 署名（AIが名前を読み取り中...）</div>
+        <div id="mSigImgs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
       <div style="margin-bottom:16px;">
         <div class="guest-row-label" style="margin-bottom:8px;">👤 お名前</div>
-        <input type="text" id="mName" placeholder="例：田中さん、山田ファミリー"
+        <input type="text" id="mName" placeholder="読み取り中..."
           oninput="updateStartBtn()"
           onfocus="this.style.borderColor='var(--primary)'"
           onblur="this.style.borderColor='var(--border)'"
@@ -634,8 +639,9 @@ let mAdults = 1, mChildren = 0;
 let mDisc = { senior: false, disability: false, review: false };
 let mVisit = '';
 let checkoutTargetId = null;
-let pendingConsentId = null;
-let pendingSignature = null;
+let pendingConsentId  = null;
+let pendingConsentSeq = null;
+let pendingSignature  = null;
 
 // 日次連番の同期（ページ再読み込み対応）
 (function syncDailySeq() {
@@ -656,7 +662,7 @@ async function loadWaitingForms() {
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from('consent_forms')
-      .select('id, adults, children, preschool, visit_count, submitted_at, signatures')
+      .select('id, adults, children, preschool, visit_count, submitted_at, signatures, day_seq')
       .eq('visit_date', today)
       .eq('checked_in', false)
       .order('submitted_at', { ascending: true });
@@ -701,25 +707,67 @@ function renderWaiting() {
   }).join('');
 }
 
-function openCheckinFromConsent(id) {
+async function openCheckinFromConsent(id) {
   const f = waitingForms.find(x => x.id === id);
   if (!f) return;
-  pendingConsentId = id;
-  pendingSignature = extractSig(f.signatures);
+  pendingConsentId  = id;
+  pendingConsentSeq = f.day_seq || null;
+  pendingSignature  = extractSig(f.signatures);
   mAdults   = f.adults || 0;
   mChildren = (f.children || 0) + (f.preschool || 0);
   mDisc     = { senior: false, disability: false, review: false };
   mVisit    = mapVisitCount(f.visit_count);
-  document.getElementById('mAdult').textContent  = mAdults;
-  document.getElementById('mChild').textContent  = mChildren;
-  document.getElementById('mName').value          = '';
-  document.getElementById('mVisitSelect').value   = mVisit;
+  document.getElementById('mAdult').textContent = mAdults;
+  document.getElementById('mChild').textContent = mChildren;
+  document.getElementById('mName').value        = '';
+  document.getElementById('mName').placeholder  = '読み取り中...';
+  document.getElementById('mVisitSelect').value = mVisit;
   document.getElementById('mDiscSenior').classList.remove('active');
   document.getElementById('mDiscDisability').classList.remove('active');
   document.getElementById('mDiscReview').classList.remove('active');
+
+  // 署名プレビュー表示
+  const sigs = Array.isArray(f.signatures) ? f.signatures : [];
+  const preview = document.getElementById('mSigPreview');
+  const imgs    = document.getElementById('mSigImgs');
+  if (sigs.length > 0) {
+    imgs.innerHTML = sigs.map(s =>
+      `<img src="${s}" style="height:52px;max-width:120px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#fff;">`
+    ).join('');
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+
   updateStartBtn();
   openModal('checkinModal');
-  setTimeout(() => document.getElementById('mName').focus(), 200);
+
+  // OCRで最初の署名から名前を読み取る
+  if (pendingSignature) {
+    try {
+      const res = await fetch('https://abeekodehorlwsmnhoza.supabase.co/functions/v1/ocr-name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: pendingSignature })
+      });
+      const { name } = await res.json();
+      if (name) {
+        document.getElementById('mName').value       = name;
+        document.getElementById('mName').placeholder = '例：田中さん、山田ファミリー';
+        preview.querySelector('.guest-row-label').textContent = '📝 署名';
+        updateStartBtn();
+      } else {
+        document.getElementById('mName').placeholder = 'お名前を入力してください';
+        preview.querySelector('.guest-row-label').textContent = '📝 署名（読み取れませんでした）';
+        setTimeout(() => document.getElementById('mName').focus(), 100);
+      }
+    } catch(e) {
+      document.getElementById('mName').placeholder = 'お名前を入力してください';
+      setTimeout(() => document.getElementById('mName').focus(), 100);
+    }
+  } else {
+    setTimeout(() => document.getElementById('mName').focus(), 200);
+  }
 }
 
 // ── 料金計算 ──
@@ -890,8 +938,10 @@ function addGacha(id, delta) {
 
 function doCheckin() {
   const name = document.getElementById('mName').value.trim();
-  const seq   = assignSeq();
+  const seq   = pendingConsentSeq || assignSeq();
   const label = name || `第${seq}組`;
+  document.getElementById('mSigPreview').style.display = 'none';
+  document.getElementById('mName').placeholder = '例：田中さん、山田ファミリー';
   const cid   = pendingConsentId;
 
   groups.push({
@@ -917,7 +967,8 @@ function doCheckin() {
       .then(() => loadWaitingForms())
       .catch(() => {});
   }
-  pendingConsentId = null;
+  pendingConsentId  = null;
+  pendingConsentSeq = null;
   closeModal('checkinModal');
   render();
   showToast(`${seqLabel(seq)} ${label}の入場を登録しました！`);

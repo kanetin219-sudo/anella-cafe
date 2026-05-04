@@ -324,6 +324,12 @@
       color: var(--text-soft); transition: all 0.2s; white-space: nowrap; line-height: 1;
     }
     .rider-delete-btn:hover { border-color: var(--warn); color: var(--warn); background: var(--warn-bg); }
+    .rider-detail-btn {
+      padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+      border: 1px solid var(--primary-light); background: transparent; cursor: pointer;
+      color: var(--primary); transition: all 0.2s; white-space: nowrap;
+    }
+    .rider-detail-btn:hover { background: rgba(201,106,59,0.1); }
     .add-rider-btn { width: 100%; text-align: center; padding: 12px; margin: 8px 0; }
 
     /* ===== 利用者管理 ===== */
@@ -890,6 +896,20 @@
   </div>
 </div>
 
+<!-- ===== モーダル: 利用者備考 ===== -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span id="noteModalName">備考</span>
+      <button class="modal-close" onclick="closeModal('noteModal')">✕</button>
+    </div>
+    <div id="noteModalContent" style="font-size:15px;line-height:1.7;white-space:pre-wrap;color:var(--text-main);min-height:60px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('noteModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============================================================
 //  グローバル変数
@@ -1219,7 +1239,7 @@ async function loadTransferPage() {
 
   const { data: schedules } = await supabase
     .from('transfer_schedules')
-    .select('*, transfer_users(name, car)')
+    .select('*, transfer_users(name, car, note)')
     .eq('schedule_date', date)
     .order('pickup_order');
 
@@ -1282,12 +1302,14 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
 
 function renderRiderItem(s, order, group) {
   const name = s.transfer_users?.name || '不明';
+  const note = s.transfer_users?.note || '';
   const isAbsent = s.status === '欠席';
   return `
   <div class="rider-item ${isAbsent?'absent':''}" draggable="true" data-id="${s.id}" data-group="${group}">
     <span class="drag-handle">⠿</span>
     <div class="rider-order">${order}</div>
-    <div class="rider-name">${name}</div>
+    <div class="rider-name">${escHtml(name)}</div>
+    <button class="rider-detail-btn" data-name="${escHtml(name)}" data-note="${escHtml(note)}" onclick="showUserNote(this)">詳細</button>
     <button class="rider-absent-btn ${isAbsent?'active':''}" onclick="toggleAbsent('${s.id}','${isAbsent}')">
       ${isAbsent ? '出席に戻す' : '欠席'}
     </button>
@@ -1987,6 +2009,18 @@ function formatDate(str) {
 
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showUserNote(btn) {
+  const name = btn.dataset.name;
+  const note = btn.dataset.note;
+  document.getElementById('noteModalName').textContent = name + ' の備考';
+  document.getElementById('noteModalContent').textContent = note || '（備考なし）';
+  openModal('noteModal');
+}
 
 // モーダル背景クリックで閉じる
 document.querySelectorAll('.modal-overlay').forEach(overlay => {

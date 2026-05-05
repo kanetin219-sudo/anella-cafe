@@ -649,8 +649,8 @@ let pendingSignature  = null;
   let d = {};
   try { d = JSON.parse(localStorage.getItem('anella_daily_seq') || '{}'); } catch(e) {}
   if (d.date !== today) {
-    const maxSeq = groups.filter(g => g.daySeq).reduce((m, g) => Math.max(m, g.daySeq), 0);
-    try { localStorage.setItem('anella_daily_seq', JSON.stringify({ date: today, next: maxSeq + 1 })); } catch(e) {}
+    // 日付が変わったら1からリセット
+    try { localStorage.setItem('anella_daily_seq', JSON.stringify({ date: today, next: 1 })); } catch(e) {}
   }
 })();
 

@@ -821,6 +821,26 @@ async function lookupPastReservation() {
 function prefillStep5() {
   if (!returnedData) return;
   const r = returnedData;
+
+  // STEP1: コースを自動選択
+  if (r.course) {
+    selectCourse(r.course);
+  }
+
+  // STEP2: 犬種を自動選択（コース選択後でないとドロップダウンが構築されない）
+  if (r.breed && fd.course) {
+    const breedSelect = document.getElementById('breedSelect');
+    const match = BREEDS.find(b => b.name === r.breed);
+    if (match) {
+      breedSelect.value = r.breed;
+      onBreedChange();
+      fd.breed = r.breed;
+      fd.breedDisplay = r.breed;
+      fd.coursePrice = fd.course === 'カットコース' ? (match.cut || 0) : (match.shampoo || 0);
+    }
+  }
+
+  // STEP5: 個人情報を自動入力
   document.getElementById('petName').value = r.pet_name || '';
   document.getElementById('gender').value = r.gender || '';
   document.getElementById('weight').value = r.weight || '';

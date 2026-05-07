@@ -565,6 +565,72 @@
         <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">犬種</div>
         <input type="text" id="manualBreed" placeholder="例：トイプードル" maxlength="30" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; background:var(--bg);">
       </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">性別</div>
+        <div class="select-wrap-sm">
+          <select id="manualGender" style="width:100%;">
+            <option value="">未記入</option>
+            <option value="男の子">男の子</option>
+            <option value="女の子">女の子</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">体重</div>
+        <div class="select-wrap-sm">
+          <select id="manualWeight" style="width:100%;">
+            <option value="">未記入</option>
+            <option value="〜3kg">〜3kg</option>
+            <option value="3〜5kg">3〜5kg</option>
+            <option value="5〜10kg">5〜10kg</option>
+            <option value="10kg〜">10kg〜</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">年齢</div>
+        <div class="select-wrap-sm">
+          <select id="manualPetAge" style="width:100%;">
+            <option value="">未記入</option>
+            <option value="1歳未満">1歳未満</option>
+            <option value="1〜3歳">1〜3歳</option>
+            <option value="4〜7歳">4〜7歳</option>
+            <option value="8〜10歳">8〜10歳</option>
+            <option value="11歳以上">11歳以上</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">毛玉</div>
+        <div class="select-wrap-sm">
+          <select id="manualMatting" style="width:100%;">
+            <option value="">未記入</option>
+            <option value="なし">なし</option>
+            <option value="少しあり">少しあり</option>
+            <option value="多めにあり">多めにあり</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">狂犬病ワクチン</div>
+        <div class="select-wrap-sm">
+          <select id="manualVaccineRabies" style="width:100%;">
+            <option value="">未記入</option>
+            <option value="接種済み">接種済み</option>
+            <option value="未接種">未接種</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">5種混合ワクチン</div>
+        <div class="select-wrap-sm">
+          <select id="manualVaccine5mix" style="width:100%;">
+            <option value="">未記入</option>
+            <option value="接種済み">接種済み</option>
+            <option value="未接種">未接種</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="section-label">お客様情報 <span style="color:var(--text-soft); font-size:11px;">任意</span></div>
@@ -1074,6 +1140,12 @@ function openManualModal() {
   document.getElementById('manualCourse').value = '';
   document.getElementById('manualPetName').value = '';
   document.getElementById('manualBreed').value = '';
+  document.getElementById('manualGender').value = '';
+  document.getElementById('manualWeight').value = '';
+  document.getElementById('manualPetAge').value = '';
+  document.getElementById('manualMatting').value = '';
+  document.getElementById('manualVaccineRabies').value = '';
+  document.getElementById('manualVaccine5mix').value = '';
   document.getElementById('manualOwnerName').value = '';
   document.getElementById('manualPhone').value = '';
   document.getElementById('manualEmail').value = '';
@@ -1136,24 +1208,37 @@ async function submitManualReservation() {
     .eq('visit_date', date);
   const reservationNumber = `${dateStr}-${String((count || 0) + 1).padStart(3, '0')}`;
 
+  const manualPhone         = document.getElementById('manualPhone').value.trim() || null;
+  const manualGender        = document.getElementById('manualGender').value || null;
+  const manualWeight        = document.getElementById('manualWeight').value || null;
+  const manualPetAge        = document.getElementById('manualPetAge').value || null;
+  const manualMatting       = document.getElementById('manualMatting').value || null;
+  const manualVaccineRabies = document.getElementById('manualVaccineRabies').value || null;
+  const manualVaccine5mix   = document.getElementById('manualVaccine5mix').value || null;
+  const manualPetName       = document.getElementById('manualPetName').value.trim() || null;
+  const manualBreed         = document.getElementById('manualBreed').value.trim() || null;
+  const manualOwnerName     = document.getElementById('manualOwnerName').value.trim() || null;
+  const manualEmail         = document.getElementById('manualEmail').value.trim() || null;
+
   const payload = {
     reservation_number: reservationNumber,
     visit_date:  date,
     visit_time:  time + ':00',
     staff:       staff,
     course:      course,
-    breed:       document.getElementById('manualBreed').value || '不明',
-    gender:      '不明',
-    weight:      '不明',
-    matting:     '不明',
+    breed:       manualBreed   || '不明',
+    gender:      manualGender  || '不明',
+    weight:      manualWeight  || '不明',
+    matting:     manualMatting || '不明',
     visit_experience: '不明',
-    pet_age:     '不明',
-    pet_name:    document.getElementById('manualPetName').value || '不明',
-    vaccine_rabies: '不明',
-    vaccine_5mix: '不明',
-    owner_name:  document.getElementById('manualOwnerName').value || '不明',
-    phone:       document.getElementById('manualPhone').value || null,
-    email:       document.getElementById('manualEmail').value || null,
+    pet_age:     manualPetAge  || '不明',
+    pet_name:    manualPetName || '不明',
+    vaccine_rabies: manualVaccineRabies || '不明',
+    vaccine_5mix:   manualVaccine5mix   || '不明',
+    vaccine_status: `狂犬病:${manualVaccineRabies||'不明'} / 5種:${manualVaccine5mix||'不明'}`,
+    owner_name:  manualOwnerName || '不明',
+    phone:       manualPhone,
+    email:       manualEmail,
     staff_note:  `【受付担当：${receptionist}】` + (document.getElementById('manualMemo').value ? '\n' + document.getElementById('manualMemo').value : ''),
     options:     [],
     course_price: 0,
@@ -1163,6 +1248,22 @@ async function submitManualReservation() {
 
   const { error } = await supabase.from('trimming_reservations').insert(payload);
   if (error) { errEl.textContent = '登録に失敗しました: ' + error.message; errEl.style.display = 'block'; return; }
+
+  // カルテ自動作成/更新（電話番号がある場合のみ）
+  if (manualPhone && manualOwnerName && manualPetName) {
+    await supabase.from('pet_kartes').upsert({
+      phone:         manualPhone,
+      owner_name:    manualOwnerName,
+      email:         manualEmail,
+      pet_name:      manualPetName,
+      breed:         manualBreed,
+      gender:        manualGender,
+      weight:        manualWeight,
+      pet_age:       manualPetAge,
+      vaccine_rabies: manualVaccineRabies,
+      vaccine_5mix:  manualVaccine5mix,
+    }, { onConflict: 'phone' });
+  }
 
   document.getElementById('manualSaveOk').style.display = 'block';
   setTimeout(() => {

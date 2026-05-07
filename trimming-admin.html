@@ -239,10 +239,71 @@
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── カルテ ── */
+    .karte-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .karte-search-input {
+      flex: 1; min-width: 180px; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text); outline: none;
+    }
+    .karte-search-input:focus { border-color: var(--primary-light); }
+    .btn-new-karte {
+      padding: 11px 18px; background: var(--accent); color: #fff; border: none; border-radius: 10px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .btn-new-karte:hover { opacity: 0.9; }
+    .karte-list { display: flex; flex-direction: column; gap: 10px; }
+    .karte-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 4px var(--shadow);
+    }
+    .karte-card:hover { border-color: var(--accent-light); box-shadow: 0 3px 10px var(--shadow); }
+    .karte-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .karte-icon { font-size: 28px; }
+    .karte-pet-name { font-size: 16px; font-weight: 700; color: var(--text); }
+    .karte-breed { font-size: 12px; color: var(--text-soft); }
+    .karte-owner { font-size: 13px; color: var(--text-mid); }
+    .karte-memos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .karte-memo-tag {
+      font-size: 11px; padding: 3px 8px; border-radius: 20px; background: #F0F8F6;
+      border: 1px solid #C8E0DB; color: var(--accent);
+    }
+    .karte-memo-tag.warn { background: var(--warn-bg); border-color: #F0C4B0; color: var(--warn); }
+    .no-kartes { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 14px; }
+
+    .karte-section { margin-bottom: 18px; }
+    .karte-section-title {
+      font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 10px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .karte-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .karte-field { margin-bottom: 0; }
+    .karte-field label { display: block; font-size: 11px; color: var(--text-soft); margin-bottom: 4px; font-weight: 700; }
+    .karte-input {
+      width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text); outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    .karte-input:focus { border-color: var(--primary-light); }
+    .karte-textarea {
+      width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text);
+      resize: vertical; min-height: 80px; outline: none;
+    }
+    .karte-textarea:focus { border-color: var(--primary-light); }
+
+    .visit-history-list { display: flex; flex-direction: column; gap: 8px; }
+    .visit-hist-item {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; font-size: 13px;
+    }
+    .visit-hist-date { font-weight: 700; color: var(--primary); font-size: 13px; }
+    .visit-hist-detail { color: var(--text-soft); font-size: 12px; margin-top: 2px; }
+
     @media (max-width: 600px) {
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
       .block-form-grid { grid-template-columns: 1fr 1fr; }
       .res-info { gap: 8px; }
+      .karte-field-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -283,6 +344,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" id="tab1" onclick="switchTab(1)">📋 予約一覧</button>
     <button class="tab-btn" id="tab2" onclick="switchTab(2)">🚫 ブロック設定</button>
+    <button class="tab-btn" id="tab3" onclick="switchTab(3)">🐾 カルテ</button>
   </div>
 
   <div class="container">
@@ -394,6 +456,17 @@
         <div class="block-list" id="blockList">
           <div class="no-blocks">日付を選択してください</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== カルテタブ ===== -->
+    <div class="tab-panel" id="panel3">
+      <div class="karte-toolbar">
+        <input type="text" class="karte-search-input" id="karteSearch" placeholder="名前・電話番号で検索..." oninput="loadKartes(this.value)">
+        <button class="btn-new-karte" onclick="openKarteModal(null)">＋ 新規カルテ作成</button>
+      </div>
+      <div class="karte-list" id="karteList">
+        <div class="no-kartes">読み込み中...</div>
       </div>
     </div>
 
@@ -537,6 +610,123 @@
   </div>
 </div>
 
+<!-- ===== カルテ編集モーダル ===== -->
+<div class="modal-overlay" id="karteModalOverlay" onclick="closeKarteModal(event)">
+  <div class="modal" id="karteModal" style="max-height:90vh; overflow-y:auto;">
+    <div class="modal-header">
+      <div class="modal-title" id="karteModalTitle">カルテ</div>
+      <button class="modal-close" onclick="closeKarteModalDirect()">✕</button>
+    </div>
+
+    <div class="karte-section">
+      <div class="karte-section-title">👤 飼い主情報</div>
+      <div class="karte-field-grid">
+        <div class="karte-field">
+          <label>お名前 <span style="color:var(--warn);">必須</span></label>
+          <input type="text" class="karte-input" id="kOwnerName" placeholder="山田 太郎" maxlength="30">
+        </div>
+        <div class="karte-field">
+          <label>電話番号 <span style="color:var(--warn);">必須</span></label>
+          <input type="tel" class="karte-input" id="kPhone" placeholder="09012345678" maxlength="15">
+        </div>
+        <div class="karte-field">
+          <label>メールアドレス</label>
+          <input type="email" class="karte-input" id="kEmail" placeholder="example@email.com" maxlength="100">
+        </div>
+        <div class="karte-field">
+          <label>LINE表示名</label>
+          <input type="text" class="karte-input" id="kLineName" placeholder="LINE名" maxlength="30">
+        </div>
+      </div>
+    </div>
+
+    <div class="karte-section">
+      <div class="karte-section-title">🐾 ペット情報</div>
+      <div class="karte-field-grid">
+        <div class="karte-field">
+          <label>ペット名 <span style="color:var(--warn);">必須</span></label>
+          <input type="text" class="karte-input" id="kPetName" placeholder="ぽち" maxlength="20">
+        </div>
+        <div class="karte-field">
+          <label>犬種・猫種</label>
+          <input type="text" class="karte-input" id="kBreed" placeholder="トイプードル" maxlength="30">
+        </div>
+        <div class="karte-field">
+          <label>性別</label>
+          <select class="karte-input" id="kGender">
+            <option value="">未記入</option>
+            <option value="男の子">男の子</option>
+            <option value="女の子">女の子</option>
+          </select>
+        </div>
+        <div class="karte-field">
+          <label>体重</label>
+          <select class="karte-input" id="kWeight">
+            <option value="">未記入</option>
+            <option value="〜3kg">〜3kg</option>
+            <option value="3〜5kg">3〜5kg</option>
+            <option value="5〜10kg">5〜10kg</option>
+            <option value="10kg〜">10kg〜</option>
+          </select>
+        </div>
+        <div class="karte-field">
+          <label>年齢</label>
+          <select class="karte-input" id="kPetAge">
+            <option value="">未記入</option>
+            <option value="1歳未満">1歳未満</option>
+            <option value="1〜3歳">1〜3歳</option>
+            <option value="4〜7歳">4〜7歳</option>
+            <option value="8〜10歳">8〜10歳</option>
+            <option value="11歳以上">11歳以上</option>
+          </select>
+        </div>
+        <div class="karte-field">
+          <label>狂犬病ワクチン</label>
+          <select class="karte-input" id="kVaccineRabies">
+            <option value="">未記入</option>
+            <option value="接種済み">接種済み</option>
+            <option value="未接種">未接種</option>
+          </select>
+        </div>
+        <div class="karte-field" style="grid-column:1/-1;">
+          <label>5種混合ワクチン</label>
+          <select class="karte-input" id="kVaccine5mix">
+            <option value="">未記入</option>
+            <option value="接種済み">接種済み</option>
+            <option value="未接種">未接種</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="karte-section">
+      <div class="karte-section-title">✂️ カットスタイルメモ</div>
+      <textarea class="karte-textarea" id="kCutStyleMemo" placeholder="希望スタイル・写真URL・長さの指示など" maxlength="1000"></textarea>
+    </div>
+
+    <div class="karte-section">
+      <div class="karte-section-title">😺 性格・扱い注意メモ</div>
+      <textarea class="karte-textarea" id="kPersonalityMemo" placeholder="噛み癖・緊張しやすい・ドライヤー苦手など" maxlength="1000"></textarea>
+    </div>
+
+    <div class="karte-section">
+      <div class="karte-section-title">⚠️ アレルギー・健康情報</div>
+      <textarea class="karte-textarea" id="kAllergyMemo" placeholder="皮膚疾患・使えないシャンプー・持病など" maxlength="1000"></textarea>
+    </div>
+
+    <div class="karte-section" id="karteHistorySection">
+      <div class="karte-section-title">📅 来店履歴</div>
+      <div class="visit-history-list" id="karteHistoryList">
+        <div style="color:var(--text-soft); font-size:13px;">読み込み中...</div>
+      </div>
+    </div>
+
+    <div style="color:var(--warn); font-size:13px; margin-bottom:10px; display:none;" id="karteErr"></div>
+    <button class="save-btn" id="karteSaveBtn" onclick="saveKarte()">カルテを保存する</button>
+    <div class="save-ok" id="karteSaveOk">✅ 保存しました</div>
+  </div>
+</div>
+
 <script>
 // ── 状態 ──────────────────────────────────────────
 let currentResId = null;
@@ -624,10 +814,11 @@ function setupRealtime() {
 
 // ── タブ切替 ─────────────────────────────────────
 function switchTab(n) {
-  [1, 2].forEach(i => {
+  [1, 2, 3].forEach(i => {
     document.getElementById('tab' + i).classList.toggle('active', i === n);
     document.getElementById('panel' + i).classList.toggle('active', i === n);
   });
+  if (n === 3) loadKartes('');
 }
 
 // ── 予約一覧 ──────────────────────────────────────
@@ -978,6 +1169,171 @@ async function submitManualReservation() {
     closeManualModalDirect();
     loadReservations();
   }, 1200);
+}
+
+// ── カルテ ───────────────────────────────────────
+let currentKarteId = null;
+
+async function loadKartes(search) {
+  const container = document.getElementById('karteList');
+  container.innerHTML = '<div class="no-kartes">読み込み中...</div>';
+
+  let query = supabase.from('pet_kartes').select('*').order('updated_at', { ascending: false });
+  if (search && search.trim()) {
+    const s = search.trim();
+    query = query.or(`owner_name.ilike.%${s}%,phone.ilike.%${s}%,pet_name.ilike.%${s}%`);
+  }
+
+  const { data, error } = await query;
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '<div class="no-kartes">カルテがありません。予約フォームから予約されると自動作成されます。</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  data.forEach(k => {
+    const card = document.createElement('div');
+    card.className = 'karte-card';
+    const memoTags = [];
+    if (k.cut_style_memo)   memoTags.push(`<span class="karte-memo-tag">✂️ カットメモあり</span>`);
+    if (k.personality_memo) memoTags.push(`<span class="karte-memo-tag">😺 性格メモあり</span>`);
+    if (k.allergy_memo)     memoTags.push(`<span class="karte-memo-tag warn">⚠️ アレルギーあり</span>`);
+
+    card.innerHTML = `
+      <div class="karte-card-header">
+        <div class="karte-icon">🐾</div>
+        <div style="flex:1;">
+          <div class="karte-pet-name">${k.pet_name} <span class="karte-breed">${k.breed || ''} ${k.gender || ''}</span></div>
+          <div class="karte-owner">👤 ${k.owner_name}　📞 ${k.phone}</div>
+        </div>
+      </div>
+      ${memoTags.length > 0 ? `<div class="karte-memos">${memoTags.join('')}</div>` : ''}
+    `;
+    card.onclick = () => openKarteModal(k);
+    container.appendChild(card);
+  });
+}
+
+function openKarteModal(karte) {
+  currentKarteId = karte ? karte.id : null;
+  document.getElementById('karteModalTitle').textContent = karte ? `${karte.pet_name}のカルテ` : '新規カルテ作成';
+  document.getElementById('karteErr').style.display = 'none';
+  document.getElementById('karteSaveOk').classList.remove('active');
+
+  document.getElementById('kOwnerName').value     = karte?.owner_name      || '';
+  document.getElementById('kPhone').value         = karte?.phone            || '';
+  document.getElementById('kEmail').value         = karte?.email            || '';
+  document.getElementById('kLineName').value      = karte?.line_name        || '';
+  document.getElementById('kPetName').value       = karte?.pet_name         || '';
+  document.getElementById('kBreed').value         = karte?.breed            || '';
+  document.getElementById('kGender').value        = karte?.gender           || '';
+  document.getElementById('kWeight').value        = karte?.weight           || '';
+  document.getElementById('kPetAge').value        = karte?.pet_age          || '';
+  document.getElementById('kVaccineRabies').value = karte?.vaccine_rabies   || '';
+  document.getElementById('kVaccine5mix').value   = karte?.vaccine_5mix     || '';
+  document.getElementById('kCutStyleMemo').value  = karte?.cut_style_memo   || '';
+  document.getElementById('kPersonalityMemo').value = karte?.personality_memo || '';
+  document.getElementById('kAllergyMemo').value   = karte?.allergy_memo     || '';
+
+  // 来店履歴
+  const histSection = document.getElementById('karteHistorySection');
+  if (karte?.phone) {
+    histSection.style.display = 'block';
+    loadKarteVisitHistory(karte.phone);
+  } else {
+    histSection.style.display = 'none';
+  }
+
+  document.getElementById('karteModalOverlay').classList.add('active');
+}
+
+async function loadKarteVisitHistory(phone) {
+  const list = document.getElementById('karteHistoryList');
+  list.innerHTML = '<div style="color:var(--text-soft); font-size:13px;">読み込み中...</div>';
+
+  const { data, error } = await supabase
+    .from('trimming_reservations')
+    .select('visit_date, visit_time, course, breed, staff, total_price, status, staff_memo')
+    .eq('phone', phone)
+    .order('visit_date', { ascending: false })
+    .limit(20);
+
+  if (error || !data || data.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-soft); font-size:13px;">来店履歴はまだありません</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(r => `
+    <div class="visit-hist-item">
+      <div class="visit-hist-date">${r.visit_date} ${r.visit_time ? r.visit_time.slice(0,5) : ''}</div>
+      <div class="visit-hist-detail">
+        ${r.course} ／ ${r.breed} ／ 担当：${r.staff}
+        ${r.total_price > 0 ? ' ／ ¥' + r.total_price.toLocaleString() : ''}
+        ／ <span style="color:${r.status === '来店済み' ? 'var(--accent)' : r.status === 'キャンセル' ? 'var(--gray)' : 'var(--primary)'};">${r.status}</span>
+        ${r.staff_memo ? '<br><span style="color:var(--accent-light);">📝 ' + r.staff_memo + '</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveKarte() {
+  const ownerName = document.getElementById('kOwnerName').value.trim();
+  const phone     = document.getElementById('kPhone').value.trim();
+  const petName   = document.getElementById('kPetName').value.trim();
+  const errEl     = document.getElementById('karteErr');
+
+  if (!ownerName) { errEl.textContent = 'お名前は必須です'; errEl.style.display = 'block'; return; }
+  if (!phone)     { errEl.textContent = '電話番号は必須です'; errEl.style.display = 'block'; return; }
+  if (!petName)   { errEl.textContent = 'ペット名は必須です'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  const btn = document.getElementById('karteSaveBtn');
+  btn.disabled = true;
+
+  const payload = {
+    phone,
+    owner_name:       ownerName,
+    email:            document.getElementById('kEmail').value.trim() || null,
+    line_name:        document.getElementById('kLineName').value.trim() || null,
+    pet_name:         petName,
+    breed:            document.getElementById('kBreed').value.trim() || null,
+    gender:           document.getElementById('kGender').value || null,
+    weight:           document.getElementById('kWeight').value || null,
+    pet_age:          document.getElementById('kPetAge').value || null,
+    vaccine_rabies:   document.getElementById('kVaccineRabies').value || null,
+    vaccine_5mix:     document.getElementById('kVaccine5mix').value || null,
+    cut_style_memo:   document.getElementById('kCutStyleMemo').value.trim() || null,
+    personality_memo: document.getElementById('kPersonalityMemo').value.trim() || null,
+    allergy_memo:     document.getElementById('kAllergyMemo').value.trim() || null,
+  };
+
+  let error;
+  if (currentKarteId) {
+    ({ error } = await supabase.from('pet_kartes').update(payload).eq('id', currentKarteId));
+  } else {
+    ({ error } = await supabase.from('pet_kartes').upsert(payload, { onConflict: 'phone' }));
+  }
+
+  btn.disabled = false;
+  if (error) {
+    errEl.textContent = '保存に失敗しました: ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('karteSaveOk').classList.add('active');
+  setTimeout(() => {
+    document.getElementById('karteSaveOk').classList.remove('active');
+    closeKarteModalDirect();
+    loadKartes(document.getElementById('karteSearch').value);
+  }, 1200);
+}
+
+function closeKarteModal(e) {
+  if (e.target === document.getElementById('karteModalOverlay')) closeKarteModalDirect();
+}
+function closeKarteModalDirect() {
+  document.getElementById('karteModalOverlay').classList.remove('active');
 }
 
 // ── キーボード Enter でログイン ───────────────────

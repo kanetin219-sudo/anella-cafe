@@ -1218,6 +1218,21 @@ async function submitReservation() {
 
     if (error) throw error;
 
+    // カルテ自動作成/更新（電話番号をキーにupsert）
+    await supabase.from('pet_kartes').upsert({
+      phone:         fd.phone,
+      owner_name:    fd.ownerName,
+      email:         fd.email || null,
+      line_name:     fd.lineName || null,
+      pet_name:      fd.petName,
+      breed:         fd.breedDisplay,
+      gender:        fd.gender,
+      weight:        fd.weight,
+      pet_age:       fd.petAge,
+      vaccine_rabies: fd.vaccineRabies,
+      vaccine_5mix:  fd.vaccine5mix,
+    }, { onConflict: 'phone' });
+
     // GAS Webhook（Gmail通知）※gas-notification.gs をデプロイ後に YOUR_GAS_ID を差し替える
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyiZc-FUtJRZOL56Y9Mtr1qRPAXK8UjoXQj5qNoWh4KZBCgYppvP9OzKuIrvcIc0fiIA/exec';
     fetch(`${GAS_URL}?token=anella2026secret&data=${encodeURIComponent(JSON.stringify(payload))}`).catch(() => {});

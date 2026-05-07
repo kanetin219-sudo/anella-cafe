@@ -293,8 +293,13 @@
     </div>
 
     <div class="err-msg" id="err0"></div>
-    <div class="nav-btns" id="step0Next" style="display:none;">
-      <button type="button" class="btn-next full" onclick="goNext(0)">次へ →</button>
+    <div id="step0Next" style="display:none;">
+      <div class="nav-btns" style="margin-bottom:10px;">
+        <button type="button" class="btn-next full" id="btnSameAsLast" onclick="goNextSameAsLast()" style="background:var(--accent);">前回と同じ内容で予約 → 日時選択へ</button>
+      </div>
+      <div class="nav-btns">
+        <button type="button" class="btn-next full" onclick="goNext(0)" style="background:var(--surface); color:var(--text-mid); border:2px solid var(--border); box-shadow:none;">コース・内容を変更して予約する</button>
+      </div>
     </div>
   </div>
 
@@ -854,6 +859,18 @@ function prefillStep5() {
   document.getElementById('lineName').value = r.line_name || '';
   document.getElementById('email').value = r.email || '';
   document.getElementById('staffNote').value = '';
+}
+
+// 前回と同じ内容でステップ4（日時選択）へジャンプ
+function goNextSameAsLast() {
+  if (!visitType) { showErr(0, 'ご利用回数を選択してください。'); return; }
+  if (!isReturning || !returnedData) { showErr(0, '電話番号で履歴を検索してください。'); return; }
+  prefillStep5();
+  // オプションも構築（buildOptionsはstep3用）
+  buildOptions();
+  if (!calYear) { calYear = today.getFullYear(); calMonth = today.getMonth(); }
+  showStep(4);
+  renderCalendar();
 }
 
 // ── STEP 1: コース選択 ─────────────────────────────

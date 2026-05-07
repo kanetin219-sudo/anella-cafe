@@ -845,19 +845,20 @@ function prefillStep5() {
     }
   }
 
-  // STEP5: 個人情報を自動入力
-  document.getElementById('petName').value = r.pet_name || '';
-  document.getElementById('gender').value = r.gender || '';
-  document.getElementById('weight').value = r.weight || '';
-  document.getElementById('petAge').value = r.pet_age || '';
+  // STEP5: 個人情報を自動入力（「不明」は空扱い）
+  const valid = v => (v && v !== '不明') ? v : '';
+  document.getElementById('petName').value = valid(r.pet_name);
+  document.getElementById('gender').value = valid(r.gender);
+  document.getElementById('weight').value = valid(r.weight);
+  document.getElementById('petAge').value = valid(r.pet_age);
   document.getElementById('matting').value = '';
   document.getElementById('visitExperience').value = '';
-  document.getElementById('vaccineRabies').value = r.vaccine_rabies || '';
-  document.getElementById('vaccine5mix').value = r.vaccine_5mix || '';
-  document.getElementById('ownerName').value = r.owner_name || '';
+  document.getElementById('vaccineRabies').value = valid(r.vaccine_rabies);
+  document.getElementById('vaccine5mix').value = valid(r.vaccine_5mix);
+  document.getElementById('ownerName').value = valid(r.owner_name);
   document.getElementById('phone').value = r.phone || '';
-  document.getElementById('lineName').value = r.line_name || '';
-  document.getElementById('email').value = r.email || '';
+  document.getElementById('lineName').value = valid(r.line_name);
+  document.getElementById('email').value = valid(r.email);
   document.getElementById('staffNote').value = '';
 }
 

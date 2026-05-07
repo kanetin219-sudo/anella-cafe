@@ -800,7 +800,10 @@ async function lookupPastReservation() {
   btn.disabled = true;
   btn.textContent = '検索中...';
 
-  const { data, error } = await supabase.rpc('lookup_reservation_by_phone', { p_phone: phone });
+  const [{ data, error }, { data: karteData }] = await Promise.all([
+    supabase.rpc('lookup_reservation_by_phone', { p_phone: phone }),
+    supabase.from('pet_kartes').select('*').eq('phone', phone).maybeSingle(),
+  ]);
 
   btn.disabled = false;
   btn.textContent = '履歴を検索する 🔍';
@@ -811,7 +814,24 @@ async function lookupPastReservation() {
     return;
   }
 
-  returnedData = data;
+  // カルテの値を優先し、ない場合は予約データにフォールバック
+  const pick = (karteVal, resVal) => {
+    if (karteVal && karteVal !== '不明') return karteVal;
+    if (resVal  && resVal  !== '不明') return resVal;
+    return '';
+  };
+  returnedData = {
+    ...data,
+    pet_name:       pick(karteData?.pet_name,       data.pet_name),
+    gender:         pick(karteData?.gender,          data.gender),
+    weight:         pick(karteData?.weight,          data.weight),
+    pet_age:        pick(karteData?.pet_age,         data.pet_age),
+    vaccine_rabies: pick(karteData?.vaccine_rabies,  data.vaccine_rabies),
+    vaccine_5mix:   pick(karteData?.vaccine_5mix,    data.vaccine_5mix),
+    owner_name:     pick(karteData?.owner_name,      data.owner_name),
+    line_name:      pick(karteData?.line_name,       data.line_name),
+    email:          pick(karteData?.email,           data.email),
+  };
   isReturning = true;
   resultEl.innerHTML = `
     <div style="font-weight:700; color:var(--accent); margin-bottom:8px;">✅ 前回のご利用情報が見つかりました</div>

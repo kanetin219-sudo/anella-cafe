@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg: #FDF6EE;
@@ -17,240 +16,176 @@
       --primary: #C96A3B;
       --primary-light: #E8946A;
       --accent: #4A7C6F;
-      --accent-light: #6FA898;
       --text: #2C1F14;
       --text-mid: #6B4F3A;
       --text-soft: #A88870;
       --border: #E8D5C0;
-      --shadow: rgba(150, 80, 30, 0.12);
+      --shadow: rgba(150,80,30,0.12);
       --warn: #D4502A;
-      --warn-bg: #FFF3EE;
-      --gray: #9E9E9E;
-      --gray-bg: #F5F5F5;
+      --income-bg: #EFF8F5;
+      --expense-bg: #FFF8F3;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
 
-    /* ── ログイン画面 ── */
-    #loginScreen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
-    }
-    .login-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-      padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px var(--shadow);
-    }
+    /* ── ログイン ── */
+    #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px var(--shadow); }
     .login-logo { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--primary); text-align: center; margin-bottom: 4px; }
     .login-sub { font-size: 13px; color: var(--text-soft); text-align: center; margin-bottom: 32px; }
     .login-field { margin-bottom: 16px; }
     .login-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
-    .login-field input {
-      width: 100%; padding: 13px 14px; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 16px; color: var(--text); outline: none;
-    }
+    .login-field input { width: 100%; padding: 13px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 16px; color: var(--text); outline: none; }
     .login-field input:focus { border-color: var(--primary-light); }
-    .login-btn {
-      width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 12px;
-      font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer;
-      margin-top: 8px; box-shadow: 0 4px 12px rgba(201,106,59,0.3); transition: opacity 0.2s;
-    }
+    .login-btn { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
     .login-btn:hover { opacity: 0.9; }
-    .login-btn:disabled { background: #D0B49E; box-shadow: none; cursor: not-allowed; }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .login-err { color: var(--warn); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
     .login-err.active { display: block; }
 
-    /* ── メイン画面 ── */
+    /* ── メイン ── */
     #mainScreen { display: none; }
 
     /* ── ヘッダー ── */
-    .admin-header {
-      background: var(--text); color: #fff; padding: 14px 20px;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
-      position: sticky; top: 0; z-index: 100;
-    }
+    .admin-header { background: var(--text); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 100; }
     .admin-header-logo { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary-light); }
     .admin-header-center { display: flex; align-items: center; gap: 10px; }
-    .month-picker {
-      padding: 8px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 15px; color: #fff;
-      cursor: pointer; outline: none;
-    }
+    .month-picker { padding: 8px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; font-family: inherit; font-size: 15px; color: #fff; cursor: pointer; outline: none; }
     .month-picker::-webkit-calendar-picker-indicator { filter: invert(1); }
-    .btn-this-month {
-      padding: 8px 13px; background: var(--primary); color: #fff; border: none; border-radius: 8px;
-      font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
-    }
+    .btn-this-month { padding: 8px 13px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
     .admin-header-right { display: flex; align-items: center; gap: 12px; }
     .admin-user { font-size: 12px; color: #bbb; }
-    .logout-btn {
-      padding: 7px 14px; background: transparent; border: 1px solid #555; border-radius: 8px;
-      color: #ccc; font-family: 'Noto Sans JP', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s;
-    }
+    .logout-btn { padding: 7px 14px; background: transparent; border: 1px solid #555; border-radius: 8px; color: #ccc; font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.2s; }
     .logout-btn:hover { border-color: #aaa; color: #fff; }
 
     /* ── タブ ── */
-    .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
-    .tab-bar::-webkit-scrollbar { display: none; }
-    .tab-btn {
-      flex: 1; min-width: 80px; padding: 13px 6px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700;
-      color: var(--text-soft); background: none; border: none; border-bottom: 3px solid transparent;
-      cursor: pointer; transition: all 0.2s; white-space: nowrap;
-    }
+    .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; }
+    .tab-btn { flex: 1; padding: 13px 6px; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--text-soft); background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+    .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 100px; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
     /* ── サマリーカード ── */
-    .summary-cards {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;
-    }
-    .sum-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 18px 14px; text-align: center; box-shadow: 0 2px 8px var(--shadow);
-    }
-    .sum-card-label { font-size: 11px; color: var(--text-soft); font-weight: 700; margin-bottom: 6px; }
-    .sum-card-value { font-size: 22px; font-weight: 700; color: var(--primary); }
-    .sum-card-value.income { color: var(--accent); }
-    .sum-card-value.expense { color: var(--text-mid); }
-    .sum-card-value.salary { color: #7B68EE; }
-    .sum-card-value.profit-plus { color: var(--accent); }
-    .sum-card-value.profit-minus { color: var(--warn); }
+    .result-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px; text-align: center; box-shadow: 0 2px 8px var(--shadow); }
+    .result-card-label { font-size: 11px; color: var(--text-soft); font-weight: 700; margin-bottom: 4px; }
+    .result-card-value { font-size: 18px; font-weight: 700; }
+    .rv-income { color: var(--accent); }
+    .rv-expense { color: var(--text-mid); }
+    .rv-plus { color: var(--accent); }
+    .rv-minus { color: var(--warn); }
 
-    /* ── チャートエリア ── */
-    .charts-area {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
-    }
-    .chart-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 20px; box-shadow: 0 2px 8px var(--shadow);
-    }
-    .chart-title { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 14px; text-align: center; }
-    .chart-wrap { position: relative; height: 200px; }
+    /* ── 入力セクション ── */
+    .input-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 8px var(--shadow); }
+    .sec-header { padding: 11px 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; cursor: pointer; user-select: none; }
+    .sec-header.inc { background: var(--income-bg); color: var(--accent); border-bottom: 1px solid #C8E0DB; }
+    .sec-header.exp { background: var(--expense-bg); color: var(--primary); border-bottom: 1px solid #F0C4B0; }
+    .sec-header.calc { background: #F0F4FF; color: #4A55A2; border-bottom: 1px solid #C5CAE9; }
+    .sec-toggle { margin-left: auto; font-size: 11px; color: var(--text-soft); }
+    .sec-body { padding: 14px 16px; }
+    .sec-body.collapsed { display: none; }
 
-    /* ── 内訳テーブル ── */
-    .section-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px var(--shadow);
+    /* ── フィールドグリッド ── */
+    .fields-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 14px; }
+    .field-item { display: flex; flex-direction: column; gap: 3px; }
+    .field-label { font-size: 11px; font-weight: 700; color: var(--text-soft); }
+    .field-wrap { display: flex; align-items: center; gap: 3px; }
+    .field-input {
+      flex: 1; min-width: 0; padding: 8px 9px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 7px; font-family: inherit; font-size: 14px; color: var(--text);
+      outline: none; text-align: right;
+      -webkit-appearance: none; -moz-appearance: textfield; appearance: textfield;
     }
-    .section-title {
-      font-size: 14px; font-weight: 700; color: var(--text-mid); margin-bottom: 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th {
-      font-size: 11px; color: var(--text-soft); font-weight: 700; text-align: left;
-      padding: 8px 10px; border-bottom: 2px solid var(--border);
-    }
-    .data-table td { font-size: 13px; padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .data-table tr:last-child td { border-bottom: none; }
-    .data-table td.amount { font-weight: 700; color: var(--text); text-align: right; }
-    .data-table td.category { color: var(--text-mid); }
-    .data-table td.memo { color: var(--text-soft); font-size: 12px; }
-    .data-table th.right { text-align: right; }
-    .data-table td.right { text-align: right; }
-    .no-data { text-align: center; padding: 24px; color: var(--text-soft); font-size: 13px; }
+    .field-input::-webkit-outer-spin-button, .field-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .field-input:focus { border-color: var(--primary-light); }
+    .field-unit { font-size: 11px; color: var(--text-soft); white-space: nowrap; }
 
-    /* ── 月合計 ── */
-    .month-total {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
-    }
-    .month-total-label { font-size: 13px; color: var(--text-mid); font-weight: 700; }
-    .month-total-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+    /* ── 小計行 ── */
+    .subtotal-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border); }
+    .subtotal-label { font-size: 12px; font-weight: 700; color: var(--text-mid); }
+    .subtotal-value { font-size: 15px; font-weight: 700; min-width: 110px; text-align: right; color: var(--primary); }
+    .subtotal-value.inc-sub { color: var(--accent); }
 
-    /* ── 追加フォーム ── */
-    .add-form-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px var(--shadow);
-    }
-    .add-form-title { font-size: 14px; font-weight: 700; color: var(--text-mid); margin-bottom: 14px; }
-    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
-    .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
-    .form-field { display: flex; flex-direction: column; gap: 5px; }
-    .form-field label { font-size: 11px; font-weight: 700; color: var(--text-soft); }
-    .form-input {
-      padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text); outline: none;
-      width: 100%; appearance: none; -webkit-appearance: none;
-    }
-    .form-input:focus { border-color: var(--primary-light); }
-    .form-select-wrap { position: relative; }
-    .form-select-wrap::after {
-      content: '▼'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-      font-size: 10px; color: var(--text-soft); pointer-events: none;
-    }
-    .form-select-wrap .form-input { padding-right: 28px; }
-    .add-btn {
-      padding: 11px 20px; background: var(--primary); color: #fff; border: none; border-radius: 8px;
-      font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .add-btn:hover { opacity: 0.9; }
-    .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* ── 計算セクション内 ── */
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .calc-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-radius: 9px; }
+    .calc-item.c-income { background: var(--income-bg); }
+    .calc-item.c-expense { background: var(--expense-bg); }
+    .calc-item.c-balance { grid-column: 1 / -1; background: #F0F4FF; }
+    .calc-label { font-size: 13px; font-weight: 700; color: var(--text-mid); }
+    .calc-value { font-size: 18px; font-weight: 700; }
+    .cv-income { color: var(--accent); }
+    .cv-expense { color: var(--text-mid); }
+    .cv-plus { color: var(--accent); }
+    .cv-minus { color: var(--warn); }
 
-    /* ── 削除ボタン ── */
-    .del-btn {
-      padding: 5px 10px; background: none; border: 1px solid #F0C4B0; border-radius: 6px;
-      font-family: 'Noto Sans JP', sans-serif; font-size: 11px; color: var(--warn); cursor: pointer;
-      white-space: nowrap;
+    .adj-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 12px; flex-wrap: wrap; }
+    .adj-label { font-size: 13px; font-weight: 700; color: var(--text-mid); white-space: nowrap; }
+    .adj-input {
+      width: 160px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 7px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; text-align: right;
+      -webkit-appearance: none; -moz-appearance: textfield;
     }
-    .del-btn:hover { background: var(--warn-bg); }
+    .adj-input::-webkit-outer-spin-button, .adj-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .adj-input:focus { border-color: var(--primary-light); }
+    .adj-unit { font-size: 12px; color: var(--text-soft); }
+    .adj-result-label { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-left: auto; white-space: nowrap; }
+    .adj-result-value { font-size: 17px; font-weight: 700; min-width: 120px; text-align: right; }
 
-    /* ── バッジ ── */
-    .pay-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-    .pay-badge {
-      font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 700;
-    }
-    .pay-badge.cash { background: #E8F5E9; color: var(--accent); border: 1px solid #C8E0DB; }
-    .pay-badge.card { background: #EEF2FF; color: #5C6BC0; border: 1px solid #C5CAE9; }
-    .pay-badge.emoney { background: #FFF8E1; color: #F57F17; border: 1px solid #FFE082; }
+    .memo-field { width: 100%; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; resize: vertical; min-height: 56px; }
+    .memo-field:focus { border-color: var(--primary-light); }
 
-    /* ── カテゴリバッジ ── */
-    .cat-badge {
-      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
-      background: var(--warn-bg); color: var(--primary); border: 1px solid #F0C4B0; font-weight: 700;
-    }
-    .cat-badge.green { background: #E8F5E9; color: var(--accent); border-color: #C8E0DB; }
-    .cat-badge.blue { background: #EEF2FF; color: #5C6BC0; border-color: #C5CAE9; }
-    .cat-badge.yellow { background: #FFF8E1; color: #F57F17; border-color: #FFE082; }
-    .cat-badge.gray { background: var(--gray-bg); color: var(--gray); border-color: #ddd; }
+    /* ── 保存バー ── */
+    .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 12px; justify-content: center; box-shadow: 0 -4px 12px var(--shadow); z-index: 50; }
+    .save-btn { padding: 12px 40px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .save-btn:hover { opacity: 0.9; }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .save-status { font-size: 13px; color: var(--text-soft); }
+    .save-status.ok { color: var(--accent); }
+    .save-status.err { color: var(--warn); }
+
+    /* ── 年間推移タブ ── */
+    .year-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .year-select { padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; color: var(--text); outline: none; cursor: pointer; }
+    .table-scroll { overflow-x: auto; border-radius: 14px; box-shadow: 0 2px 8px var(--shadow); }
+    .year-table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: 13px; white-space: nowrap; }
+    .year-table th { background: var(--text); color: #fff; padding: 10px 12px; font-weight: 700; font-size: 11px; text-align: right; }
+    .year-table th:first-child { text-align: center; position: sticky; left: 0; z-index: 5; }
+    .year-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: right; }
+    .year-table td:first-child { font-weight: 700; color: var(--text-mid); text-align: center; background: var(--bg); position: sticky; left: 0; z-index: 3; border-right: 1px solid var(--border); }
+    .year-table tr:hover td { background: #FFF5EE; }
+    .year-table tr:hover td:first-child { background: #FFEEDD; cursor: pointer; }
+    .year-table .plus { color: var(--accent); font-weight: 700; }
+    .year-table .minus { color: var(--warn); font-weight: 700; }
+    .year-table .total-row td { background: var(--bg); font-weight: 700; border-top: 2px solid var(--border); }
+    .year-table .total-row td:first-child { background: #F5E8D8; }
+    .year-table .no-data { color: var(--text-soft); }
 
     /* ── ローディング ── */
-    .loading-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(253,246,238,0.85);
-      z-index: 200; align-items: center; justify-content: center;
-    }
+    .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(253,246,238,0.85); z-index: 200; align-items: center; justify-content: center; }
     .loading-overlay.active { display: flex; }
-    .spinner {
-      width: 40px; height: 40px; border: 4px solid var(--border);
-      border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── レスポンシブ ── */
     @media (max-width: 700px) {
-      .summary-cards { grid-template-columns: repeat(2, 1fr); }
-      .charts-area { grid-template-columns: 1fr; }
-      .form-grid { grid-template-columns: 1fr; }
-      .form-grid-3 { grid-template-columns: 1fr 1fr; }
+      .result-cards { grid-template-columns: repeat(2, 1fr); }
+      .fields-grid { grid-template-columns: repeat(2, 1fr); }
+      .calc-grid { grid-template-columns: 1fr; }
       .admin-header { flex-direction: column; align-items: flex-start; }
-      .admin-header-center { width: 100%; }
-      .month-picker { flex: 1; }
     }
     @media (max-width: 480px) {
-      .summary-cards { grid-template-columns: 1fr 1fr; }
-      .form-grid-3 { grid-template-columns: 1fr; }
+      .result-card-value { font-size: 15px; }
     }
   </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-</div>
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
 
-<!-- ===== ログイン画面 ===== -->
+<!-- ===== ログイン ===== -->
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">ANELLA CAFE</div>
@@ -268,10 +203,9 @@
   </div>
 </div>
 
-<!-- ===== メイン画面 ===== -->
+<!-- ===== メイン ===== -->
 <div id="mainScreen">
 
-  <!-- ヘッダー -->
   <div class="admin-header">
     <div class="admin-header-logo">ANELLA Finance</div>
     <div class="admin-header-center">
@@ -284,337 +218,476 @@
     </div>
   </div>
 
-  <!-- タブ -->
   <div class="tab-bar">
-    <button class="tab-btn active" id="tab1" onclick="switchTab(1)">📊 月次サマリー</button>
-    <button class="tab-btn" id="tab2" onclick="switchTab(2)">💰 売上</button>
-    <button class="tab-btn" id="tab3" onclick="switchTab(3)">📦 経費</button>
-    <button class="tab-btn" id="tab4" onclick="switchTab(4)">👥 給与</button>
-    <button class="tab-btn" id="tab5" onclick="switchTab(5)">🏢 固定費</button>
+    <button class="tab-btn active" id="tab1" onclick="switchTab(1)">📝 月次入力</button>
+    <button class="tab-btn" id="tab2" onclick="switchTab(2)">📊 年間推移</button>
   </div>
 
   <div class="container">
 
-    <!-- ===== 月次サマリータブ ===== -->
+    <!-- ===== 月次入力タブ ===== -->
     <div class="tab-panel active" id="panel1">
 
-      <div class="summary-cards">
-        <div class="sum-card">
-          <div class="sum-card-label">総収入</div>
-          <div class="sum-card-value income" id="summaryIncome">¥0</div>
+      <!-- サマリーカード -->
+      <div class="result-cards">
+        <div class="result-card">
+          <div class="result-card-label">合計売上</div>
+          <div class="result-card-value rv-income" id="rc_income">¥0</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-card-label">総経費</div>
-          <div class="sum-card-value expense" id="summaryExpense">¥0</div>
+        <div class="result-card">
+          <div class="result-card-label">支出合計</div>
+          <div class="result-card-value rv-expense" id="rc_expense">¥0</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-card-label">給与合計</div>
-          <div class="sum-card-value salary" id="summarySalary">¥0</div>
+        <div class="result-card">
+          <div class="result-card-label">収支</div>
+          <div class="result-card-value rv-plus" id="rc_balance">¥0</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-card-label">当月利益</div>
-          <div class="sum-card-value" id="summaryProfit">¥0</div>
+        <div class="result-card">
+          <div class="result-card-label">利益（税引後）</div>
+          <div class="result-card-value rv-plus" id="rc_profit">¥0</div>
         </div>
       </div>
 
-      <div class="charts-area">
-        <div class="chart-card">
-          <div class="chart-title">収入内訳（カテゴリ別）</div>
-          <div class="chart-wrap">
-            <canvas id="incomeChart"></canvas>
+      <!-- 収入 -->
+      <div class="input-section">
+        <div class="sec-header inc" onclick="toggleSec('s_income')">
+          <span>💰 収入</span>
+          <span class="sec-toggle" id="tog_s_income">▼</span>
+        </div>
+        <div class="sec-body" id="s_income">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">カフェ・トリミング売上</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_cafe_uriage" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">給付費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_kyufu_hi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">利用者食費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_riyosha_shokuhi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">その他収入</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_sonota_uriage" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">合計売上</span>
+            <span class="subtotal-value inc-sub" id="sub_income">¥0</span>
           </div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">支出内訳（経費カテゴリ別）</div>
-          <div class="chart-wrap">
-            <canvas id="expenseChart"></canvas>
+      </div>
+
+      <!-- 人件費 -->
+      <div class="input-section">
+        <div class="sec-header exp" onclick="toggleSec('s_jinken')">
+          <span>👥 人件費</span>
+          <span class="sec-toggle" id="tog_s_jinken">▼</span>
+        </div>
+        <div class="sec-body" id="s_jinken">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">人件費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_jinken_hi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">社保</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_shakai_hoken" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">就労工賃</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_roshu_kocho" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">小計</span>
+            <span class="subtotal-value" id="sub_jinken">¥0</span>
           </div>
         </div>
       </div>
 
-      <div class="section-card">
-        <div class="section-title">📋 詳細内訳</div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>項目</th>
-              <th class="right">金額</th>
-              <th class="right">割合</th>
-            </tr>
-          </thead>
-          <tbody id="summaryDetailTable">
-            <tr><td colspan="3" class="no-data">読み込み中...</td></tr>
-          </tbody>
-        </table>
+      <!-- 施設費 -->
+      <div class="input-section">
+        <div class="sec-header exp" onclick="toggleSec('s_shisetsu')">
+          <span>🏢 施設費</span>
+          <span class="sec-toggle" id="tog_s_shisetsu">▼</span>
+        </div>
+        <div class="sec-body" id="s_shisetsu">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">家賃</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_yachin" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">駐車場</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_chushajo" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">電気</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_denki" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">水道</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_suido" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">ガス</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_gas_hi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">ゴミ処理代</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_gomi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">小計</span>
+            <span class="subtotal-value" id="sub_shisetsu">¥0</span>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- ===== 売上タブ ===== -->
+      <!-- システム費 -->
+      <div class="input-section">
+        <div class="sec-header exp" onclick="toggleSec('s_system')">
+          <span>💻 システム費</span>
+          <span class="sec-toggle" id="tog_s_system">▼</span>
+        </div>
+        <div class="sec-body" id="s_system">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">ネット電話</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_net_phone" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">ノウビー</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_knowbee" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">スマレジ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_smaregi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">Eラーニング</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_elearning" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">リタジイーノ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_retailzino" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">小計</span>
+            <span class="subtotal-value" id="sub_system">¥0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 仕入れ・消耗品 -->
+      <div class="input-section">
+        <div class="sec-header exp" onclick="toggleSec('s_shiire')">
+          <span>📦 仕入れ・消耗品</span>
+          <span class="sec-toggle" id="tog_s_shiire">▼</span>
+        </div>
+        <div class="sec-body" id="s_shiire">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">物販仕入れ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_butsuhan_shiire" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">ペット用品</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_pet_goods" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">アロマ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_aroma" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">カメラ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_camera" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">小計</span>
+            <span class="subtotal-value" id="sub_shiire">¥0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 保険・車両 -->
+      <div class="input-section">
+        <div class="sec-header exp" onclick="toggleSec('s_hoken')">
+          <span>🚗 保険・車両</span>
+          <span class="sec-toggle" id="tog_s_hoken">▼</span>
+        </div>
+        <div class="sec-body" id="s_hoken">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">車両費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_sharyo_hi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">保険</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_hoken" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">利用者保険</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_riyosha_hoken" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">小計</span>
+            <span class="subtotal-value" id="sub_hoken">¥0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 固定支払い -->
+      <div class="input-section">
+        <div class="sec-header exp" onclick="toggleSec('s_kotei')">
+          <span>📋 固定支払い・その他</span>
+          <span class="sec-toggle" id="tog_s_kotei">▼</span>
+        </div>
+        <div class="sec-body" id="s_kotei">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">広告費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_kokoku_hi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">返済</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_hensei" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">ロイヤリティ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_royalty" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">ジライーノ</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_jiraiino" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">地域貢献費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_chiiki_koken" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
+          </div>
+          <div class="subtotal-row">
+            <span class="subtotal-label">小計</span>
+            <span class="subtotal-value" id="sub_kotei">¥0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 収支計算 -->
+      <div class="input-section">
+        <div class="sec-header calc" onclick="toggleSec('s_calc')">
+          <span>🧮 収支計算</span>
+          <span class="sec-toggle" id="tog_s_calc">▼</span>
+        </div>
+        <div class="sec-body" id="s_calc">
+          <div class="calc-grid">
+            <div class="calc-item c-income">
+              <span class="calc-label">合計売上</span>
+              <span class="calc-value cv-income" id="calc_income">¥0</span>
+            </div>
+            <div class="calc-item c-expense">
+              <span class="calc-label">支出合計</span>
+              <span class="calc-value cv-expense" id="calc_expense">¥0</span>
+            </div>
+            <div class="calc-item c-balance">
+              <span class="calc-label">収支（売上 − 支出）</span>
+              <span class="calc-value cv-plus" id="calc_balance">¥0</span>
+            </div>
+          </div>
+
+          <div class="adj-row">
+            <span class="adj-label">控除</span>
+            <input type="number" class="adj-input" id="f_kojo" min="0" placeholder="0" oninput="recalc()">
+            <span class="adj-unit">円</span>
+            <span class="adj-result-label">利益前金額：</span>
+            <span class="adj-result-value cv-plus" id="calc_mae">¥0</span>
+          </div>
+
+          <div class="adj-row" style="border-top: none; padding-top: 0;">
+            <span class="adj-label">利益（税引後）</span>
+            <input type="number" class="adj-input" id="f_rieki_zei" min="0" placeholder="未入力時は利益前を表示" oninput="recalc()">
+            <span class="adj-unit">円</span>
+          </div>
+
+          <div style="margin-top: 12px;">
+            <div class="field-label" style="margin-bottom: 5px;">メモ</div>
+            <textarea class="memo-field" id="f_memo" placeholder="備考・特記事項など"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /panel1 -->
+
+    <!-- ===== 年間推移タブ ===== -->
     <div class="tab-panel" id="panel2">
 
-      <div class="add-form-card">
-        <div class="add-form-title">＋ 売上を追加</div>
-        <div class="form-grid">
-          <div class="form-field">
-            <label>日付</label>
-            <input type="date" id="incDate" class="form-input">
-          </div>
-          <div class="form-field">
-            <label>カテゴリ</label>
-            <div class="form-select-wrap">
-              <select id="incCategory" class="form-input">
-                <option value="カフェ">カフェ</option>
-                <option value="トリミング">トリミング</option>
-                <option value="その他">その他</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-field">
-            <label>合計金額（円）</label>
-            <input type="number" id="incAmount" class="form-input" placeholder="例: 15000" min="0">
-          </div>
-          <div class="form-field">
-            <label>メモ（任意）</label>
-            <input type="text" id="incMemo" class="form-input" placeholder="備考など">
-          </div>
-        </div>
-        <div class="form-grid-3">
-          <div class="form-field">
-            <label>現金（任意）</label>
-            <input type="number" id="incCash" class="form-input" placeholder="0" min="0">
-          </div>
-          <div class="form-field">
-            <label>カード（任意）</label>
-            <input type="number" id="incCard" class="form-input" placeholder="0" min="0">
-          </div>
-          <div class="form-field">
-            <label>電子マネー（任意）</label>
-            <input type="number" id="incEmoney" class="form-input" placeholder="0" min="0">
-          </div>
-        </div>
-        <button class="add-btn" id="incAddBtn" onclick="addIncome()">追加する</button>
+      <div class="year-controls">
+        <select id="yearSelect" class="year-select" onchange="loadYearView()"></select>
+        <span style="font-size: 13px; color: var(--text-soft);">年の収支推移（月をクリックで編集）</span>
       </div>
 
-      <div class="month-total">
-        <span class="month-total-label">月合計</span>
-        <span class="month-total-value" id="incomeMonthTotal">¥0</span>
-      </div>
-
-      <div class="section-card">
-        <table class="data-table">
+      <div class="table-scroll">
+        <table class="year-table">
           <thead>
             <tr>
-              <th>日付</th>
-              <th>カテゴリ</th>
-              <th class="right">金額</th>
-              <th>内訳</th>
-              <th>メモ</th>
-              <th></th>
+              <th>月</th>
+              <th>合計売上</th>
+              <th>支出合計</th>
+              <th>収支</th>
+              <th>控除</th>
+              <th>利益前金額</th>
+              <th>利益（税引後）</th>
             </tr>
           </thead>
-          <tbody id="incomeTable">
-            <tr><td colspan="6" class="no-data">読み込み中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ===== 経費タブ ===== -->
-    <div class="tab-panel" id="panel3">
-
-      <div class="add-form-card">
-        <div class="add-form-title">＋ 経費を追加</div>
-        <div class="form-grid">
-          <div class="form-field">
-            <label>日付</label>
-            <input type="date" id="expDate" class="form-input">
-          </div>
-          <div class="form-field">
-            <label>カテゴリ</label>
-            <div class="form-select-wrap">
-              <select id="expCategory" class="form-input">
-                <option value="食材仕入れ">食材仕入れ</option>
-                <option value="消耗品">消耗品</option>
-                <option value="光熱費">光熱費</option>
-                <option value="通信費">通信費</option>
-                <option value="広告費">広告費</option>
-                <option value="修繕費">修繕費</option>
-                <option value="その他">その他</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-field">
-            <label>金額（円）</label>
-            <input type="number" id="expAmount" class="form-input" placeholder="例: 30000" min="0">
-          </div>
-          <div class="form-field">
-            <label>メモ（任意）</label>
-            <input type="text" id="expMemo" class="form-input" placeholder="備考など">
-          </div>
-        </div>
-        <button class="add-btn" id="expAddBtn" onclick="addExpense()">追加する</button>
-      </div>
-
-      <div class="month-total">
-        <span class="month-total-label">月合計</span>
-        <span class="month-total-value" id="expenseMonthTotal">¥0</span>
-      </div>
-
-      <div class="section-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>カテゴリ</th>
-              <th class="right">金額</th>
-              <th>メモ</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="expenseTable">
-            <tr><td colspan="5" class="no-data">読み込み中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ===== 給与タブ ===== -->
-    <div class="tab-panel" id="panel4">
-
-      <div class="add-form-card">
-        <div class="add-form-title">＋ 給与を追加</div>
-        <div class="form-grid">
-          <div class="form-field">
-            <label>スタッフ名</label>
-            <input type="text" id="salStaff" class="form-input" placeholder="名前を入力" list="staffNameList">
-            <datalist id="staffNameList"></datalist>
-          </div>
-          <div class="form-field">
-            <label>金額（円）</label>
-            <input type="number" id="salAmount" class="form-input" placeholder="例: 200000" min="0">
-          </div>
-          <div class="form-field" style="grid-column: 1 / -1;">
-            <label>メモ（任意）</label>
-            <input type="text" id="salMemo" class="form-input" placeholder="備考など">
-          </div>
-        </div>
-        <button class="add-btn" id="salAddBtn" onclick="addSalary()">追加する</button>
-      </div>
-
-      <div class="month-total">
-        <span class="month-total-label">月合計</span>
-        <span class="month-total-value" id="salaryMonthTotal">¥0</span>
-      </div>
-
-      <div class="section-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>スタッフ名</th>
-              <th class="right">金額</th>
-              <th>メモ</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="salaryTable">
-            <tr><td colspan="4" class="no-data">読み込み中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ===== 固定費タブ ===== -->
-    <div class="tab-panel" id="panel5">
-
-      <div class="add-form-card">
-        <div class="add-form-title">＋ 固定費を追加</div>
-        <div class="form-grid">
-          <div class="form-field">
-            <label>カテゴリ</label>
-            <div class="form-select-wrap">
-              <select id="fixCategory" class="form-input">
-                <option value="家賃">家賃</option>
-                <option value="保険料">保険料</option>
-                <option value="リース">リース</option>
-                <option value="税金・社保">税金・社保</option>
-                <option value="ローン">ローン</option>
-                <option value="その他">その他</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-field">
-            <label>金額（円）</label>
-            <input type="number" id="fixAmount" class="form-input" placeholder="例: 80000" min="0">
-          </div>
-          <div class="form-field" style="grid-column: 1 / -1;">
-            <label>メモ（任意）</label>
-            <input type="text" id="fixMemo" class="form-input" placeholder="備考など">
-          </div>
-        </div>
-        <button class="add-btn" id="fixAddBtn" onclick="addFixed()">追加する</button>
-      </div>
-
-      <div class="month-total">
-        <span class="month-total-label">月合計</span>
-        <span class="month-total-value" id="fixedMonthTotal">¥0</span>
-      </div>
-
-      <div class="section-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>カテゴリ</th>
-              <th class="right">金額</th>
-              <th>メモ</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="fixedTable">
-            <tr><td colspan="4" class="no-data">読み込み中...</td></tr>
+          <tbody id="yearTableBody">
+            <tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-soft);">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
   </div><!-- /container -->
+
+  <!-- 保存バー -->
+  <div class="save-bar" id="saveBar">
+    <span class="save-status" id="saveStatus"></span>
+    <button class="save-btn" id="saveBtn" onclick="saveMonth()">保存する</button>
+  </div>
+
 </div><!-- /mainScreen -->
 
 <script>
-// ── 状態 ──────────────────────────────────────────
 let currentMonth = '';
 let activeTab = 1;
-let incomeChartInstance = null;
-let expenseChartInstance = null;
+
+// ── フィールド定義 ─────────────────────────────────
+const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'riyosha_shokuhi', 'sonota_uriage'];
+
+const EXPENSE_GROUPS = {
+  jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho'],
+  shisetsu: ['yachin', 'chushajo', 'denki', 'suido', 'gas_hi', 'gomi'],
+  system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino'],
+  shiire:   ['butsuhan_shiire', 'pet_goods', 'aroma', 'camera'],
+  hoken:    ['sharyo_hi', 'hoken', 'riyosha_hoken'],
+  kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken'],
+};
+
+const ALL_EXPENSE_FIELDS = Object.values(EXPENSE_GROUPS).flat();
+const ALL_NUM_FIELDS = [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, 'kojo', 'rieki_zei'];
 
 // ── 認証 ──────────────────────────────────────────
 async function checkAuth() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    showMain(session.user.email);
-  }
+  if (session) showMain(session.user.email);
 }
 
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   const btn      = document.getElementById('loginBtn');
-  const err      = document.getElementById('loginErr');
-
   if (!email || !password) { showLoginErr('メールとパスワードを入力してください'); return; }
-
-  btn.disabled = true;
-  btn.textContent = 'ログイン中...';
-  err.classList.remove('active');
-
+  btn.disabled = true; btn.textContent = 'ログイン中...';
+  document.getElementById('loginErr').classList.remove('active');
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  btn.disabled = false;
-  btn.textContent = 'ログイン';
-
-  if (error) {
-    showLoginErr('メールまたはパスワードが正しくありません');
-    return;
-  }
+  btn.disabled = false; btn.textContent = 'ログイン';
+  if (error) { showLoginErr('メールまたはパスワードが正しくありません'); return; }
   showMain(data.user.email);
 }
 
@@ -627,16 +700,15 @@ async function doLogout() {
 
 function showLoginErr(msg) {
   const el = document.getElementById('loginErr');
-  el.textContent = msg;
-  el.classList.add('active');
+  el.textContent = msg; el.classList.add('active');
 }
 
 function showMain(email) {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainScreen').style.display = 'block';
   document.getElementById('adminUserLabel').textContent = email;
+  initYearSelect();
   setThisMonth();
-  loadStaffNames();
 }
 
 // ── 月選択 ──────────────────────────────────────
@@ -645,513 +717,220 @@ function setThisMonth() {
   const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   document.getElementById('monthPicker').value = ym;
   currentMonth = ym;
-  loadCurrentTab();
+  loadMonth();
 }
 
 function onMonthChange() {
   currentMonth = document.getElementById('monthPicker').value;
-  if (!currentMonth) return;
-  loadCurrentTab();
-}
-
-function loadCurrentTab() {
-  switch (activeTab) {
-    case 1: loadSummary(); break;
-    case 2: loadIncome(); break;
-    case 3: loadExpense(); break;
-    case 4: loadSalary(); break;
-    case 5: loadFixed(); break;
-  }
+  if (currentMonth && activeTab === 1) loadMonth();
 }
 
 // ── タブ切替 ─────────────────────────────────────
 function switchTab(n) {
   activeTab = n;
-  [1, 2, 3, 4, 5].forEach(i => {
+  [1, 2].forEach(i => {
     document.getElementById('tab'   + i).classList.toggle('active', i === n);
     document.getElementById('panel' + i).classList.toggle('active', i === n);
   });
-  // 今日の日付をフォームにセット
-  const today = new Date().toISOString().slice(0, 10);
-  if (n === 2 && !document.getElementById('incDate').value) document.getElementById('incDate').value = today;
-  if (n === 3 && !document.getElementById('expDate').value) document.getElementById('expDate').value = today;
-  loadCurrentTab();
+  document.getElementById('saveBar').style.display = n === 1 ? 'flex' : 'none';
+  if (n === 2) loadYearView();
 }
 
-// ── 月の開始・終了日を計算 ──────────────────────
-function getMonthRange(ym) {
-  const [y, m] = ym.split('-').map(Number);
-  const start = `${ym}-01`;
-  const lastDay = new Date(y, m, 0).getDate();
-  const end   = `${ym}-${String(lastDay).padStart(2, '0')}`;
-  return { start, end };
+// ── セクション折りたたみ ──────────────────────────
+function toggleSec(id) {
+  const body = document.getElementById(id);
+  const tog  = document.getElementById('tog_' + id);
+  tog.textContent = body.classList.toggle('collapsed') ? '▶' : '▼';
 }
 
-// ── ローディング ──────────────────────────────────
+// ── ユーティリティ ────────────────────────────────
+function fmt(n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); }
+function fval(id) { return parseInt(document.getElementById(id).value) || 0; }
 function showLoading() { document.getElementById('loadingOverlay').classList.add('active'); }
 function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
 
-// ── 金額フォーマット ──────────────────────────────
-function fmt(n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); }
+// ── リアルタイム計算 ──────────────────────────────
+function recalc() {
+  const totalIncome = INCOME_FIELDS.reduce((s, f) => s + fval('f_' + f), 0);
 
-// ── カテゴリバッジ ────────────────────────────────
-function incomeCatBadge(cat) {
-  const cls = cat === 'カフェ' ? '' : cat === 'トリミング' ? 'green' : 'blue';
-  return `<span class="cat-badge ${cls}">${cat}</span>`;
-}
-function expenseCatBadge(cat) {
-  const map = {
-    '食材仕入れ': '', '消耗品': 'green', '光熱費': 'yellow',
-    '通信費': 'blue', '広告費': 'blue', '修繕費': 'yellow', 'その他': 'gray'
-  };
-  return `<span class="cat-badge ${map[cat] || 'gray'}">${cat}</span>`;
-}
-function fixedCatBadge(cat) {
-  const map = {
-    '家賃': '', '保険料': 'green', 'リース': 'blue',
-    '税金・社保': 'yellow', 'ローン': 'yellow', 'その他': 'gray'
-  };
-  return `<span class="cat-badge ${map[cat] || 'gray'}">${cat}</span>`;
+  let totalExpense = 0;
+  for (const [grp, fields] of Object.entries(EXPENSE_GROUPS)) {
+    const sub = fields.reduce((s, f) => s + fval('f_' + f), 0);
+    document.getElementById('sub_' + grp).textContent = fmt(sub);
+    totalExpense += sub;
+  }
+
+  const balance   = totalIncome - totalExpense;
+  const kojo      = fval('f_kojo');
+  const riekiMae  = balance - kojo;
+  const riekiZei  = fval('f_rieki_zei');
+  const showProfit = riekiZei || riekiMae;
+
+  // 小計・計算表示
+  document.getElementById('sub_income').textContent    = fmt(totalIncome);
+  document.getElementById('calc_income').textContent   = fmt(totalIncome);
+  document.getElementById('calc_expense').textContent  = fmt(totalExpense);
+
+  const balEl = document.getElementById('calc_balance');
+  balEl.textContent = fmt(balance);
+  balEl.className = 'calc-value ' + (balance >= 0 ? 'cv-plus' : 'cv-minus');
+
+  const maeEl = document.getElementById('calc_mae');
+  maeEl.textContent = fmt(riekiMae);
+  maeEl.className = 'adj-result-value ' + (riekiMae >= 0 ? 'cv-plus' : 'cv-minus');
+
+  // サマリーカード
+  document.getElementById('rc_income').textContent  = fmt(totalIncome);
+  document.getElementById('rc_expense').textContent = fmt(totalExpense);
+
+  const rcBal = document.getElementById('rc_balance');
+  rcBal.textContent = fmt(balance);
+  rcBal.className = 'result-card-value ' + (balance >= 0 ? 'rv-plus' : 'rv-minus');
+
+  const rcProfit = document.getElementById('rc_profit');
+  rcProfit.textContent = fmt(showProfit);
+  rcProfit.className = 'result-card-value ' + (showProfit >= 0 ? 'rv-plus' : 'rv-minus');
 }
 
-// ── スタッフ名リスト（オートコンプリート用） ────────
-async function loadStaffNames() {
-  const { data } = await supabase
-    .from('anella_salary')
-    .select('staff_name')
-    .order('staff_name');
-  if (!data) return;
-  const names = [...new Set(data.map(d => d.staff_name))];
-  const dl = document.getElementById('staffNameList');
-  dl.innerHTML = names.map(n => `<option value="${n}">`).join('');
-}
-
-// ── 月次サマリー ──────────────────────────────────
-async function loadSummary() {
+// ── 月データ読み込み ──────────────────────────────
+async function loadMonth() {
   if (!currentMonth) return;
   showLoading();
-  const { start, end } = getMonthRange(currentMonth);
+  const { data } = await supabase
+    .from('anella_monthly_finance')
+    .select('*')
+    .eq('year_month', currentMonth)
+    .maybeSingle();
+  hideLoading();
 
-  const [incRes, expRes, salRes, fixRes] = await Promise.all([
-    supabase.from('anella_income').select('category, amount').gte('income_date', start).lte('income_date', end),
-    supabase.from('anella_expense').select('category, amount').gte('expense_date', start).lte('expense_date', end),
-    supabase.from('anella_salary').select('amount').eq('year_month', currentMonth),
-    supabase.from('anella_fixed_cost').select('category, amount').eq('year_month', currentMonth),
-  ]);
+  ALL_NUM_FIELDS.forEach(f => { document.getElementById('f_' + f).value = ''; });
+  document.getElementById('f_memo').value = '';
+
+  if (data) {
+    ALL_NUM_FIELDS.forEach(f => {
+      if (data[f]) document.getElementById('f_' + f).value = data[f];
+    });
+    document.getElementById('f_memo').value = data.memo || '';
+    setSaveStatus('');
+  } else {
+    setSaveStatus('この月のデータはまだありません');
+  }
+  recalc();
+}
+
+// ── 月データ保存 ──────────────────────────────────
+async function saveMonth() {
+  if (!currentMonth) return;
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+
+  const record = { year_month: currentMonth, updated_at: new Date().toISOString() };
+  ALL_NUM_FIELDS.forEach(f => { record[f] = fval('f_' + f); });
+  record.memo = document.getElementById('f_memo').value.trim() || null;
+
+  const { error } = await supabase
+    .from('anella_monthly_finance')
+    .upsert(record, { onConflict: 'year_month' });
+
+  btn.disabled = false;
+
+  if (error) {
+    setSaveStatus('保存に失敗しました: ' + error.message, true);
+  } else {
+    setSaveStatus('保存しました ✓', false, true);
+    setTimeout(() => setSaveStatus(''), 3000);
+  }
+}
+
+function setSaveStatus(msg, isErr = false, isOk = false) {
+  const el = document.getElementById('saveStatus');
+  el.textContent = msg;
+  el.className = 'save-status' + (isErr ? ' err' : isOk ? ' ok' : '');
+}
+
+// ── 年間推移 ──────────────────────────────────────
+function initYearSelect() {
+  const sel = document.getElementById('yearSelect');
+  const cur = new Date().getFullYear();
+  for (let y = cur + 1; y >= cur - 3; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + '年';
+    if (y === cur) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+async function loadYearView() {
+  const year = document.getElementById('yearSelect').value;
+  if (!year) return;
+  showLoading();
+
+  const { data } = await supabase
+    .from('anella_monthly_finance')
+    .select('year_month,' + [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, 'kojo', 'rieki_zei'].join(','))
+    .gte('year_month', year + '-01')
+    .lte('year_month', year + '-12')
+    .order('year_month');
 
   hideLoading();
 
-  const incomes  = incRes.data  || [];
-  const expenses = expRes.data  || [];
-  const salaries = salRes.data  || [];
-  const fixeds   = fixRes.data  || [];
+  const byMonth = {};
+  (data || []).forEach(r => { byMonth[r.year_month] = r; });
 
-  const totalIncome  = incomes.reduce((s, r) => s + (r.amount || 0), 0);
-  const totalExpense = expenses.reduce((s, r) => s + (r.amount || 0), 0);
-  const totalSalary  = salaries.reduce((s, r) => s + (r.amount || 0), 0);
-  const totalFixed   = fixeds.reduce((s, r) => s + (r.amount || 0), 0);
-  const profit       = totalIncome - totalExpense - totalSalary - totalFixed;
+  let sumInc = 0, sumExp = 0, sumBal = 0, sumKojo = 0, sumMae = 0, sumProfit = 0;
 
-  // サマリーカード
-  document.getElementById('summaryIncome').textContent  = fmt(totalIncome);
-  document.getElementById('summaryExpense').textContent = fmt(totalExpense);
-  document.getElementById('summarySalary').textContent  = fmt(totalSalary);
-
-  const profitEl = document.getElementById('summaryProfit');
-  profitEl.textContent = fmt(profit);
-  profitEl.className = 'sum-card-value ' + (profit >= 0 ? 'profit-plus' : 'profit-minus');
-
-  // 収入チャート（カテゴリ別）
-  const incomeByCategory = {};
-  incomes.forEach(r => {
-    incomeByCategory[r.category] = (incomeByCategory[r.category] || 0) + r.amount;
-  });
-
-  // 経費チャート（カテゴリ別）
-  const expenseByCategory = {};
-  expenses.forEach(r => {
-    expenseByCategory[r.category] = (expenseByCategory[r.category] || 0) + r.amount;
-  });
-
-  renderPieChart('incomeChart', incomeByCategory, [
-    '#4A7C6F', '#C96A3B', '#5C6BC0'
-  ], incomeChartInstance, inst => { incomeChartInstance = inst; });
-
-  renderPieChart('expenseChart', expenseByCategory, [
-    '#C96A3B', '#4A7C6F', '#F57F17', '#5C6BC0', '#E91E63', '#9C27B0', '#9E9E9E'
-  ], expenseChartInstance, inst => { expenseChartInstance = inst; });
-
-  // 詳細内訳テーブル
-  const tbody = document.getElementById('summaryDetailTable');
+  const tbody = document.getElementById('yearTableBody');
   const rows = [];
 
-  rows.push(`<tr style="background:#F0F8F6;"><td colspan="3" style="font-weight:700; color:var(--accent); padding:10px;">収入</td></tr>`);
-  Object.entries(incomeByCategory).forEach(([cat, amt]) => {
-    const pct = totalIncome > 0 ? Math.round(amt / totalIncome * 100) : 0;
-    rows.push(`<tr><td class="category" style="padding-left:20px;">${cat}</td><td class="amount">${fmt(amt)}</td><td class="right" style="color:var(--text-soft); font-size:12px;">${pct}%</td></tr>`);
-  });
-  rows.push(`<tr style="font-weight:700;"><td style="padding-left:20px; color:var(--text-mid);">合計</td><td class="amount" style="color:var(--accent);">${fmt(totalIncome)}</td><td></td></tr>`);
+  for (let m = 1; m <= 12; m++) {
+    const ym = year + '-' + String(m).padStart(2, '0');
+    const r  = byMonth[ym];
+    if (!r) {
+      rows.push(`<tr><td onclick="jumpToMonth('${ym}')">${m}月</td><td class="no-data" colspan="6">-</td></tr>`);
+      continue;
+    }
+    const inc  = INCOME_FIELDS.reduce((s, f) => s + (r[f] || 0), 0);
+    const exp  = ALL_EXPENSE_FIELDS.reduce((s, f) => s + (r[f] || 0), 0);
+    const bal  = inc - exp;
+    const kojo = r.kojo || 0;
+    const mae  = bal - kojo;
+    const prof = r.rieki_zei || mae;
 
-  rows.push(`<tr style="background:#FFF3EE;"><td colspan="3" style="font-weight:700; color:var(--primary); padding:10px;">経費</td></tr>`);
-  Object.entries(expenseByCategory).forEach(([cat, amt]) => {
-    const pct = totalExpense > 0 ? Math.round(amt / totalExpense * 100) : 0;
-    rows.push(`<tr><td class="category" style="padding-left:20px;">${cat}</td><td class="amount">${fmt(amt)}</td><td class="right" style="color:var(--text-soft); font-size:12px;">${pct}%</td></tr>`);
-  });
-  rows.push(`<tr style="font-weight:700;"><td style="padding-left:20px; color:var(--text-mid);">合計</td><td class="amount" style="color:var(--primary);">${fmt(totalExpense)}</td><td></td></tr>`);
+    sumInc += inc; sumExp += exp; sumBal += bal;
+    sumKojo += kojo; sumMae += mae; sumProfit += prof;
 
-  rows.push(`<tr style="background:#EEF2FF;"><td colspan="3" style="font-weight:700; color:#5C6BC0; padding:10px;">給与</td></tr>`);
-  rows.push(`<tr><td style="padding-left:20px; color:var(--text-mid);">給与合計</td><td class="amount" style="color:#5C6BC0;">${fmt(totalSalary)}</td><td></td></tr>`);
+    rows.push(`<tr onclick="jumpToMonth('${ym}')">
+      <td>${m}月</td>
+      <td>${fmt(inc)}</td>
+      <td>${fmt(exp)}</td>
+      <td class="${bal >= 0 ? 'plus' : 'minus'}">${fmt(bal)}</td>
+      <td>${kojo ? fmt(kojo) : '-'}</td>
+      <td class="${mae >= 0 ? 'plus' : 'minus'}">${fmt(mae)}</td>
+      <td class="${prof >= 0 ? 'plus' : 'minus'}">${fmt(prof)}</td>
+    </tr>`);
+  }
 
-  rows.push(`<tr style="background:#FFF8E1;"><td colspan="3" style="font-weight:700; color:#F57F17; padding:10px;">固定費</td></tr>`);
-  const fixedByCategory = {};
-  fixeds.forEach(r => { fixedByCategory[r.category] = (fixedByCategory[r.category] || 0) + r.amount; });
-  Object.entries(fixedByCategory).forEach(([cat, amt]) => {
-    rows.push(`<tr><td class="category" style="padding-left:20px;">${cat}</td><td class="amount">${fmt(amt)}</td><td></td></tr>`);
-  });
-  rows.push(`<tr style="font-weight:700;"><td style="padding-left:20px; color:var(--text-mid);">合計</td><td class="amount" style="color:#F57F17;">${fmt(totalFixed)}</td><td></td></tr>`);
-
-  rows.push(`<tr style="background:${profit >= 0 ? '#E8F5E9' : '#FFF3EE'}; border-top: 2px solid var(--border);">
-    <td colspan="3" style="font-weight:700; color:${profit >= 0 ? 'var(--accent)' : 'var(--warn)'}; padding:12px; font-size:15px;">
-      当月利益：${fmt(profit)}
-    </td>
+  rows.push(`<tr class="total-row">
+    <td>年計</td>
+    <td>${fmt(sumInc)}</td>
+    <td>${fmt(sumExp)}</td>
+    <td class="${sumBal >= 0 ? 'plus' : 'minus'}">${fmt(sumBal)}</td>
+    <td>${fmt(sumKojo)}</td>
+    <td class="${sumMae >= 0 ? 'plus' : 'minus'}">${fmt(sumMae)}</td>
+    <td class="${sumProfit >= 0 ? 'plus' : 'minus'}">${fmt(sumProfit)}</td>
   </tr>`);
 
   tbody.innerHTML = rows.join('');
 }
 
-function renderPieChart(canvasId, data, colors, existingInstance, setInstance) {
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-
-  if (existingInstance) {
-    existingInstance.destroy();
-  }
-
-  const labels = Object.keys(data);
-  const values = Object.values(data);
-
-  if (labels.length === 0) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#A88870';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('データなし', canvas.width / 2, canvas.height / 2);
-    setInstance(null);
-    return;
-  }
-
-  const inst = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors.slice(0, labels.length),
-        borderWidth: 2,
-        borderColor: '#FFFAF4',
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: { family: 'Noto Sans JP', size: 11 },
-            color: '#6B4F3A',
-            padding: 10,
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const val = context.parsed;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const pct = total > 0 ? Math.round(val / total * 100) : 0;
-              return ` ¥${val.toLocaleString('ja-JP')} (${pct}%)`;
-            }
-          }
-        }
-      }
-    }
-  });
-  setInstance(inst);
+function jumpToMonth(ym) {
+  switchTab(1);
+  document.getElementById('monthPicker').value = ym;
+  currentMonth = ym;
+  loadMonth();
 }
 
-// ── 売上 ──────────────────────────────────────────
-async function loadIncome() {
-  if (!currentMonth) return;
-  const { start, end } = getMonthRange(currentMonth);
-  const { data, error } = await supabase
-    .from('anella_income')
-    .select('*')
-    .gte('income_date', start)
-    .lte('income_date', end)
-    .order('income_date', { ascending: false });
-
-  const tbody = document.getElementById('incomeTable');
-  if (error || !data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="no-data">この月の売上データはありません</td></tr>`;
-    document.getElementById('incomeMonthTotal').textContent = '¥0';
-    return;
-  }
-
-  const total = data.reduce((s, r) => s + (r.amount || 0), 0);
-  document.getElementById('incomeMonthTotal').textContent = fmt(total);
-
-  tbody.innerHTML = data.map(r => {
-    const badges = [];
-    if (r.payment_cash  > 0) badges.push(`<span class="pay-badge cash">現金 ${fmt(r.payment_cash)}</span>`);
-    if (r.payment_card  > 0) badges.push(`<span class="pay-badge card">カード ${fmt(r.payment_card)}</span>`);
-    if (r.payment_emoney > 0) badges.push(`<span class="pay-badge emoney">電子 ${fmt(r.payment_emoney)}</span>`);
-    return `
-    <tr>
-      <td style="white-space:nowrap;">${r.income_date}</td>
-      <td>${incomeCatBadge(r.category)}</td>
-      <td class="amount">${fmt(r.amount)}</td>
-      <td><div class="pay-badges">${badges.join('') || '<span style="color:var(--text-soft);font-size:12px;">-</span>'}</div></td>
-      <td class="memo">${r.memo || ''}</td>
-      <td><button class="del-btn" onclick="deleteIncome('${r.id}')">削除</button></td>
-    </tr>`;
-  }).join('');
-}
-
-async function addIncome() {
-  const date    = document.getElementById('incDate').value;
-  const cat     = document.getElementById('incCategory').value;
-  const amount  = parseInt(document.getElementById('incAmount').value) || 0;
-  const cash    = parseInt(document.getElementById('incCash').value)   || 0;
-  const card    = parseInt(document.getElementById('incCard').value)   || 0;
-  const emoney  = parseInt(document.getElementById('incEmoney').value) || 0;
-  const memo    = document.getElementById('incMemo').value.trim();
-
-  if (!date)   { alert('日付を入力してください'); return; }
-  if (amount <= 0) { alert('金額を入力してください'); return; }
-
-  const btn = document.getElementById('incAddBtn');
-  btn.disabled = true;
-
-  const { error } = await supabase.from('anella_income').insert({
-    income_date: date,
-    category: cat,
-    amount,
-    payment_cash: cash || null,
-    payment_card: card || null,
-    payment_emoney: emoney || null,
-    memo: memo || null,
-  });
-
-  btn.disabled = false;
-  if (error) { alert('追加に失敗しました: ' + error.message); return; }
-
-  document.getElementById('incAmount').value = '';
-  document.getElementById('incCash').value   = '';
-  document.getElementById('incCard').value   = '';
-  document.getElementById('incEmoney').value = '';
-  document.getElementById('incMemo').value   = '';
-  loadIncome();
-}
-
-async function deleteIncome(id) {
-  if (!confirm('この売上データを削除してもよいですか？')) return;
-  const { error } = await supabase.from('anella_income').delete().eq('id', id);
-  if (error) { alert('削除に失敗しました'); return; }
-  loadIncome();
-}
-
-// ── 経費 ──────────────────────────────────────────
-async function loadExpense() {
-  if (!currentMonth) return;
-  const { start, end } = getMonthRange(currentMonth);
-  const { data, error } = await supabase
-    .from('anella_expense')
-    .select('*')
-    .gte('expense_date', start)
-    .lte('expense_date', end)
-    .order('expense_date', { ascending: false });
-
-  const tbody = document.getElementById('expenseTable');
-  if (error || !data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="no-data">この月の経費データはありません</td></tr>`;
-    document.getElementById('expenseMonthTotal').textContent = '¥0';
-    return;
-  }
-
-  const total = data.reduce((s, r) => s + (r.amount || 0), 0);
-  document.getElementById('expenseMonthTotal').textContent = fmt(total);
-
-  tbody.innerHTML = data.map(r => `
-    <tr>
-      <td style="white-space:nowrap;">${r.expense_date}</td>
-      <td>${expenseCatBadge(r.category)}</td>
-      <td class="amount">${fmt(r.amount)}</td>
-      <td class="memo">${r.memo || ''}</td>
-      <td><button class="del-btn" onclick="deleteExpense('${r.id}')">削除</button></td>
-    </tr>
-  `).join('');
-}
-
-async function addExpense() {
-  const date   = document.getElementById('expDate').value;
-  const cat    = document.getElementById('expCategory').value;
-  const amount = parseInt(document.getElementById('expAmount').value) || 0;
-  const memo   = document.getElementById('expMemo').value.trim();
-
-  if (!date)   { alert('日付を入力してください'); return; }
-  if (amount <= 0) { alert('金額を入力してください'); return; }
-
-  const btn = document.getElementById('expAddBtn');
-  btn.disabled = true;
-
-  const { error } = await supabase.from('anella_expense').insert({
-    expense_date: date,
-    category: cat,
-    amount,
-    memo: memo || null,
-  });
-
-  btn.disabled = false;
-  if (error) { alert('追加に失敗しました: ' + error.message); return; }
-
-  document.getElementById('expAmount').value = '';
-  document.getElementById('expMemo').value   = '';
-  loadExpense();
-}
-
-async function deleteExpense(id) {
-  if (!confirm('この経費データを削除してもよいですか？')) return;
-  const { error } = await supabase.from('anella_expense').delete().eq('id', id);
-  if (error) { alert('削除に失敗しました'); return; }
-  loadExpense();
-}
-
-// ── 給与 ──────────────────────────────────────────
-async function loadSalary() {
-  if (!currentMonth) return;
-  const { data, error } = await supabase
-    .from('anella_salary')
-    .select('*')
-    .eq('year_month', currentMonth)
-    .order('staff_name', { ascending: true });
-
-  const tbody = document.getElementById('salaryTable');
-  if (error || !data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="no-data">この月の給与データはありません</td></tr>`;
-    document.getElementById('salaryMonthTotal').textContent = '¥0';
-    return;
-  }
-
-  const total = data.reduce((s, r) => s + (r.amount || 0), 0);
-  document.getElementById('salaryMonthTotal').textContent = fmt(total);
-
-  tbody.innerHTML = data.map(r => `
-    <tr>
-      <td style="font-weight:700;">${r.staff_name}</td>
-      <td class="amount">${fmt(r.amount)}</td>
-      <td class="memo">${r.memo || ''}</td>
-      <td><button class="del-btn" onclick="deleteSalary('${r.id}')">削除</button></td>
-    </tr>
-  `).join('');
-}
-
-async function addSalary() {
-  const name   = document.getElementById('salStaff').value.trim();
-  const amount = parseInt(document.getElementById('salAmount').value) || 0;
-  const memo   = document.getElementById('salMemo').value.trim();
-
-  if (!name)   { alert('スタッフ名を入力してください'); return; }
-  if (amount <= 0) { alert('金額を入力してください'); return; }
-
-  const btn = document.getElementById('salAddBtn');
-  btn.disabled = true;
-
-  const { error } = await supabase.from('anella_salary').insert({
-    year_month: currentMonth,
-    staff_name: name,
-    amount,
-    memo: memo || null,
-  });
-
-  btn.disabled = false;
-  if (error) { alert('追加に失敗しました: ' + error.message); return; }
-
-  document.getElementById('salStaff').value  = '';
-  document.getElementById('salAmount').value = '';
-  document.getElementById('salMemo').value   = '';
-  loadSalary();
-  loadStaffNames();
-}
-
-async function deleteSalary(id) {
-  if (!confirm('この給与データを削除してもよいですか？')) return;
-  const { error } = await supabase.from('anella_salary').delete().eq('id', id);
-  if (error) { alert('削除に失敗しました'); return; }
-  loadSalary();
-}
-
-// ── 固定費 ──────────────────────────────────────
-async function loadFixed() {
-  if (!currentMonth) return;
-  const { data, error } = await supabase
-    .from('anella_fixed_cost')
-    .select('*')
-    .eq('year_month', currentMonth)
-    .order('category', { ascending: true });
-
-  const tbody = document.getElementById('fixedTable');
-  if (error || !data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="no-data">この月の固定費データはありません</td></tr>`;
-    document.getElementById('fixedMonthTotal').textContent = '¥0';
-    return;
-  }
-
-  const total = data.reduce((s, r) => s + (r.amount || 0), 0);
-  document.getElementById('fixedMonthTotal').textContent = fmt(total);
-
-  tbody.innerHTML = data.map(r => `
-    <tr>
-      <td>${fixedCatBadge(r.category)}</td>
-      <td class="amount">${fmt(r.amount)}</td>
-      <td class="memo">${r.memo || ''}</td>
-      <td><button class="del-btn" onclick="deleteFixed('${r.id}')">削除</button></td>
-    </tr>
-  `).join('');
-}
-
-async function addFixed() {
-  const cat    = document.getElementById('fixCategory').value;
-  const amount = parseInt(document.getElementById('fixAmount').value) || 0;
-  const memo   = document.getElementById('fixMemo').value.trim();
-
-  if (amount <= 0) { alert('金額を入力してください'); return; }
-
-  const btn = document.getElementById('fixAddBtn');
-  btn.disabled = true;
-
-  const { error } = await supabase.from('anella_fixed_cost').insert({
-    year_month: currentMonth,
-    category: cat,
-    amount,
-    memo: memo || null,
-  });
-
-  btn.disabled = false;
-  if (error) { alert('追加に失敗しました: ' + error.message); return; }
-
-  document.getElementById('fixAmount').value = '';
-  document.getElementById('fixMemo').value   = '';
-  loadFixed();
-}
-
-async function deleteFixed(id) {
-  if (!confirm('この固定費データを削除してもよいですか？')) return;
-  const { error } = await supabase.from('anella_fixed_cost').delete().eq('id', id);
-  if (error) { alert('削除に失敗しました'); return; }
-  loadFixed();
-}
-
-// ── キーボード Enter でログイン ───────────────────
+// ── Enter でログイン ──────────────────────────────
 document.getElementById('loginPassword').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });

@@ -1101,15 +1101,16 @@ function parseAmazonCsv(text) {
   // 列インデックスを名前で探す
   const findCol = (candidates) => {
     for (const c of candidates) {
-      const idx = headers.findIndex(h => h.includes(c));
+      const idx = headers.findIndex(h => h.trim() === c || h.includes(c));
       if (idx >= 0) return idx;
     }
     return -1;
   };
 
-  const dateIdx   = findCol(['注文日', 'Order Date', '日付', 'Date', '注文した']);
-  const nameIdx   = findCol(['タイトル', '商品名', 'Title', '品名', '商品情報', 'Product Name', '商品タイトル', '商品']);
-  const amountIdx = findCol(['注文合計', '合計', '購入価格', 'Item Total', 'Total', '金額', '注文金額', '小計', 'grand total', '税込']);
+  const dateIdx   = findCol(['Order Date', '注文日', '日付', 'Date', '注文した']);
+  const nameIdx   = findCol(['Product Name', 'タイトル', '商品名', 'Title', '品名', '商品情報', '商品タイトル', '商品']);
+  const amountIdx = findCol(['Total Amount', '注文合計', '合計', '購入価格', 'Item Total', '金額', '注文金額', '小計', 'grand total', '税込']);
+  const statusIdx = findCol(['Order Status', '注文ステータス', 'Status']);
 
   if (amountIdx < 0) return [];
 
@@ -1117,6 +1118,12 @@ function parseAmazonCsv(text) {
   for (let i = 1; i < lines.length; i++) {
     const cols = splitCsvLine(lines[i], delim);
     if (cols.length < 2) continue;
+
+    // キャンセル済みは除外
+    if (statusIdx >= 0) {
+      const status = cleanCell(cols[statusIdx] || '').toLowerCase();
+      if (status === 'cancelled' || status === 'canceled' || status === 'キャンセル') continue;
+    }
 
     const rawAmt = cols[amountIdx] || '';
     const amount = parseJpAmount(rawAmt);
@@ -1126,13 +1133,29 @@ function parseAmazonCsv(text) {
     const rawName = nameIdx >= 0 ? (cols[nameIdx] || '') : (cols[1] || '');
 
     items.push({
-      date:   cleanCell(rawDate),
-      name:   cleanCell(rawName),
+      date:    extractYmd(cleanCell(rawDate)),
+      rawDate: cleanCell(rawDate),
+      name:    cleanCell(rawName),
       amount,
       checked: true,
     });
   }
   return items;
+}
+
+// ISO 8601 "2026-01-10T03:34:42Z" → "2026-01-10" に変換
+function extractYmd(dateStr) {
+  if (!dateStr) return '';
+  // ISO形式
+  const isoMatch = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoMatch) return isoMatch[1];
+  // 日本語形式（2026年1月10日）
+  const jpMatch = dateStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})/);
+  if (jpMatch) return `${jpMatch[1]}-${jpMatch[2].padStart(2,'0')}-${jpMatch[3].padStart(2,'0')}`;
+  // スラッシュ形式（2026/1/10）
+  const slashMatch = dateStr.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if (slashMatch) return `${slashMatch[1]}-${slashMatch[2].padStart(2,'0')}-${slashMatch[3].padStart(2,'0')}`;
+  return dateStr;
 }
 
 function splitCsvLine(line, delim) {
@@ -1218,13 +1241,13 @@ function updateAmzTotal() {
 
 function isInMonth(dateStr, ym) {
   if (!dateStr || !ym) return false;
-  // 日付形式が色々（2026/5/1, 2026-05-01, 2026年5月1日 など）
+  // extractYmd済みの "YYYY-MM-DD" 形式ならそのままスライス
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr.slice(0, 7) === ym;
+  // その他の形式をフォールバック変換
   const normalized = dateStr.replace(/年|月/g, '-').replace(/日/g, '').replace(/\//g, '-');
   const parts = normalized.split('-');
   if (parts.length < 2) return false;
-  const y = parts[0].padStart(4, '20');
-  const m = parts[1].padStart(2, '0');
-  return `${y}-${m}` === ym;
+  return `${parts[0]}-${parts[1].padStart(2,'0')}` === ym;
 }
 
 function escHtml(s) {

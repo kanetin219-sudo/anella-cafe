@@ -315,13 +315,6 @@
               </div>
             </div>
             <div class="field-item">
-              <div class="field-label">利用者食費</div>
-              <div class="field-wrap">
-                <input type="number" class="field-input" id="f_riyosha_shokuhi" min="0" placeholder="0" oninput="recalc()">
-                <span class="field-unit">円</span>
-              </div>
-            </div>
-            <div class="field-item">
               <div class="field-label">その他収入</div>
               <div class="field-wrap">
                 <input type="number" class="field-input" id="f_sonota_uriage" min="0" placeholder="0" oninput="recalc()">
@@ -620,6 +613,13 @@
                 <span class="field-unit">円</span>
               </div>
             </div>
+            <div class="field-item">
+              <div class="field-label">利用者食費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_riyosha_shokuhi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
           </div>
           <div class="subtotal-row">
             <span class="subtotal-label">小計</span>
@@ -787,7 +787,7 @@ let currentMonth = '';
 let activeTab = 1;
 
 // ── フィールド定義 ─────────────────────────────────
-const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'riyosha_shokuhi', 'sonota_uriage'];
+const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'sonota_uriage'];
 
 const EXPENSE_GROUPS = {
   jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho'],
@@ -795,7 +795,7 @@ const EXPENSE_GROUPS = {
   system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino', 'keitai'],
   shiire:   ['butsuhan_shiire', 'pet_goods', 'aroma', 'camera'],
   hoken:    ['sharyo_hi', 'hoken', 'riyosha_hoken'],
-  kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken', 'zappi'],
+  kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken', 'zappi', 'riyosha_shokuhi'],
 };
 
 const ALL_EXPENSE_FIELDS = Object.values(EXPENSE_GROUPS).flat();

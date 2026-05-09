@@ -474,6 +474,13 @@
                 <span class="field-unit">円</span>
               </div>
             </div>
+            <div class="field-item">
+              <div class="field-label">携帯通信費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_keitai" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
           </div>
           <div class="subtotal-row">
             <span class="subtotal-label">小計</span>
@@ -785,7 +792,7 @@ const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'riyosha_shokuhi', 'sonota_uri
 const EXPENSE_GROUPS = {
   jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho'],
   shisetsu: ['yachin', 'chushajo', 'denki', 'suido', 'gas_hi', 'gomi'],
-  system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino'],
+  system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino', 'keitai'],
   shiire:   ['butsuhan_shiire', 'pet_goods', 'aroma', 'camera'],
   hoken:    ['sharyo_hi', 'hoken', 'riyosha_hoken'],
   kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken', 'zappi'],

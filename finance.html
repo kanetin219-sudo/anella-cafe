@@ -606,6 +606,13 @@
                 <span class="field-unit">円</span>
               </div>
             </div>
+            <div class="field-item">
+              <div class="field-label">雑費</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_zappi" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
           </div>
           <div class="subtotal-row">
             <span class="subtotal-label">小計</span>
@@ -755,6 +762,7 @@
               <option value="sharyo_hi">車両費</option>
               <option value="hoken">保険</option>
               <option value="chiiki_koken">地域貢献費</option>
+              <option value="zappi">雑費</option>
             </select>
             <span class="amz-total-badge" id="amzTotalBadge">合計 ¥0</span>
             <button class="amz-import-btn" id="amzImportBtn" onclick="importAmzItems()">フォームに追加する</button>
@@ -780,7 +788,7 @@ const EXPENSE_GROUPS = {
   system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino'],
   shiire:   ['butsuhan_shiire', 'pet_goods', 'aroma', 'camera'],
   hoken:    ['sharyo_hi', 'hoken', 'riyosha_hoken'],
-  kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken'],
+  kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken', 'zappi'],
 };
 
 const ALL_EXPENSE_FIELDS = Object.values(EXPENSE_GROUPS).flat();
@@ -1275,7 +1283,7 @@ function importAmzItems() {
     kokoku_hi:'s_kotei', chiiki_koken:'s_kotei',
     denki:'s_shisetsu', suido:'s_shisetsu', gomi:'s_shisetsu',
     net_phone:'s_system',
-    sharyo_hi:'s_hoken', hoken:'s_hoken',
+    zappi:'s_kotei', sharyo_hi:'s_hoken', hoken:'s_hoken',
   };
   const secId = secMap[cat];
   if (secId) {

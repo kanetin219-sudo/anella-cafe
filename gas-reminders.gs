@@ -18,8 +18,10 @@
 // ── 設定 ─────────────────────────────────────────
 var PROP = PropertiesService.getScriptProperties();
 
-function getSupabaseUrl()  { return PROP.getProperty('SUPABASE_URL') || 'https://abeekodehorlwsmnhoza.supabase.co'; }
-function getServiceKey()   { return PROP.getProperty('SUPABASE_SERVICE_KEY') || ''; }
+var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiZWVrb2RlaG9ybHdzbW5ob3phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzAzMTksImV4cCI6MjA5Mjc0NjMxOX0.ZgOB2TUuBBRNV8pejae_UOX9kXIiFb-CS7X0alRX1uU';
+
+function getSupabaseUrl() { return PROP.getProperty('SUPABASE_URL') || 'https://abeekodehorlwsmnhoza.supabase.co'; }
+function getAnonKey()     { return PROP.getProperty('SUPABASE_ANON_KEY') || ANON_KEY; }
 
 var STORE_NAME   = 'ANELLA CAFE 大分店';
 var STORE_TEL    = '097-594-9770';
@@ -29,18 +31,19 @@ var STAFF_EMAIL  = 'anellacafeoita@gmail.com';
 // ── Supabase ヘルパー ─────────────────────────────
 
 function getReservations(targetDate, statusFilter) {
-  var url = getSupabaseUrl() + '/rest/v1/trimming_reservations'
-    + '?visit_date=eq.' + targetDate
-    + (statusFilter ? '&status=eq.' + encodeURIComponent(statusFilter) : '')
-    + '&order=visit_time.asc';
+  var url = getSupabaseUrl() + '/rest/v1/rpc/gas_get_reminders';
 
   var response = UrlFetchApp.fetch(url, {
-    method: 'GET',
+    method: 'POST',
     headers: {
-      'apikey':        getServiceKey(),
-      'Authorization': 'Bearer ' + getServiceKey(),
+      'apikey':        getAnonKey(),
+      'Authorization': 'Bearer ' + getAnonKey(),
       'Content-Type':  'application/json'
     },
+    payload: JSON.stringify({
+      p_date:   targetDate,
+      p_status: statusFilter || null
+    }),
     muteHttpExceptions: true
   });
 
@@ -52,19 +55,16 @@ function getReservations(targetDate, statusFilter) {
 }
 
 function updateReminderFlag(id, field) {
-  var url = getSupabaseUrl() + '/rest/v1/trimming_reservations?id=eq.' + id;
-  var body = {};
-  body[field] = true;
+  var url = getSupabaseUrl() + '/rest/v1/rpc/gas_mark_sent';
 
   UrlFetchApp.fetch(url, {
-    method: 'PATCH',
+    method: 'POST',
     headers: {
-      'apikey':        getServiceKey(),
-      'Authorization': 'Bearer ' + getServiceKey(),
-      'Content-Type':  'application/json',
-      'Prefer':        'return=minimal'
+      'apikey':        getAnonKey(),
+      'Authorization': 'Bearer ' + getAnonKey(),
+      'Content-Type':  'application/json'
     },
-    payload: JSON.stringify(body),
+    payload: JSON.stringify({ p_id: id, p_field: field }),
     muteHttpExceptions: true
   });
 }
@@ -352,23 +352,22 @@ function sendManualReminder() {
   var targetDate = '2026-05-08'; // ← 対象日を変更して実行
 
   // ステータス問わず全予約を取得（キャンセル以外）
-  var url = getSupabaseUrl() + '/rest/v1/trimming_reservations'
-    + '?visit_date=eq.' + targetDate
-    + '&status=neq.キャンセル'
-    + '&order=visit_time.asc';
+  var url = getSupabaseUrl() + '/rest/v1/rpc/gas_get_reminders';
 
   var response = UrlFetchApp.fetch(url, {
-    method: 'GET',
+    method: 'POST',
     headers: {
-      'apikey':        getServiceKey(),
-      'Authorization': 'Bearer ' + getServiceKey(),
+      'apikey':        getAnonKey(),
+      'Authorization': 'Bearer ' + getAnonKey(),
       'Content-Type':  'application/json'
     },
+    payload: JSON.stringify({ p_date: targetDate, p_status: null }),
     muteHttpExceptions: true
   });
 
-  var reservations = JSON.parse(response.getContentText());
-  Logger.log(targetDate + ' の対象予約: ' + reservations.length + '件');
+  var all = JSON.parse(response.getContentText());
+  var reservations = all.filter(function(r) { return r.status !== 'キャンセル'; });
+  Logger.log(targetDate + ' の対象予約: ' + reservations.length + '件（キャンセル除外済み）');
 
   var sent = 0;
   reservations.forEach(function(r) {
@@ -399,8 +398,7 @@ function sendManualReminder() {
 function setupProperties() {
   var props = PropertiesService.getScriptProperties();
   props.setProperties({
-    'SUPABASE_URL':         'https://abeekodehorlwsmnhoza.supabase.co',
-    'SUPABASE_SERVICE_KEY': '★ここにservice_roleキーを貼り付け★'
+    'SUPABASE_URL': 'https://abeekodehorlwsmnhoza.supabase.co'
   });
-  Logger.log('プロパティ設定完了');
+  Logger.log('プロパティ設定完了（anon keyはコード内に埋め込み済み）');
 }

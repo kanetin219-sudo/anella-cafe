@@ -329,6 +329,46 @@
         </div>
       </div>
 
+      <!-- 利用状況 -->
+      <div class="input-section">
+        <div class="sec-header inc" onclick="toggleSec('s_usage')">
+          <span>👥 利用状況</span>
+          <span class="sec-toggle" id="tog_s_usage">▼</span>
+        </div>
+        <div class="sec-body" id="s_usage">
+          <div class="fields-grid">
+            <div class="field-item">
+              <div class="field-label">ふれあい新規</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_fureai_new" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">人</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">リピーター</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_repeater" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">人</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">トリミング</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_trimming_count" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">件</span>
+              </div>
+            </div>
+            <div class="field-item">
+              <div class="field-label">就労利用数</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_joryu_riyosuu" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">人</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 人件費 -->
       <div class="input-section">
         <div class="sec-header exp" onclick="toggleSec('s_jinken')">
@@ -788,6 +828,7 @@ let activeTab = 1;
 
 // ── フィールド定義 ─────────────────────────────────
 const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'sonota_uriage'];
+const COUNT_FIELDS  = ['fureai_new', 'repeater', 'trimming_count', 'joryu_riyosuu'];
 
 const EXPENSE_GROUPS = {
   jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho'],
@@ -799,7 +840,7 @@ const EXPENSE_GROUPS = {
 };
 
 const ALL_EXPENSE_FIELDS = Object.values(EXPENSE_GROUPS).flat();
-const ALL_NUM_FIELDS = [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, 'kojo', 'rieki_zei'];
+const ALL_NUM_FIELDS = [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, ...COUNT_FIELDS, 'kojo', 'rieki_zei'];
 
 // ── 認証 ──────────────────────────────────────────
 async function checkAuth() {

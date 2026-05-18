@@ -330,6 +330,12 @@
       color: var(--primary); transition: all 0.2s; white-space: nowrap;
     }
     .rider-detail-btn:hover { background: rgba(201,106,59,0.1); }
+    .rider-switch-btn {
+      padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+      border: 1px solid var(--accent); background: transparent; cursor: pointer;
+      color: var(--accent); transition: all 0.2s; white-space: nowrap;
+    }
+    .rider-switch-btn:hover { background: rgba(74,124,111,0.1); }
     .add-rider-btn { width: 100%; text-align: center; padding: 12px; margin: 8px 0; }
 
     /* ===== 利用者管理 ===== */
@@ -1258,16 +1264,20 @@ async function loadTransferPage() {
 }
 
 function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
-  const go10 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
+  const go10_1 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30' && (s.pickup_group||1) === 1).sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
+  const go10_2 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30' && (s.pickup_group||1) === 2).sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
   const go11 = schedules.filter(s => s.pickup_time && s.pickup_time >= '10:30' && s.pickup_time < '13:00').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
-  const ret15 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '14:30' && s.dropoff_time < '15:30').sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
+  const ret15_1 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '14:30' && s.dropoff_time < '15:30' && (s.dropoff_group||1) === 1).sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
+  const ret15_2 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '14:30' && s.dropoff_time < '15:30' && (s.dropoff_group||1) === 2).sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
   const ret16 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '15:30').sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
 
   const groups = [
-    { key: 'go10', label: '🌅 行き 10:00', items: go10, driverKey: 'pickup_driver', badge: 'badge-primary' },
-    { key: 'go11', label: '🌅 行き 11:00', items: go11, driverKey: 'pickup_driver', badge: 'badge-primary' },
-    { key: 'return15', label: '🌇 帰り 15:00', items: ret15, driverKey: 'dropoff_driver_15', badge: 'badge-accent' },
-    { key: 'return16', label: '🌙 帰り 16:00', items: ret16, driverKey: 'dropoff_driver_16', badge: 'badge-green' },
+    { key: 'go10_1', label: '🌅 行き 10:00 ①便', items: go10_1, driverKey: 'pickup_driver',    badge: 'badge-primary', groupField: 'pickup_group',  groupNum: 1 },
+    { key: 'go10_2', label: '🌅 行き 10:00 ②便', items: go10_2, driverKey: 'pickup_driver_2',  badge: 'badge-primary', groupField: 'pickup_group',  groupNum: 2 },
+    { key: 'go11',   label: '🌅 行き 11:00',      items: go11,   driverKey: 'pickup_driver',    badge: 'badge-primary', groupField: null,            groupNum: null },
+    { key: 'return15_1', label: '🌇 帰り 15:00 ①便', items: ret15_1, driverKey: 'dropoff_driver_15',   badge: 'badge-accent', groupField: 'dropoff_group', groupNum: 1 },
+    { key: 'return15_2', label: '🌇 帰り 15:00 ②便', items: ret15_2, driverKey: 'dropoff_driver_15_2', badge: 'badge-accent', groupField: 'dropoff_group', groupNum: 2 },
+    { key: 'return16',   label: '🌙 帰り 16:00',     items: ret16,   driverKey: 'dropoff_driver_16',    badge: 'badge-green',  groupField: null,            groupNum: null },
   ];
 
   const container = document.getElementById('transferGroups');
@@ -1291,7 +1301,7 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
       </div>
       <div class="rider-list drop-zone" id="riderList_${g.key}" data-group="${g.key}">
         ${g.items.length === 0 ? `<div class="empty-state">利用者なし</div>` : ''}
-        ${g.items.map((s,i) => renderRiderItem(s, i+1, g.key)).join('')}
+        ${g.items.map((s,i) => renderRiderItem(s, i+1, g.key, g.groupField, g.groupNum)).join('')}
       </div>
     </div>`;
   }).join('');
@@ -1300,16 +1310,21 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
   document.querySelectorAll('.rider-item').forEach(setupDrag);
 }
 
-function renderRiderItem(s, order, group) {
+function renderRiderItem(s, order, group, groupField, groupNum) {
   const name = s.transfer_users?.name || '不明';
   const note = s.transfer_users?.note || '';
   const isAbsent = s.status === '欠席';
+  const otherGroup = groupNum === 1 ? 2 : 1;
+  const switchBtn = groupField
+    ? `<button class="rider-switch-btn" onclick="moveToGroup('${s.id}','${groupField}',${otherGroup})">→${otherGroup}便</button>`
+    : '';
   return `
   <div class="rider-item ${isAbsent?'absent':''}" draggable="true" data-id="${s.id}" data-group="${group}">
     <span class="drag-handle">⠿</span>
     <div class="rider-order">${order}</div>
     <div class="rider-name">${escHtml(name)}</div>
     <button class="rider-detail-btn" data-name="${escHtml(name)}" data-note="${escHtml(note)}" onclick="showUserNote(this)">詳細</button>
+    ${switchBtn}
     <button class="rider-absent-btn ${isAbsent?'active':''}" onclick="toggleAbsent('${s.id}','${isAbsent}')">
       ${isAbsent ? '出席に戻す' : '欠席'}
     </button>
@@ -1346,10 +1361,15 @@ function setupDrag(el) {
   el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
 }
 
+async function moveToGroup(scheduleId, field, newGroup) {
+  await supabase.from('transfer_schedules').update({ [field]: newGroup }).eq('id', scheduleId);
+  loadTransferPage();
+}
+
 async function saveDragOrder(list) {
   const items = [...list.querySelectorAll('.rider-item')];
   const group = list.dataset.group;
-  const isGo = group === 'go';
+  const isGo = group.startsWith('go');
   const updates = items.map((el, i) => ({
     id: el.dataset.id,
     [isGo ? 'pickup_order' : 'dropoff_order']: i + 1

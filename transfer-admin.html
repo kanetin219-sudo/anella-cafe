@@ -141,6 +141,11 @@
     .badge-red { background: rgba(212,80,42,0.1); color: var(--warn); }
     .badge-gray { background: var(--gray-bg); color: var(--gray); }
     .badge-primary { background: rgba(201,106,59,0.12); color: var(--primary); }
+    .badge-blue   { background: rgba(59,123,201,0.13); color: #3B7BC9; }
+    .badge-accent { background: rgba(74,124,111,0.13); color: var(--accent); }
+    .group-header-orange { background: rgba(201,106,59,0.07) !important; border-left: 4px solid var(--primary); }
+    .group-header-blue   { background: rgba(59,123,201,0.07) !important; border-left: 4px solid #3B7BC9; }
+    .group-header-green  { background: rgba(74,124,111,0.07) !important; border-left: 4px solid var(--accent); }
     .form-group { margin-bottom: 14px; }
     .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 5px; }
     .form-input, .form-select, .form-textarea {
@@ -1272,12 +1277,12 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
   const ret16 = schedules.filter(s => s.dropoff_time && s.dropoff_time >= '15:30').sort((a,b)=>(a.dropoff_order||99)-(b.dropoff_order||99));
 
   const groups = [
-    { key: 'go10_1', label: '🌅 行き 10:00 ①便', items: go10_1, driverKey: 'pickup_driver',    badge: 'badge-primary', groupField: 'pickup_group',  groupNum: 1 },
-    { key: 'go10_2', label: '🌅 行き 10:00 ②便', items: go10_2, driverKey: 'pickup_driver_2',  badge: 'badge-primary', groupField: 'pickup_group',  groupNum: 2 },
-    { key: 'go11',   label: '🌅 行き 11:00',      items: go11,   driverKey: 'pickup_driver',    badge: 'badge-primary', groupField: null,            groupNum: null },
-    { key: 'return15_1', label: '🌇 帰り 15:00 ①便', items: ret15_1, driverKey: 'dropoff_driver_15',   badge: 'badge-accent', groupField: 'dropoff_group', groupNum: 1 },
-    { key: 'return15_2', label: '🌇 帰り 15:00 ②便', items: ret15_2, driverKey: 'dropoff_driver_15_2', badge: 'badge-accent', groupField: 'dropoff_group', groupNum: 2 },
-    { key: 'return16',   label: '🌙 帰り 16:00',     items: ret16,   driverKey: 'dropoff_driver_16',    badge: 'badge-green',  groupField: null,            groupNum: null },
+    { key: 'go10_1', label: '🌅 行き 10:00 ①便', items: go10_1, driverKey: 'pickup_driver',    badge: 'badge-primary', headerClass: 'group-header-orange', groupField: 'pickup_group',  groupNum: 1 },
+    { key: 'go10_2', label: '🌅 行き 10:00 ②便', items: go10_2, driverKey: 'pickup_driver_2',  badge: 'badge-blue',    headerClass: 'group-header-blue',   groupField: 'pickup_group',  groupNum: 2 },
+    { key: 'go11',   label: '🌅 行き 11:00',      items: go11,   driverKey: 'pickup_driver',    badge: 'badge-green',   headerClass: 'group-header-green',  groupField: null,            groupNum: null },
+    { key: 'return15_1', label: '🌇 帰り 15:00 ①便', items: ret15_1, driverKey: 'dropoff_driver_15',   badge: 'badge-accent', headerClass: '', groupField: 'dropoff_group', groupNum: 1 },
+    { key: 'return15_2', label: '🌇 帰り 15:00 ②便', items: ret15_2, driverKey: 'dropoff_driver_15_2', badge: 'badge-accent', headerClass: '', groupField: 'dropoff_group', groupNum: 2 },
+    { key: 'return16',   label: '🌙 帰り 16:00',     items: ret16,   driverKey: 'dropoff_driver_16',    badge: 'badge-green',  headerClass: '', groupField: null,            groupNum: null },
   ];
 
   const container = document.getElementById('transferGroups');
@@ -1286,7 +1291,7 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
     const driverVal = dd[g.driverKey] || '';
     return `
     <div class="group-card">
-      <div class="group-header">
+      <div class="group-header ${g.headerClass || ''}">
         <div class="group-title">
           ${g.label}
           <span class="badge ${g.badge}">${g.items.length}名</span>

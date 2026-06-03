@@ -419,10 +419,27 @@
 
     /* ===== 印刷スタイル ===== */
     @media print {
+      @page { size: A4 landscape; margin: 6mm; }
       .app-header, .bottom-nav, .print-controls, .no-print { display: none !important; }
-      .page-content { padding: 0; }
+      .page-content { padding: 0; max-width: none; margin: 0; }
       body { background: #fff; }
-      .print-table { font-size: 11px; }
+      .print-table { font-size: 8px; width: 100%; table-layout: fixed; }
+      .print-table th { padding: 3px 2px; font-size: 8px; }
+      .print-table td { padding: 3px 2px; word-break: break-all; }
+      /* 列幅配分：月・日・曜は狭く、利用者列は広く、運転者列は中程度 */
+      .print-table th:nth-child(1), .print-table td:nth-child(1) { width: 3%; }
+      .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 3%; }
+      .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 4%; }
+      .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 14%; }
+      .print-table th:nth-child(5), .print-table td:nth-child(5) { width: 7%; }
+      .print-table th:nth-child(6), .print-table td:nth-child(6) { width: 14%; }
+      .print-table th:nth-child(7), .print-table td:nth-child(7) { width: 7%; }
+      .print-table th:nth-child(8), .print-table td:nth-child(8) { width: 14%; }
+      .print-table th:nth-child(9), .print-table td:nth-child(9) { width: 7%; }
+      .print-table th:nth-child(10), .print-table td:nth-child(10) { width: 12%; }
+      .print-table th:nth-child(11), .print-table td:nth-child(11) { width: 6%; }
+      .print-table th:nth-child(12), .print-table td:nth-child(12) { width: 12%; }
+      .print-table th:nth-child(13), .print-table td:nth-child(13) { width: 6%; }
     }
 
     /* ===== レスポンシブ ===== */

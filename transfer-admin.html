@@ -419,27 +419,23 @@
 
     /* ===== 印刷スタイル ===== */
     @media print {
-      @page { size: A4 landscape; margin: 6mm; }
+      @page { size: A4 portrait; margin: 8mm; }
       .app-header, .bottom-nav, .print-controls, .no-print { display: none !important; }
       .page-content { padding: 0; max-width: none; margin: 0; }
       body { background: #fff; }
-      .print-table { font-size: 8px; width: 100%; table-layout: fixed; }
-      .print-table th { padding: 3px 2px; font-size: 8px; }
-      .print-table td { padding: 3px 2px; word-break: break-all; }
-      /* 列幅配分：月・日・曜は狭く、利用者列は広く、運転者列は中程度 */
-      .print-table th:nth-child(1), .print-table td:nth-child(1) { width: 3%; }
-      .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 3%; }
-      .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 4%; }
-      .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 14%; }
-      .print-table th:nth-child(5), .print-table td:nth-child(5) { width: 7%; }
-      .print-table th:nth-child(6), .print-table td:nth-child(6) { width: 14%; }
-      .print-table th:nth-child(7), .print-table td:nth-child(7) { width: 7%; }
-      .print-table th:nth-child(8), .print-table td:nth-child(8) { width: 14%; }
-      .print-table th:nth-child(9), .print-table td:nth-child(9) { width: 7%; }
-      .print-table th:nth-child(10), .print-table td:nth-child(10) { width: 12%; }
-      .print-table th:nth-child(11), .print-table td:nth-child(11) { width: 6%; }
-      .print-table th:nth-child(12), .print-table td:nth-child(12) { width: 12%; }
-      .print-table th:nth-child(13), .print-table td:nth-child(13) { width: 6%; }
+      .print-table { font-size: 9px; width: 100%; table-layout: fixed; }
+      .print-table th { padding: 4px 3px; font-size: 8px; }
+      .print-table td { padding: 4px 3px; word-break: break-all; vertical-align: top; }
+      .print-driver { font-size: 7.5px; color: #555; }
+      /* 列幅：月・日・曜は狭く、時間帯5列で残りを均等割り */
+      .print-table th:nth-child(1), .print-table td:nth-child(1) { width: 4%; }
+      .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 4%; }
+      .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 5%; }
+      .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 17.4%; }
+      .print-table th:nth-child(5), .print-table td:nth-child(5) { width: 17.4%; }
+      .print-table th:nth-child(6), .print-table td:nth-child(6) { width: 17.4%; }
+      .print-table th:nth-child(7), .print-table td:nth-child(7) { width: 17.4%; }
+      .print-table th:nth-child(8), .print-table td:nth-child(8) { width: 17.4%; }
     }
 
     /* ===== レスポンシブ ===== */
@@ -697,15 +693,15 @@
           <thead>
             <tr>
               <th>月</th><th>日</th><th>曜</th>
-              <th>行き10:00①（利用者）</th><th>運転者</th>
-              <th>行き10:00②（利用者）</th><th>運転者</th>
-              <th>行き11:00（利用者）</th><th>運転者</th>
-              <th>帰り15:00（利用者）</th><th>運転者</th>
-              <th>帰り16:00（利用者）</th><th>運転者</th>
+              <th>行き10:00①</th>
+              <th>行き10:00②</th>
+              <th>行き11:00</th>
+              <th>帰り15:00</th>
+              <th>帰り16:00</th>
             </tr>
           </thead>
           <tbody id="printTableBody">
-            <tr><td colspan="13" class="empty-state">月を選択してください</td></tr>
+            <tr><td colspan="8" class="empty-state">月を選択してください</td></tr>
           </tbody>
         </table>
       </div>
@@ -2036,19 +2032,19 @@ async function loadPrintPage() {
     const ret15Users = dayScheds.filter(s => s.status !== '欠席' && s.dropoff_time && s.dropoff_time >= '14:30' && s.dropoff_time < '15:30').map(s=>s.transfer_users?.name).join('、');
     const ret16Users = dayScheds.filter(s => s.status !== '欠席' && s.dropoff_time && s.dropoff_time >= '15:30').map(s=>s.transfer_users?.name).join('、');
 
+    const cell = (users, driver) => {
+      let html = users || '';
+      if (driver) html += `<br><span class="print-driver">▶${driver}</span>`;
+      return html;
+    };
     const rowClass = dow===0?'sun':dow===6?'sat':'';
     rows += `<tr class="${rowClass}">
       <td>${m}</td><td>${d}</td><td>${DOW[dow]}</td>
-      <td style="text-align:left;">${go10_1Users}</td>
-      <td>${dd.pickup_driver||''}</td>
-      <td style="text-align:left;">${go10_2Users}</td>
-      <td>${dd.pickup_driver_2||''}</td>
-      <td style="text-align:left;">${go11Users}</td>
-      <td>${dd.pickup_driver||''}</td>
-      <td style="text-align:left;">${ret15Users}</td>
-      <td>${dd.dropoff_driver_15||''}</td>
-      <td style="text-align:left;">${ret16Users}</td>
-      <td>${dd.dropoff_driver_16||''}</td>
+      <td style="text-align:left;">${cell(go10_1Users, dd.pickup_driver)}</td>
+      <td style="text-align:left;">${cell(go10_2Users, dd.pickup_driver_2)}</td>
+      <td style="text-align:left;">${cell(go11Users, dd.pickup_driver)}</td>
+      <td style="text-align:left;">${cell(ret15Users, dd.dropoff_driver_15)}</td>
+      <td style="text-align:left;">${cell(ret16Users, dd.dropoff_driver_16)}</td>
     </tr>`;
   }
   tbody.innerHTML = rows;

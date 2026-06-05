@@ -288,6 +288,8 @@ let dragStaffId = null;
 let editingStaffId = null;
 let editingAreaCode = null;
 let editingAssignmentId = null;
+let lastOwnWrite = 0; // 自分自身のチェック書き込み時刻（Realtime抑制用）
+let isLoadingDay = false;
 
 // ================================================================
 // Date helpers
@@ -338,6 +340,8 @@ async function init() {
 }
 
 async function loadDay() {
+  if (isLoadingDay) return;
+  isLoadingDay = true;
   document.getElementById('dateLabel').textContent = dateLabel(currentDate);
   const ds = dateStr(currentDate);
   const { data: asgn } = await sb.from('placement_assignments')
@@ -345,7 +349,10 @@ async function loadDay() {
   assignments = asgn || [];
 
   const ids = assignments.map(a => a.id);
-  taskChecks = {};
+  // 自分の書き込み直後（3秒以内）はローカル状態を保持、それ以外はDBから取得
+  if (Date.now() - lastOwnWrite > 3000) {
+    taskChecks = {};
+  }
   if (ids.length) {
     const { data: chks } = await sb.from('placement_task_checks')
       .select('*').in('assignment_id', ids);
@@ -354,6 +361,7 @@ async function loadDay() {
       taskChecks[c.assignment_id].add(c.task_id);
     });
   }
+  isLoadingDay = false;
   renderBoard();
 }
 
@@ -559,6 +567,7 @@ function closeAssignModal() { document.getElementById('assignModal').classList.r
 // Inline task toggle (card チェックボックス)
 // ================================================================
 async function toggleTask(staffId, taskId, areaCode, checked) {
+  lastOwnWrite = Date.now(); // 自分の書き込みとしてマーク
   const ds = dateStr(currentDate);
   let asgn = assignments.find(a => a.staff_id === staffId && a.time_slot === currentSlot);
   if (!asgn) {
@@ -569,11 +578,10 @@ async function toggleTask(staffId, taskId, areaCode, checked) {
     if (!asgn) return;
     assignments.push(asgn);
   }
-  // まずローカル状態を更新（Realtimeより先に反映）
+  // ローカル状態を先に更新（画面には即反映済みなので再描画しない）
   if (!taskChecks[asgn.id]) taskChecks[asgn.id] = new Set();
   if (checked) {
     taskChecks[asgn.id].add(taskId);
-    // upsert で重複エラーを回避
     await sb.from('placement_task_checks').upsert(
       { assignment_id: asgn.id, task_id: taskId },
       { onConflict: 'assignment_id,task_id' }
@@ -583,6 +591,8 @@ async function toggleTask(staffId, taskId, areaCode, checked) {
     await sb.from('placement_task_checks').delete()
       .eq('assignment_id', asgn.id).eq('task_id', taskId);
   }
+  // DB保存完了後にローカル状態を再確認（他端末との整合）
+  lastOwnWrite = Date.now();
 }
 
 // ================================================================
@@ -700,11 +710,17 @@ async function updateStaffColor(id, color) {
 let realtimeDebounce = null;
 function subscribeRealtime() {
   sb.channel('placement-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_assignments' }, () => loadDay())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_task_checks' }, () => {
-      // チェック変更はローカル状態を優先し、軽量な再フェッチのみ実施
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_assignments' }, () => {
+      // 配置変更は500ms待ってから反映（task_checks書き込みが完了するのを待つ）
       clearTimeout(realtimeDebounce);
-      realtimeDebounce = setTimeout(refreshTaskChecksOnly, 800);
+      realtimeDebounce = setTimeout(loadDay, 500);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_task_checks' }, () => {
+      // 自分の書き込みから3秒以内は無視（ローカル状態が正しい）
+      if (Date.now() - lastOwnWrite < 3000) return;
+      // 他端末からの変更のみ反映
+      clearTimeout(realtimeDebounce);
+      realtimeDebounce = setTimeout(refreshTaskChecksOnly, 500);
     })
     .subscribe();
 }
@@ -714,7 +730,6 @@ async function refreshTaskChecksOnly() {
   if (!ids.length) return;
   const { data: chks } = await sb.from('placement_task_checks')
     .select('*').in('assignment_id', ids);
-  // ローカルの taskChecks を DB データで上書き（ただし描画は最小限）
   const newChecks = {};
   (chks || []).forEach(c => {
     if (!newChecks[c.assignment_id]) newChecks[c.assignment_id] = new Set();

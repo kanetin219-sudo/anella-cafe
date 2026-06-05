@@ -569,13 +569,19 @@ async function toggleTask(staffId, taskId, areaCode, checked) {
     if (!asgn) return;
     assignments.push(asgn);
   }
+  // まずローカル状態を更新（Realtimeより先に反映）
+  if (!taskChecks[asgn.id]) taskChecks[asgn.id] = new Set();
   if (checked) {
-    await sb.from('placement_task_checks').insert({ assignment_id: asgn.id, task_id: taskId }).onConflict().ignore();
-    if (!taskChecks[asgn.id]) taskChecks[asgn.id] = new Set();
     taskChecks[asgn.id].add(taskId);
+    // upsert で重複エラーを回避
+    await sb.from('placement_task_checks').upsert(
+      { assignment_id: asgn.id, task_id: taskId },
+      { onConflict: 'assignment_id,task_id' }
+    );
   } else {
-    await sb.from('placement_task_checks').delete().eq('assignment_id', asgn.id).eq('task_id', taskId);
-    taskChecks[asgn.id]?.delete(taskId);
+    taskChecks[asgn.id].delete(taskId);
+    await sb.from('placement_task_checks').delete()
+      .eq('assignment_id', asgn.id).eq('task_id', taskId);
   }
 }
 
@@ -691,11 +697,31 @@ async function updateStaffColor(id, color) {
 // ================================================================
 // Realtime
 // ================================================================
+let realtimeDebounce = null;
 function subscribeRealtime() {
   sb.channel('placement-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_assignments' }, () => loadDay())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_task_checks' }, () => loadDay())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'placement_task_checks' }, () => {
+      // チェック変更はローカル状態を優先し、軽量な再フェッチのみ実施
+      clearTimeout(realtimeDebounce);
+      realtimeDebounce = setTimeout(refreshTaskChecksOnly, 800);
+    })
     .subscribe();
+}
+
+async function refreshTaskChecksOnly() {
+  const ids = assignments.map(a => a.id);
+  if (!ids.length) return;
+  const { data: chks } = await sb.from('placement_task_checks')
+    .select('*').in('assignment_id', ids);
+  // ローカルの taskChecks を DB データで上書き（ただし描画は最小限）
+  const newChecks = {};
+  (chks || []).forEach(c => {
+    if (!newChecks[c.assignment_id]) newChecks[c.assignment_id] = new Set();
+    newChecks[c.assignment_id].add(c.task_id);
+  });
+  taskChecks = newChecks;
+  renderBoard();
 }
 
 // ================================================================

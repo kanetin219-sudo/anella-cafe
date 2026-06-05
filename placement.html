@@ -63,14 +63,12 @@ body { background: #F8FAFC; font-family: 'Hiragino Sans','Noto Sans JP',sans-ser
 .badge-B { background: var(--area-B); color: #fff; }
 .badge-C { background: var(--area-C); color: #1E293B; }
 .badge-off { background: var(--area-off); color: #fff; }
-.expand-btn { color: #94A3B8; font-size: .85rem; transition: transform .2s; }
-.expand-btn.open { transform: rotate(180deg); }
-
-.task-panel { border-top: 1px solid #F1F5F9; padding: 8px 12px 10px; display: none; }
-.task-panel.open { display: block; }
-.task-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.task-panel { border-top: 1px solid #F1F5F9; padding: 8px 12px 10px; }
+.task-item { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; transition: background .12s; }
+.task-item:hover { background: #F8FAFC; }
 .task-item label { font-size: .8rem; color: #374151; cursor: pointer; flex: 1; }
-.task-item input[type=checkbox] { accent-color: #3B82F6; width: 15px; height: 15px; cursor: pointer; }
+.task-item input[type=checkbox] { accent-color: #3B82F6; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.task-item.checked label { color: #3B82F6; font-weight: 600; }
 .task-empty { font-size: .78rem; color: #94A3B8; text-align: center; padding: 6px 0; }
 
 /* ===== WEEK VIEW ===== */
@@ -429,30 +427,24 @@ function buildCard(staff, asgn, isOff) {
   // Tasks for this assignment
   const checks = asgn ? (taskChecks[asgn.id] || new Set()) : new Set();
   const areaTasks = taskList.filter(t => t.area_code === area);
-  const taskHtml = areaTasks.length ? areaTasks.map(t => `
-    <div class="task-item">
-      <input type="checkbox" id="tc-${staff.id}-${t.id}" ${checks.has(t.id)?'checked':''}
-        onchange="toggleTask('${staff.id}','${t.id}','${area||''}',this.checked)">
+  const taskHtml = areaTasks.length ? areaTasks.map(t => {
+    const isChecked = checks.has(t.id);
+    return `<div class="task-item${isChecked?' checked':''}">
+      <input type="checkbox" id="tc-${staff.id}-${t.id}" ${isChecked?'checked':''}
+        onchange="this.closest('.task-item').classList.toggle('checked',this.checked);toggleTask('${staff.id}','${t.id}','${area||''}',this.checked)">
       <label for="tc-${staff.id}-${t.id}">${t.task_name}</label>
-    </div>`).join('') : '<div class="task-empty">タスクなし</div>';
+    </div>`;
+  }).join('') : '<div class="task-empty">タスクなし</div>';
 
   div.innerHTML = `
     <div class="staff-card-header" onclick="openAssignModal('${staff.id}')">
       <span class="staff-dot" style="background:${staff.color}"></span>
       <span class="staff-name">${staff.name}</span>
       ${badgeHtml}
-      ${area && area !== '休み' ? `<span class="expand-btn" id="exp-${staff.id}" onclick="event.stopPropagation();toggleExpand('${staff.id}')"><i class="bi bi-chevron-down"></i></span>` : ''}
+      <i class="bi bi-pencil-square text-secondary" style="font-size:.78rem; opacity:.5;"></i>
     </div>
-    ${area && area !== '休み' ? `<div class="task-panel" id="tp-${staff.id}">${taskHtml}</div>` : ''}`;
+    ${area && area !== '休み' ? `<div class="task-panel">${taskHtml}</div>` : ''}`;
   return div;
-}
-
-function toggleExpand(staffId) {
-  const panel = document.getElementById(`tp-${staffId}`);
-  const btn   = document.getElementById(`exp-${staffId}`);
-  if (!panel) return;
-  panel.classList.toggle('open');
-  btn.classList.toggle('open');
 }
 
 // ================================================================

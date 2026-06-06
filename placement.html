@@ -253,6 +253,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
         <th style="min-width:80px;">スタッフ</th>
         <th id="wh0"></th><th id="wh1"></th><th id="wh2"></th>
         <th id="wh3"></th><th id="wh4"></th><th id="wh5"></th>
+        <th id="wh6" style="color:#FFB3B3;"></th>
       </tr></thead>
       <tbody id="weekBody"></tbody>
     </table>
@@ -316,6 +317,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
           <th style="min-width:80px;">スタッフ</th>
           <th id="sh0"></th><th id="sh1"></th><th id="sh2"></th>
           <th id="sh3"></th><th id="sh4"></th><th id="sh5"></th>
+          <th id="sh6" style="color:#F87171;"></th>
         </tr></thead>
         <tbody id="shiftWeekBody"></tbody>
       </table>
@@ -421,7 +423,7 @@ function getMondayOfWeek(d) {
   return c;
 }
 function getWeekDays(mon) {
-  return Array.from({length:6}, (_,i) => { const d = new Date(mon); d.setDate(mon.getDate()+i); return d; });
+  return Array.from({length:7}, (_,i) => { const d = new Date(mon); d.setDate(mon.getDate()+i); return d; });
 }
 
 // ================================================================
@@ -743,7 +745,7 @@ function shiftWeekView(n) {
 }
 async function loadWeekView() {
   const days = getWeekDays(weekViewBase);
-  const s = dateStr(days[0]), e = dateStr(days[5]);
+  const s = dateStr(days[0]), e = dateStr(days[6]);
   const [ar, sh] = await Promise.all([
     sb.from('placement_assignments').select('*').gte('assignment_date',s).lte('assignment_date',e),
     sb.from('placement_shifts').select('*').gte('shift_date',s).lte('shift_date',e)
@@ -754,14 +756,15 @@ async function loadWeekView() {
 }
 function renderWeekView(days) {
   const today = dateStr(new Date());
-  const DOW_S = ['月','火','水','木','金','土'];
+  const DOW_S = ['月','火','水','木','金','土','日'];
+  const DOW_COLORS = ['','','','','','','#F87171']; // 日曜は赤
   days.forEach((d,i) => {
     const el = document.getElementById(`wh${i}`);
     const ds = dateStr(d);
-    el.innerHTML = `${DOW_S[i]}<br><small style="font-weight:400;opacity:.8;">${d.getMonth()+1}/${d.getDate()}</small>`;
+    el.innerHTML = `<span style="${DOW_COLORS[i]?'color:'+DOW_COLORS[i]:''}">${DOW_S[i]}</span><br><small style="font-weight:400;opacity:.8;">${d.getMonth()+1}/${d.getDate()}</small>`;
     if (ds===today) el.style.background='rgba(255,255,255,.3)';
   });
-  const label = `${days[0].getMonth()+1}/${days[0].getDate()} 〜 ${days[5].getMonth()+1}/${days[5].getDate()}`;
+  const label = `${days[0].getMonth()+1}/${days[0].getDate()} 〜 ${days[6].getMonth()+1}/${days[6].getDate()}`;
   document.getElementById('weekRangeLabel').textContent = label;
   document.getElementById('navLabel').textContent = label;
 
@@ -886,13 +889,14 @@ function closeShiftModal() { document.getElementById('shiftModal').classList.rem
 function shiftWeekShift(n) { shiftWeekBase=new Date(shiftWeekBase); shiftWeekBase.setDate(shiftWeekBase.getDate()+n*7); renderShiftModal(); }
 async function renderShiftModal() {
   shiftWeekDays = getWeekDays(shiftWeekBase);
-  const s=dateStr(shiftWeekDays[0]), e=dateStr(shiftWeekDays[5]);
-  const DOW_S=['月','火','水','木','金','土'];
+  const s=dateStr(shiftWeekDays[0]), e=dateStr(shiftWeekDays[6]);
+  const DOW_S=['月','火','水','木','金','土','日'];
+  const DOW_COLORS=['','','','','','','#F87171'];
   shiftWeekDays.forEach((d,i) => {
     const el=document.getElementById(`sh${i}`);
-    if(el) el.innerHTML=`${DOW_S[i]}<br><small>${d.getMonth()+1}/${d.getDate()}</small>`;
+    if(el) el.innerHTML=`<span style="${DOW_COLORS[i]?'color:'+DOW_COLORS[i]:''}">${DOW_S[i]}</span><br><small>${d.getMonth()+1}/${d.getDate()}</small>`;
   });
-  document.getElementById('shiftWeekLabel').textContent=`${shiftWeekDays[0].getMonth()+1}/${shiftWeekDays[0].getDate()} 〜 ${shiftWeekDays[5].getMonth()+1}/${shiftWeekDays[5].getDate()}`;
+  document.getElementById('shiftWeekLabel').textContent=`${shiftWeekDays[0].getMonth()+1}/${shiftWeekDays[0].getDate()} 〜 ${shiftWeekDays[6].getMonth()+1}/${shiftWeekDays[6].getDate()}`;
   const {data:ws}=await sb.from('placement_shifts').select('*').gte('shift_date',s).lte('shift_date',e);
   const sm={};
   (ws||[]).forEach(x=>{ sm[`${x.staff_id}_${x.shift_date}`]=x; });

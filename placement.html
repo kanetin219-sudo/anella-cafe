@@ -522,10 +522,12 @@ function renderBoard() {
   });
 }
 
-function buildSlotSection(staff, asgn, slot) {
+function buildSlotSection(staff, asgn, slot, taskArea) {
   const area = asgn?.area_code;
   const checks = asgn ? (taskChecks[asgn.id]||new Set()) : new Set();
-  const areaTasks = area&&area!=='休み' ? taskList.filter(t=>t.area_code===area) : [];
+  // タスク表示は taskArea（午前のエリア）を基準に統一
+  const displayArea = taskArea || (area&&area!=='休み'?area:null);
+  const areaTasks = displayArea ? taskList.filter(t=>t.area_code===displayArea) : [];
   const sc = slot==='午前'?'am':'pm';
 
   let btn;
@@ -541,7 +543,7 @@ function buildSlotSection(staff, asgn, slot) {
     const chk = checks.has(t.id);
     return `<div class="task-item${chk?' checked':''}">
       <input type="checkbox" id="tc-${staff.id}-${slot}-${t.id}" ${chk?'checked':''}
-        onchange="this.closest('.task-item').classList.toggle('checked',this.checked);toggleTaskSlot('${staff.id}','${t.id}','${area}','${slot}',this.checked)">
+        onchange="this.closest('.task-item').classList.toggle('checked',this.checked);toggleTaskSlot('${staff.id}','${t.id}','${displayArea}','${slot}',this.checked)">
       <label for="tc-${staff.id}-${slot}-${t.id}">${t.task_name}</label>
     </div>`;
   }).join('');
@@ -564,6 +566,11 @@ function buildCard(staff, amAsgn, pmAsgn) {
 
   const sh = shifts[staff.id];
   const tl = sh?.start&&sh?.end?`${sh.start}〜${sh.end}`:(sh?.start?sh.start+'〜':null);
+  // 午前のエリアを基準にタスクを統一表示（午後も同じ項目）
+  const amArea = amAsgn?.area_code && amAsgn.area_code !== '休み' ? amAsgn.area_code : null;
+  const pmArea = pmAsgn?.area_code && pmAsgn.area_code !== '休み' ? pmAsgn.area_code : null;
+  const taskArea = amArea || pmArea; // どちらかのエリアを使用
+
   div.innerHTML = `
     <div class="staff-card-header">
       <span class="staff-dot" style="background:${staff.color}"></span>
@@ -573,9 +580,9 @@ function buildCard(staff, amAsgn, pmAsgn) {
       </span>
     </div>
     <div style="border-top:1px solid #F0F4FF;">
-      ${buildSlotSection(staff,amAsgn,'午前')}
+      ${buildSlotSection(staff,amAsgn,'午前',taskArea)}
       <hr class="slot-divider">
-      ${buildSlotSection(staff,pmAsgn,'午後')}
+      ${buildSlotSection(staff,pmAsgn,'午後',taskArea)}
     </div>`;
   return div;
 }

@@ -32,6 +32,17 @@ body { background: #F8FAFC; font-family: 'Hiragino Sans','Noto Sans JP',sans-ser
 .slot-btn { background: rgba(255,255,255,.12); border: none; color: rgba(255,255,255,.75); border-radius: 20px; padding: 4px 14px; font-size: .82rem; cursor: pointer; }
 .slot-btn.active { background: #fff; color: #1E293B; font-weight: 700; }
 
+/* ===== SLOT LABELS ===== */
+.slot-label-badge { font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+.slot-label-badge.am { background: #DBEAFE; color: #1D4ED8; }
+.slot-label-badge.pm { background: #FEF9C3; color: #92400E; }
+.slot-section { padding: 5px 10px 7px; }
+.slot-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.slot-area-btn { font-size: .72rem; font-weight: 700; padding: 2px 9px; border-radius: 99px; cursor: pointer; border: none; transition: opacity .12s; }
+.slot-area-btn:hover { opacity: .85; }
+.slot-area-none { font-size: .72rem; color: #94A3B8; padding: 2px 8px; border: 1px dashed #CBD5E1; border-radius: 99px; cursor: pointer; background: none; }
+.slot-divider { border: none; border-top: 1px dashed #E2E8F0; margin: 4px 0; }
+
 /* ===== BOARD ===== */
 .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px; min-height: calc(100vh - 120px); }
 @media (max-width: 700px) { .board { grid-template-columns: 1fr 1fr; } }
@@ -146,10 +157,6 @@ body { background: #F8FAFC; font-family: 'Hiragino Sans','Noto Sans JP',sans-ser
     <span class="date-label" id="dateLabel"></span>
     <button class="btn-ghost" onclick="shiftDay(1)"><i class="bi bi-chevron-right"></i></button>
     <button class="btn-ghost" onclick="goToday()">今日</button>
-  </div>
-  <div class="slot-toggle">
-    <button class="slot-btn active" id="slotAm" onclick="setSlot('午前')">午前</button>
-    <button class="slot-btn" id="slotPm" onclick="setSlot('午後')">午後</button>
   </div>
   <div class="view-toggle">
     <button class="active" id="viewDay" onclick="setView('day')">日次</button>
@@ -346,10 +353,11 @@ let dragStaffId = null;
 let editingStaffId = null;
 let editingAreaCode = null;
 let editingAssignmentId = null;
+let editingSlot = '午前'; // 編集中のスロット
 let lastOwnWrite = 0;
 let isLoadingDay = false;
-let shifts = {};       // staffId -> { start_time, end_time }
-let shiftWeekBase = new Date(); // シフト入力モーダルの週基点
+let shifts = {};
+let shiftWeekBase = new Date();
 
 // ================================================================
 // Date helpers
@@ -368,12 +376,6 @@ function shiftDay(n) {
 function goToday() {
   currentDate = new Date();
   loadDay();
-}
-function setSlot(slot) {
-  currentSlot = slot;
-  document.getElementById('slotAm').classList.toggle('active', slot === '午前');
-  document.getElementById('slotPm').classList.toggle('active', slot === '午後');
-  renderBoard();
 }
 function setView(v) {
   currentView = v;
@@ -446,40 +448,63 @@ async function loadWeek() {
 }
 
 // ================================================================
-// Render Board
+// Render Board（午前の配置でカラム決定・両スロットをカードに表示）
 // ================================================================
 function renderBoard() {
-  const areas = ['unassigned','A','B','C'];
-  const counts = { unassigned:0, A:0, B:0, C:0 };
-
-  // Build area→staff map for current slot
   const areaMap = { unassigned:[], A:[], B:[], C:[] };
+
   staffList.forEach(staff => {
-    const asgn = assignments.find(a => a.staff_id === staff.id && a.time_slot === currentSlot);
-    const area = asgn?.area_code;
-    if (area === 'A' || area === 'B' || area === 'C') {
-      areaMap[area].push({ staff, asgn });
-    } else if (area === '休み') {
-      // show in unassigned with 休み badge
-      areaMap.unassigned.push({ staff, asgn, isOff: true });
-    } else {
-      areaMap.unassigned.push({ staff, asgn: null });
-    }
-    counts[area === 'A' || area === 'B' || area === 'C' ? area : 'unassigned']++;
+    const amAsgn = assignments.find(a => a.staff_id === staff.id && a.time_slot === '午前');
+    const pmAsgn = assignments.find(a => a.staff_id === staff.id && a.time_slot === '午後');
+    // 午前の配置でカラムを決定（なければ午後、なければ未割当）
+    const am = amAsgn?.area_code;
+    const key = (am === 'A' || am === 'B' || am === 'C') ? am : 'unassigned';
+    areaMap[key].push(buildCard(staff, amAsgn, pmAsgn));
   });
 
-  areas.forEach(key => {
+  ['unassigned','A','B','C'].forEach(key => {
     const el = document.getElementById(`cards-${key}`);
     el.innerHTML = '';
-    areaMap[key].forEach(({ staff, asgn, isOff }) => {
-      el.appendChild(buildCard(staff, asgn, isOff));
-    });
+    areaMap[key].forEach(card => el.appendChild(card));
     document.getElementById(`cnt-${key}`).textContent = areaMap[key].length;
   });
 }
 
-function buildCard(staff, asgn, isOff) {
+function buildSlotSection(staff, asgn, slot) {
   const area = asgn?.area_code;
+  const checks = asgn ? (taskChecks[asgn.id] || new Set()) : new Set();
+  const areaTasks = area && area !== '休み' ? taskList.filter(t => t.area_code === area) : [];
+  const slotClass = slot === '午前' ? 'am' : 'pm';
+
+  let areaBtnHtml;
+  if (!area) {
+    areaBtnHtml = `<button class="slot-area-none" onclick="event.stopPropagation();openAssignModalSlot('${staff.id}','${slot}')">＋割当</button>`;
+  } else if (area === '休み') {
+    areaBtnHtml = `<button class="slot-area-btn" style="background:#9CA3AF;color:#fff;" onclick="event.stopPropagation();openAssignModalSlot('${staff.id}','${slot}')">休み</button>`;
+  } else {
+    const info = AREA_INFO[area];
+    areaBtnHtml = `<button class="slot-area-btn" style="background:${info.color};color:#fff;" onclick="event.stopPropagation();openAssignModalSlot('${staff.id}','${slot}')">${info.label}</button>`;
+  }
+
+  const taskHtml = areaTasks.map(t => {
+    const isChecked = checks.has(t.id);
+    return `<div class="task-item${isChecked?' checked':''}">
+      <input type="checkbox" id="tc-${staff.id}-${slot}-${t.id}" ${isChecked?'checked':''}
+        onchange="this.closest('.task-item').classList.toggle('checked',this.checked);toggleTaskSlot('${staff.id}','${t.id}','${area}','${slot}',this.checked)">
+      <label for="tc-${staff.id}-${slot}-${t.id}">${t.task_name}</label>
+    </div>`;
+  }).join('');
+
+  return `<div class="slot-section">
+    <div class="slot-row">
+      <span class="slot-label-badge ${slotClass}">${slot}</span>
+      ${areaBtnHtml}
+    </div>
+    ${taskHtml ? `<div class="task-panel" style="padding:0 0 0 2px;">${taskHtml}</div>` : ''}
+  </div>`;
+}
+
+function buildCard(staff, amAsgn, pmAsgn) {
   const div = document.createElement('div');
   div.className = 'staff-card';
   div.draggable = true;
@@ -491,67 +516,45 @@ function buildCard(staff, asgn, isOff) {
   });
   div.addEventListener('dragend', () => div.classList.remove('dragging'));
 
-  let badgeHtml = '';
-  if (isOff) {
-    badgeHtml = `<span class="area-badge badge-off">休み</span>`;
-  } else if (area) {
-    badgeHtml = `<span class="area-badge badge-${area}">${AREA_INFO[area]?.label || area}</span>`;
-  }
-
-  // Tasks for this assignment
-  const checks = asgn ? (taskChecks[asgn.id] || new Set()) : new Set();
-  const areaTasks = taskList.filter(t => t.area_code === area);
-  const taskHtml = areaTasks.length ? areaTasks.map(t => {
-    const isChecked = checks.has(t.id);
-    return `<div class="task-item${isChecked?' checked':''}">
-      <input type="checkbox" id="tc-${staff.id}-${t.id}" ${isChecked?'checked':''}
-        onchange="this.closest('.task-item').classList.toggle('checked',this.checked);toggleTask('${staff.id}','${t.id}','${area||''}',this.checked)">
-      <label for="tc-${staff.id}-${t.id}">${t.task_name}</label>
-    </div>`;
-  }).join('') : '<div class="task-empty">タスクなし</div>';
-
   const sh = shifts[staff.id];
-  const timeLabel = sh?.start && sh?.end
-    ? `${sh.start}〜${sh.end}`
-    : sh?.start ? sh.start + '〜' : null;
-  const shiftBadge = `<span class="shift-time ${timeLabel ? '' : 'no-time'}"
-    onclick="event.stopPropagation();editShiftInline('${staff.id}',this)"
-    title="勤務時間を編集">
+  const timeLabel = sh?.start && sh?.end ? `${sh.start}〜${sh.end}` : sh?.start ? sh.start + '〜' : null;
+  const shiftBadge = `<span class="shift-time ${timeLabel?'':'no-time'}"
+    onclick="event.stopPropagation();editShiftInline('${staff.id}',this)">
     <i class="bi bi-clock" style="font-size:.7rem;"></i>
     ${timeLabel || '時間未入力'}
   </span>`;
 
   div.innerHTML = `
-    <div class="staff-card-header" onclick="openAssignModal('${staff.id}')">
+    <div class="staff-card-header" style="cursor:default;">
       <span class="staff-dot" style="background:${staff.color}"></span>
       <span class="staff-name">${staff.name}</span>
-      ${badgeHtml}
-      <i class="bi bi-pencil-square text-secondary" style="font-size:.78rem; opacity:.5;"></i>
-    </div>
-    <div style="padding:0 12px 8px; display:flex; align-items:center; gap:6px;">
       ${shiftBadge}
     </div>
-    ${area && area !== '休み' ? `<div class="task-panel">${taskHtml}</div>` : ''}`;
+    <div style="border-top:1px solid #F1F5F9;">
+      ${buildSlotSection(staff, amAsgn, '午前')}
+      <hr class="slot-divider">
+      ${buildSlotSection(staff, pmAsgn, '午後')}
+    </div>`;
   return div;
 }
 
 // ================================================================
-// Drag & Drop
+// Drag & Drop（午前スロットを移動）
 // ================================================================
 function dropCard(event, areaCode) {
   event.preventDefault();
   if (!dragStaffId) return;
-  saveAreaDirectly(dragStaffId, areaCode || null);
+  saveAreaDirectly(dragStaffId, areaCode || null, '午前');
   dragStaffId = null;
 }
 
-async function saveAreaDirectly(staffId, areaCode) {
+async function saveAreaDirectly(staffId, areaCode, slot) {
   const ds = dateStr(currentDate);
-  const existing = assignments.find(a => a.staff_id === staffId && a.time_slot === currentSlot);
+  const existing = assignments.find(a => a.staff_id === staffId && a.time_slot === slot);
   if (existing) {
     await sb.from('placement_assignments').update({ area_code: areaCode || null, updated_at: new Date().toISOString() }).eq('id', existing.id);
   } else if (areaCode) {
-    await sb.from('placement_assignments').insert({ assignment_date: ds, staff_id: staffId, time_slot: currentSlot, area_code: areaCode });
+    await sb.from('placement_assignments').insert({ assignment_date: ds, staff_id: staffId, time_slot: slot, area_code: areaCode });
   }
   await loadDay();
 }
@@ -559,14 +562,18 @@ async function saveAreaDirectly(staffId, areaCode) {
 // ================================================================
 // Assignment Modal
 // ================================================================
+function openAssignModalSlot(staffId, slot) {
+  editingSlot = slot;
+  openAssignModal(staffId);
+}
 function openAssignModal(staffId) {
   editingStaffId = staffId;
   const staff = staffList.find(s => s.id === staffId);
-  const asgn = assignments.find(a => a.staff_id === staffId && a.time_slot === currentSlot);
+  const asgn = assignments.find(a => a.staff_id === staffId && a.time_slot === editingSlot);
   editingAssignmentId = asgn?.id || null;
   editingAreaCode = asgn?.area_code || null;
 
-  document.getElementById('assignModalTitle').textContent = `${staff.name} - ${currentSlot}の配置`;
+  document.getElementById('assignModalTitle').textContent = `${staff.name} - ${editingSlot}の配置`;
 
   const opts = document.getElementById('areaOptions');
   opts.innerHTML = ['A','B','C','休み'].map(code => {
@@ -614,7 +621,7 @@ async function saveAssignment() {
     await sb.from('placement_assignments').update({ area_code: editingAreaCode, updated_at: new Date().toISOString() }).eq('id', aId);
   } else {
     const { data } = await sb.from('placement_assignments').insert({
-      assignment_date: ds, staff_id: editingStaffId, time_slot: currentSlot, area_code: editingAreaCode
+      assignment_date: ds, staff_id: editingStaffId, time_slot: editingSlot, area_code: editingAreaCode
     }).select().single();
     aId = data?.id;
   }
@@ -784,13 +791,17 @@ async function saveShiftWeek() {
 // ================================================================
 // Inline task toggle (card チェックボックス)
 // ================================================================
-async function toggleTask(staffId, taskId, areaCode, checked) {
-  lastOwnWrite = Date.now(); // 自分の書き込みとしてマーク
+async function toggleTaskSlot(staffId, taskId, areaCode, slot, checked) {
+  return toggleTask(staffId, taskId, areaCode, checked, slot);
+}
+async function toggleTask(staffId, taskId, areaCode, checked, slot) {
+  slot = slot || editingSlot || '午前';
+  lastOwnWrite = Date.now();
   const ds = dateStr(currentDate);
-  let asgn = assignments.find(a => a.staff_id === staffId && a.time_slot === currentSlot);
+  let asgn = assignments.find(a => a.staff_id === staffId && a.time_slot === slot);
   if (!asgn) {
     const { data } = await sb.from('placement_assignments').insert({
-      assignment_date: ds, staff_id: staffId, time_slot: currentSlot, area_code: areaCode
+      assignment_date: ds, staff_id: staffId, time_slot: slot, area_code: areaCode
     }).select().single();
     asgn = data;
     if (!asgn) return;

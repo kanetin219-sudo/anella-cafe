@@ -915,6 +915,15 @@ function switchTab(n) {
 // ── 予約一覧 ──────────────────────────────────────
 let currentView = '日';
 
+function fmt(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function parseLocalDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function setView(v) {
   currentView = v;
   ['日','週','月'].forEach(label => {
@@ -925,38 +934,39 @@ function setView(v) {
 }
 
 function navigatePeriod(dir) {
-  const date = new Date(document.getElementById('filterDate').value || new Date().toISOString().slice(0,10));
+  const val = document.getElementById('filterDate').value || fmt(new Date());
+  const base = parseLocalDate(val);
+  let next;
   if (currentView === '日') {
-    date.setDate(date.getDate() + dir);
+    next = new Date(base.getFullYear(), base.getMonth(), base.getDate() + dir);
   } else if (currentView === '週') {
-    date.setDate(date.getDate() + dir * 7);
+    next = new Date(base.getFullYear(), base.getMonth(), base.getDate() + dir * 7);
   } else {
-    date.setMonth(date.getMonth() + dir);
+    next = new Date(base.getFullYear(), base.getMonth() + dir, 1);
   }
-  document.getElementById('filterDate').value = date.toISOString().slice(0,10);
+  document.getElementById('filterDate').value = fmt(next);
   loadReservations();
 }
 
 function setToday() {
-  const d = new Date().toISOString().slice(0, 10);
-  document.getElementById('filterDate').value = d;
+  document.getElementById('filterDate').value = fmt(new Date());
   loadReservations();
 }
 
 function getDateRange() {
-  const base = new Date(document.getElementById('filterDate').value || new Date().toISOString().slice(0,10));
+  const val = document.getElementById('filterDate').value || fmt(new Date());
+  const base = parseLocalDate(val);
   if (currentView === '日') {
-    const d = base.toISOString().slice(0,10);
-    return { from: d, to: d };
+    return { from: val, to: val };
   } else if (currentView === '週') {
     const day = base.getDay();
-    const mon = new Date(base); mon.setDate(base.getDate() - (day === 0 ? 6 : day - 1));
-    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-    return { from: mon.toISOString().slice(0,10), to: sun.toISOString().slice(0,10) };
+    const mon = new Date(base.getFullYear(), base.getMonth(), base.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+    return { from: fmt(mon), to: fmt(sun) };
   } else {
     const first = new Date(base.getFullYear(), base.getMonth(), 1);
     const last  = new Date(base.getFullYear(), base.getMonth() + 1, 0);
-    return { from: first.toISOString().slice(0,10), to: last.toISOString().slice(0,10) };
+    return { from: fmt(first), to: fmt(last) };
   }
 }
 

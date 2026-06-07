@@ -106,6 +106,24 @@
       padding: 10px 14px; background: var(--primary); color: #fff; border: none; border-radius: 8px;
       font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
     }
+    /* ── 表示切替 ── */
+    .view-toggle { display: flex; gap: 4px; }
+    .view-btn {
+      padding: 8px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-mid); cursor: pointer;
+    }
+    .view-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .nav-btn {
+      padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      font-size: 16px; cursor: pointer; color: var(--text-mid); line-height: 1;
+    }
+    .nav-btn:hover { border-color: var(--primary-light); }
+    .period-label { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .date-group-header {
+      font-size: 13px; font-weight: 700; color: var(--text-mid); padding: 8px 4px 4px;
+      border-bottom: 1px solid var(--border); margin-top: 8px;
+    }
+    .date-group-header:first-child { margin-top: 0; }
     .realtime-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; margin-left: auto; flex-shrink: 0; }
     .realtime-dot.connected { background: #4CAF50; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
@@ -352,8 +370,15 @@
     <!-- ===== 予約一覧タブ ===== -->
     <div class="tab-panel active" id="panel1">
       <div class="filter-bar">
-        <span class="filter-label">日付</span>
-        <input type="date" id="filterDate" onchange="loadReservations()">
+        <div class="view-toggle">
+          <button class="view-btn active" id="viewDay" onclick="setView('日')">日</button>
+          <button class="view-btn" id="viewWeek" onclick="setView('週')">週</button>
+          <button class="view-btn" id="viewMonth" onclick="setView('月')">月</button>
+        </div>
+        <button class="nav-btn" onclick="navigatePeriod(-1)">‹</button>
+        <span class="period-label" id="periodLabel"></span>
+        <button class="nav-btn" onclick="navigatePeriod(1)">›</button>
+        <input type="date" id="filterDate" onchange="loadReservations()" style="display:none;">
         <button class="btn-today" onclick="setToday()">今日</button>
         <span class="filter-label">担当</span>
         <div class="select-wrap-sm">
@@ -888,21 +913,75 @@ function switchTab(n) {
 }
 
 // ── 予約一覧 ──────────────────────────────────────
+let currentView = '日';
+
+function setView(v) {
+  currentView = v;
+  ['日','週','月'].forEach(label => {
+    const btn = document.getElementById('view' + (label === '日' ? 'Day' : label === '週' ? 'Week' : 'Month'));
+    if (btn) btn.classList.toggle('active', label === v);
+  });
+  loadReservations();
+}
+
+function navigatePeriod(dir) {
+  const date = new Date(document.getElementById('filterDate').value || new Date().toISOString().slice(0,10));
+  if (currentView === '日') {
+    date.setDate(date.getDate() + dir);
+  } else if (currentView === '週') {
+    date.setDate(date.getDate() + dir * 7);
+  } else {
+    date.setMonth(date.getMonth() + dir);
+  }
+  document.getElementById('filterDate').value = date.toISOString().slice(0,10);
+  loadReservations();
+}
+
 function setToday() {
   const d = new Date().toISOString().slice(0, 10);
   document.getElementById('filterDate').value = d;
   loadReservations();
 }
 
+function getDateRange() {
+  const base = new Date(document.getElementById('filterDate').value || new Date().toISOString().slice(0,10));
+  if (currentView === '日') {
+    const d = base.toISOString().slice(0,10);
+    return { from: d, to: d };
+  } else if (currentView === '週') {
+    const day = base.getDay();
+    const mon = new Date(base); mon.setDate(base.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    return { from: mon.toISOString().slice(0,10), to: sun.toISOString().slice(0,10) };
+  } else {
+    const first = new Date(base.getFullYear(), base.getMonth(), 1);
+    const last  = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+    return { from: first.toISOString().slice(0,10), to: last.toISOString().slice(0,10) };
+  }
+}
+
+function updatePeriodLabel() {
+  const { from, to } = getDateRange();
+  const f = from.replace(/-/g, '/');
+  const t = to.replace(/-/g, '/');
+  let label = '';
+  if (currentView === '日') label = f;
+  else if (currentView === '週') label = f + ' 〜 ' + t;
+  else label = from.slice(0,7).replace('-', '年') + '月';
+  document.getElementById('periodLabel').textContent = label;
+}
+
 async function loadReservations() {
-  const date = document.getElementById('filterDate').value;
+  const { from, to } = getDateRange();
   const staff = document.getElementById('filterStaff').value;
-  if (!date) return;
+  updatePeriodLabel();
 
   let query = supabase
     .from('trimming_reservations')
     .select('*')
-    .eq('visit_date', date)
+    .gte('visit_date', from)
+    .lte('visit_date', to)
+    .order('visit_date', { ascending: true })
     .order('visit_time', { ascending: true });
 
   if (staff) query = query.eq('staff', staff);
@@ -923,13 +1002,26 @@ function renderStats(list) {
 
 function renderReservations(list) {
   const container = document.getElementById('reservationList');
+  const noMsg = currentView === '日' ? 'この日の予約はありません' : 'この期間の予約はありません';
   if (list.length === 0) {
-    container.innerHTML = '<div class="no-reservations">この日の予約はありません</div>';
+    container.innerHTML = `<div class="no-reservations">${noMsg}</div>`;
     return;
   }
 
   container.innerHTML = '';
+  const DAY_NAMES = ['日','月','火','水','木','金','土'];
+  let lastDate = null;
+
   list.forEach(r => {
+    if (currentView !== '日' && r.visit_date !== lastDate) {
+      lastDate = r.visit_date;
+      const d = new Date(r.visit_date);
+      const dow = DAY_NAMES[d.getDay()];
+      const header = document.createElement('div');
+      header.className = 'date-group-header';
+      header.textContent = r.visit_date.replace(/-/g,'/') + '（' + dow + '）';
+      container.appendChild(header);
+    }
     const card = document.createElement('div');
     card.className = 'res-card' + (r.status === 'キャンセル' ? ' cancelled' : '');
     card.innerHTML = `

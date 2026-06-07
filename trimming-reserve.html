@@ -767,19 +767,6 @@ function clearErr(n) {
 }
 
 // ── STEP 0: 来店回数選択 ──────────────────────────
-function clearFormForNew() {
-  fd.course = ''; fd.breed = ''; fd.breedDisplay = ''; fd.coursePrice = 0;
-  fd.options = []; fd.optionsPrice = 0; fd.totalPrice = 0;
-  fd.staff = 'どちらでもいい'; fd.visitDate = ''; fd.visitTime = '';
-  fd.gender = ''; fd.weight = ''; fd.matting = ''; fd.visitExperience = '';
-  fd.petAge = ''; fd.petName = ''; fd.vaccineRabies = ''; fd.vaccine5mix = ''; fd.staffNote = '';
-  fd.ownerName = ''; fd.phone = ''; fd.lineName = ''; fd.email = '';
-  ['btnShampoo','btnCut'].forEach(id => document.getElementById(id)?.classList.remove('selected'));
-  ['petName','gender','weight','petAge','matting','visitExperience',
-   'vaccineRabies','vaccine5mix','staffNote','ownerName','phone','lineName','email']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-}
-
 function selectVisitType(type) {
   visitType = type;
   document.getElementById('btnNew').classList.toggle('selected', type === 'new');
@@ -789,10 +776,10 @@ function selectVisitType(type) {
     document.getElementById('step0Next').style.display = 'none';
   } else {
     document.getElementById('returnLookup').style.display = 'none';
-    document.getElementById('step0Next').style.display = 'flex';
+    document.getElementById('step0Next').style.display = 'none';
     isReturning = false;
     returnedData = null;
-    clearFormForNew();
+    goNext(0);
   }
 }
 

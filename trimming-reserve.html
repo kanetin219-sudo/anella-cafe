@@ -1292,7 +1292,7 @@ async function submitReservation() {
     }, { onConflict: 'phone' });
 
     // GAS Webhook（Gmail通知）※gas-notification.gs をデプロイ後に YOUR_GAS_ID を差し替える
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxyiZc-FUtJRZOL56Y9Mtr1qRPAXK8UjoXQj5qNoWh4KZBCgYppvP9OzKuIrvcIc0fiIA/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrt1xfRcoIKPfI4nIQkRHDpkP_6GgiunqFYGMFvvu3s-7-Kqh8jx8QzTt2zfXbKh0l-g/exec';
     fetch(`${GAS_URL}?token=anella2026secret&data=${encodeURIComponent(JSON.stringify(payload))}`).catch(() => {});
 
     document.getElementById('loadingOverlay').classList.remove('active');

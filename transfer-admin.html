@@ -1295,8 +1295,9 @@ async function loadTransferPage() {
   const dow = new Date(y, m - 1, d).getDay();
   const { data: selfDefaults } = await supabase
     .from('transfer_default_schedules')
-    .select('user_id, transfer_users(id, name, needs_transfer, is_active)')
-    .eq('day_of_week', dow);
+    .select('user_id, is_attend, transfer_users(id, name, needs_transfer, is_active)')
+    .eq('day_of_week', dow)
+    .eq('is_attend', true);
   const selfUsers = (selfDefaults || []).filter(
     s => s.transfer_users?.needs_transfer === false && s.transfer_users?.is_active === true
   );

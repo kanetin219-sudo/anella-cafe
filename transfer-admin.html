@@ -1290,11 +1290,22 @@ async function loadTransferPage() {
     .select('*')
     .eq('drive_date', date);
 
-  renderTransferGroups(schedules || [], drivers || [], dailyDrivers || [], date);
+  // 自力ユーザーの当日スケジュールを取得（曜日から判定）
+  const [y, m, d] = date.split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  const { data: selfDefaults } = await supabase
+    .from('transfer_default_schedules')
+    .select('user_id, transfer_users(id, name, needs_transfer, is_active)')
+    .eq('day_of_week', dow);
+  const selfUsers = (selfDefaults || []).filter(
+    s => s.transfer_users?.needs_transfer === false && s.transfer_users?.is_active === true
+  );
+
+  renderTransferGroups(schedules || [], drivers || [], dailyDrivers || [], date, selfUsers);
   setupRealtimeTransfer(date);
 }
 
-function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
+function renderTransferGroups(schedules, drivers, dailyDrivers, date, selfUsers) {
   const go10_1 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30' && (s.pickup_group||1) === 1).sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
   const go10_2 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30' && (s.pickup_group||1) === 2).sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
   const go11 = schedules.filter(s => s.pickup_time && s.pickup_time >= '10:30' && s.pickup_time < '13:00').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
@@ -1337,6 +1348,28 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date) {
       </div>
     </div>`;
   }).join('');
+
+  // 自力参加ユーザーセクション
+  if (selfUsers && selfUsers.length > 0) {
+    container.innerHTML += `
+    <div class="time-section-divider">自力参加</div>
+    <div class="group-card" style="border-left: 4px solid var(--accent);">
+      <div class="group-header" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+        <div class="group-title">
+          🚶 自力参加
+          <span class="badge badge-gray">${selfUsers.length}名</span>
+        </div>
+      </div>
+      <div class="rider-list">
+        ${selfUsers.map(s => `
+          <div class="rider-item" style="opacity:0.85;">
+            <span style="font-size:18px;margin-right:4px;">🚶</span>
+            <div class="rider-name">${escHtml(s.transfer_users?.name || '不明')}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
 
   // ドラッグ&ドロップ設定
   document.querySelectorAll('.rider-item').forEach(setupDrag);

@@ -1237,13 +1237,10 @@ async function submitReservation() {
   document.getElementById('loadingOverlay').classList.add('active');
 
   try {
-    // 予約番号生成
+    // 予約番号生成（SECURITY DEFINER RPCでRLSをバイパスしてカウント取得）
     const dateStr = fd.visitDate.replace(/-/g, '');
-    const { count } = await supabase
-      .from('trimming_reservations')
-      .select('*', { count: 'exact', head: true })
-      .eq('visit_date', fd.visitDate);
-    const reservationNumber = `${dateStr}-${String((count || 0) + 1).padStart(3, '0')}`;
+    const { data: countData } = await supabase.rpc('count_reservations_by_date', { p_date: fd.visitDate });
+    const reservationNumber = `${dateStr}-${String((Number(countData) || 0) + 1).padStart(3, '0')}`;
 
     const payload = {
       reservation_number: reservationNumber,

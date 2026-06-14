@@ -1159,7 +1159,7 @@ async function saveMemo() {
       newStaffList.forEach(s => {
         TIME_SLOTS_ADMIN.forEach(slot => {
           const slotHour = parseInt(slot.slice(0, 2));
-          if (timeHour <= slotHour && slotHour < timeHour + 3) {
+          if (timeHour <= slotHour && slotHour < timeHour + 4) {
             blockRows.push({
               block_date: date,
               block_time: slot + ':00',
@@ -1323,11 +1323,11 @@ async function submitManualReservation() {
   if (allBlocks && allBlocks.length > 0) {
     const makiBlocked = allBlocks.some(b => {
       const blockHour = parseInt(b.block_time.slice(0, 2));
-      return b.staff === '牧' && blockHour <= timeHour && timeHour < blockHour + 3;
+      return b.staff === '牧' && blockHour <= timeHour && timeHour < blockHour + 4;
     });
     const kabataBlocked = allBlocks.some(b => {
       const blockHour = parseInt(b.block_time.slice(0, 2));
-      return b.staff === '椛田' && blockHour <= timeHour && timeHour < blockHour + 3;
+      return b.staff === '椛田' && blockHour <= timeHour && timeHour < blockHour + 4;
     });
 
     let isBlocked = false;
@@ -1426,7 +1426,7 @@ async function submitManualReservation() {
   blockStaffList.forEach(s => {
     TIME_SLOTS_ADM.forEach(slot => {
       const slotHour = parseInt(slot.slice(0, 2));
-      if (timeHour <= slotHour && slotHour < timeHour + 3) {
+      if (timeHour <= slotHour && slotHour < timeHour + 4) {
         blockRows.push({
           block_date: date,
           block_time: slot + ':00',

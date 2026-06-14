@@ -1311,7 +1311,7 @@ async function submitManualReservation() {
   if (!receptionist) { errEl.textContent = '受付担当者を選択してください'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
-  // ブロック時間チェック（3時間のバッファを考慮）
+  // ブロック時間チェック（3時間のバッファを考慮） + 2人出勤チェック
   const time  = document.getElementById('manualTime').value;
   const staff = document.getElementById('manualStaff').value;
   const timeHour = parseInt(time.slice(0, 2));
@@ -1337,6 +1337,17 @@ async function submitManualReservation() {
 
     if (isBlocked) {
       errEl.textContent = 'この日時はブロックされているため登録できません。ブロック設定を確認してください。';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const otherStaffExists = staff !== 'どちらでもいい' && (
+      (staff === '牧' && allBlocks.some(b => b.staff === '椛田')) ||
+      (staff === '椛田' && allBlocks.some(b => b.staff === '牧'))
+    );
+
+    if (otherStaffExists) {
+      errEl.textContent = 'この日は既に別のスタッフが予約済みです。2人出勤の日は作れません。';
       errEl.style.display = 'block';
       return;
     }

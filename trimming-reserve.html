@@ -1112,14 +1112,35 @@ async function loadTimeSlots() {
   grid.style.display = 'none';
 
   let bookedSlots = [];
+  let dayBlocked = false;
   try {
     const { data, error } = await supabase.rpc('get_booked_slots', { p_date: fd.visitDate });
     if (!error && data) bookedSlots = data;
   } catch (e) {}
 
+  if (fd.staff === '牧' || fd.staff === '椛田') {
+    const { data: blocks } = await supabase
+      .from('blocked_times')
+      .select('staff')
+      .eq('block_date', fd.visitDate)
+      .eq('staff', fd.staff);
+    if (blocks && blocks.length > 0) dayBlocked = true;
+  }
+
   loading.style.display = 'none';
   grid.style.display = 'grid';
   grid.innerHTML = '';
+
+  if (dayBlocked) {
+    const msg = document.createElement('div');
+    msg.style.gridColumn = '1/-1';
+    msg.style.textAlign = 'center';
+    msg.style.color = 'var(--warn)';
+    msg.style.padding = '16px';
+    msg.textContent = `この日は${fd.staff}が入ってるため、予約できません`;
+    grid.appendChild(msg);
+    return;
+  }
 
   TIME_SLOTS.forEach(t => {
     const makiBooked   = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '牧');

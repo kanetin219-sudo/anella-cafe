@@ -1134,6 +1134,7 @@ async function saveMemo() {
   const btn   = document.getElementById('saveBtn');
   btn.disabled = true;
 
+  const oldStaff = currentResData.staff;
   const { error } = await supabase
     .from('trimming_reservations')
     .update({ staff_memo: memo || null, staff })
@@ -1141,6 +1142,34 @@ async function saveMemo() {
 
   btn.disabled = false;
   if (!error) {
+    if (oldStaff !== staff) {
+      const date = currentResData.visit_date;
+      const time = currentResData.visit_time;
+
+      await supabase
+        .from('blocked_times')
+        .delete()
+        .eq('block_date', date)
+        .eq('block_time', time)
+        .in('staff', oldStaff === 'どちらでもいい' ? ['牧', '椛田'] : [oldStaff])
+        .eq('reason', null);
+
+      const blockRows = [];
+      const newStaffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
+      newStaffList.forEach(s => {
+        blockRows.push({
+          block_date: date,
+          block_time: time,
+          staff: s,
+          reason: null
+        });
+      });
+
+      if (blockRows.length > 0) {
+        await supabase.from('blocked_times').insert(blockRows);
+      }
+    }
+
     document.getElementById('saveOk').classList.add('active');
     setTimeout(() => document.getElementById('saveOk').classList.remove('active'), 2000);
     loadReservations();

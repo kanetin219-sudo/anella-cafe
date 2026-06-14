@@ -1145,23 +1145,28 @@ async function saveMemo() {
     if (oldStaff !== staff) {
       const date = currentResData.visit_date;
       const time = currentResData.visit_time;
+      const timeHour = parseInt(time.slice(0, 2));
+      const TIME_SLOTS_ADMIN = ['10:00','11:00','12:00','13:00','14:00','15:00'];
 
       await supabase
         .from('blocked_times')
         .delete()
         .eq('block_date', date)
-        .eq('block_time', time)
-        .in('staff', oldStaff === 'どちらでもいい' ? ['牧', '椛田'] : [oldStaff])
-        .eq('reason', null);
+        .in('staff', oldStaff === 'どちらでもいい' ? ['牧', '椛田'] : [oldStaff]);
 
       const blockRows = [];
       const newStaffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
       newStaffList.forEach(s => {
-        blockRows.push({
-          block_date: date,
-          block_time: time,
-          staff: s,
-          reason: null
+        TIME_SLOTS_ADMIN.forEach(slot => {
+          const slotHour = parseInt(slot.slice(0, 2));
+          if (timeHour <= slotHour && slotHour < timeHour + 3) {
+            blockRows.push({
+              block_date: date,
+              block_time: slot + ':00',
+              staff: s,
+              reason: null
+            });
+          }
         });
       });
 
@@ -1306,19 +1311,24 @@ async function submitManualReservation() {
   if (!receptionist) { errEl.textContent = '受付担当者を選択してください'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
-  // ブロック時間チェック
+  // ブロック時間チェック（3時間のバッファを考慮）
   const time  = document.getElementById('manualTime').value;
   const staff = document.getElementById('manualStaff').value;
+  const timeHour = parseInt(time.slice(0, 2));
   const { data: allBlocks } = await supabase
     .from('blocked_times')
     .select('staff, block_time')
     .eq('block_date', date);
 
   if (allBlocks && allBlocks.length > 0) {
-    const matchedBlocks = allBlocks.filter(b => b.block_time.slice(0, 5) === time);
-    const blockedStaff  = matchedBlocks.map(b => b.staff);
-    const makiBlocked   = blockedStaff.includes('牧');
-    const kabataBlocked = blockedStaff.includes('椛田');
+    const makiBlocked = allBlocks.some(b => {
+      const blockHour = parseInt(b.block_time.slice(0, 2));
+      return b.staff === '牧' && blockHour <= timeHour && timeHour < blockHour + 3;
+    });
+    const kabataBlocked = allBlocks.some(b => {
+      const blockHour = parseInt(b.block_time.slice(0, 2));
+      return b.staff === '椛田' && blockHour <= timeHour && timeHour < blockHour + 3;
+    });
 
     let isBlocked = false;
     if (staff === '牧'          && makiBlocked)                      isBlocked = true;
@@ -1396,15 +1406,23 @@ async function submitManualReservation() {
     }, { onConflict: 'phone' });
   }
 
-  // 手動予約登録時にブロック設定を自動追加
+  // 手動予約登録時にブロック設定を自動追加（3時間のバッファ）
   const blockRows = [];
   const blockStaffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
+  const timeHour = parseInt(time.slice(0, 2));
+  const TIME_SLOTS_ADM = ['10:00','11:00','12:00','13:00','14:00','15:00'];
+
   blockStaffList.forEach(s => {
-    blockRows.push({
-      block_date: date,
-      block_time: time + ':00',
-      staff: s,
-      reason: `予約: ${course}`
+    TIME_SLOTS_ADM.forEach(slot => {
+      const slotHour = parseInt(slot.slice(0, 2));
+      if (timeHour <= slotHour && slotHour < timeHour + 3) {
+        blockRows.push({
+          block_date: date,
+          block_time: slot + ':00',
+          staff: s,
+          reason: `予約: ${course}`
+        });
+      }
     });
   });
   if (blockRows.length > 0) {

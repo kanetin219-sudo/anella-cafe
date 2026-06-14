@@ -1143,8 +1143,15 @@ async function loadTimeSlots() {
   }
 
   TIME_SLOTS.forEach(t => {
-    const makiBooked   = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '牧');
-    const kabataBooked = bookedSlots.some(s => s.slot_time === t && s.slot_staff === '椛田');
+    const currentHour = parseInt(t.slice(0, 2));
+    const makiBooked   = bookedSlots.some(s => {
+      const slotHour = parseInt(s.slot_time.slice(0, 2));
+      return s.slot_staff === '牧' && slotHour <= currentHour && currentHour < slotHour + 3;
+    });
+    const kabataBooked = bookedSlots.some(s => {
+      const slotHour = parseInt(s.slot_time.slice(0, 2));
+      return s.slot_staff === '椛田' && slotHour <= currentHour && currentHour < slotHour + 3;
+    });
     let available;
     if (fd.staff === '牧')         available = !makiBooked;
     else if (fd.staff === '椛田')  available = !kabataBooked;

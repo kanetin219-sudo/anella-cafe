@@ -1367,6 +1367,21 @@ async function submitManualReservation() {
     }, { onConflict: 'phone' });
   }
 
+  // 手動予約登録時にブロック設定を自動追加
+  const blockRows = [];
+  const blockStaffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
+  blockStaffList.forEach(s => {
+    blockRows.push({
+      block_date: date,
+      block_time: time + ':00',
+      staff: s,
+      reason: `予約: ${course}`
+    });
+  });
+  if (blockRows.length > 0) {
+    await supabase.from('blocked_times').insert(blockRows);
+  }
+
   document.getElementById('manualSaveOk').style.display = 'block';
   setTimeout(() => {
     closeManualModalDirect();

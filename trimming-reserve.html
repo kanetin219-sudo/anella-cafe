@@ -1087,20 +1087,11 @@ function changeMonth(dir) {
 function selectDate(dateStr, el) {
   fd.visitDate = dateStr;
   fd.visitTime = '';
+  fd.staff = null;
   document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('staffSelectWrap').style.display = 'block';
+  document.getElementById('staffSelectWrap').style.display = 'none';
   loadTimeSlots();
-}
-
-function selectStaff(staffName, el) {
-  fd.staff = staffName;
-  fd.visitTime = '';
-  ['staffBtn_any','staffBtn_maki','staffBtn_kabata'].forEach(id => {
-    document.getElementById(id).classList.remove('selected');
-  });
-  el.classList.add('selected');
-  if (fd.visitDate) loadTimeSlots();
 }
 
 async function loadTimeSlots() {
@@ -1145,18 +1136,10 @@ async function loadTimeSlots() {
   let anyAvailable = false;
   TIME_SLOTS.forEach(t => {
     const currentHour = parseInt(t.slice(0, 2));
-    const makiBooked   = bookedSlots.some(s => {
+    const available = !bookedSlots.some(s => {
       const slotHour = parseInt(s.slot_time.slice(0, 2));
-      return s.slot_staff === '牧' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
+      return currentHour < slotHour + 4 && slotHour < currentHour + 4;
     });
-    const kabataBooked = bookedSlots.some(s => {
-      const slotHour = parseInt(s.slot_time.slice(0, 2));
-      return s.slot_staff === '椛田' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
-    });
-    let available;
-    if (fd.staff === '牧')         available = !makiBooked;
-    else if (fd.staff === '椛田')  available = !kabataBooked;
-    else                           available = !makiBooked || !kabataBooked;
     if (available) anyAvailable = true;
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -1287,7 +1270,7 @@ async function submitReservation() {
       reservation_number: reservationNumber,
       visit_date: fd.visitDate,
       visit_time: fd.visitTime + ':00',
-      staff: fd.staff,
+      staff: null,
       course: fd.course,
       breed: fd.breedDisplay,
       gender: fd.gender,

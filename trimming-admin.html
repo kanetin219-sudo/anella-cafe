@@ -1428,13 +1428,13 @@ async function submitManualReservation() {
   // 手動予約登録時にブロック設定を自動追加（3時間のバッファ）
   const blockRows = [];
   const blockStaffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
-  const timeHour = parseInt(time.slice(0, 2));
+  const blockTimeHour = parseInt(time.slice(0, 2));
   const TIME_SLOTS_ADM = ['10:00','11:00','12:00','13:00','14:00','15:00'];
 
   blockStaffList.forEach(s => {
     TIME_SLOTS_ADM.forEach(slot => {
       const slotHour = parseInt(slot.slice(0, 2));
-      if (timeHour <= slotHour && slotHour < timeHour + 4) {
+      if (blockTimeHour <= slotHour && slotHour < blockTimeHour + 4) {
         blockRows.push({
           block_date: date,
           block_time: slot + ':00',

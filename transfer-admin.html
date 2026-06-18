@@ -1302,11 +1302,35 @@ async function loadTransferPage() {
     s => s.transfer_users?.needs_transfer === false && s.transfer_users?.is_active === true
   );
 
-  renderTransferGroups(schedules || [], drivers || [], dailyDrivers || [], date, selfUsers);
+  // 自力ユーザーをschedules テーブルに登録（欠席状態を管理するため）
+  for (const selfUser of selfUsers) {
+    const { data: existing } = await supabase
+      .from('transfer_schedules')
+      .select('id')
+      .eq('schedule_date', date)
+      .eq('user_id', selfUser.user_id);
+
+    if (!existing || existing.length === 0) {
+      await supabase.from('transfer_schedules').insert({
+        schedule_date: date,
+        user_id: selfUser.user_id,
+        status: '出席'
+      });
+    }
+  }
+
+  // 自力ユーザーのスケジュールも取得（欠席状態を反映するため）
+  const { data: selfSchedules } = await supabase
+    .from('transfer_schedules')
+    .select('id, user_id, status, transfer_users(name)')
+    .eq('schedule_date', date)
+    .in('user_id', selfUsers.map(u => u.user_id));
+
+  renderTransferGroups(schedules || [], drivers || [], dailyDrivers || [], date, selfUsers, selfSchedules || []);
   setupRealtimeTransfer(date);
 }
 
-function renderTransferGroups(schedules, drivers, dailyDrivers, date, selfUsers) {
+function renderTransferGroups(schedules, drivers, dailyDrivers, date, selfUsers, selfSchedules) {
   const go10_1 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30' && (s.pickup_group||1) === 1).sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
   const go10_2 = schedules.filter(s => s.pickup_time && s.pickup_time < '10:30' && (s.pickup_group||1) === 2).sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
   const go11 = schedules.filter(s => s.pickup_time && s.pickup_time >= '10:30' && s.pickup_time < '13:00').sort((a,b)=>(a.pickup_order||99)-(b.pickup_order||99));
@@ -1324,8 +1348,13 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date, selfUsers)
   ];
 
   const container = document.getElementById('transferGroups');
+  const dd = {};
+  (dailyDrivers || []).forEach(d => {
+    if (d.car === '社用車') {
+      Object.assign(dd, d);
+    }
+  });
   container.innerHTML = groups.map(g => {
-    const dd = dailyDrivers.find(d => d.car === '社用車') || {};
     const driverVal = dd[g.driverKey] || '';
     const dividerHtml = g.divider ? `<div class="time-section-divider">${g.divider}</div>` : '';
     return dividerHtml + `
@@ -1352,22 +1381,39 @@ function renderTransferGroups(schedules, drivers, dailyDrivers, date, selfUsers)
 
   // 自力参加ユーザーセクション
   if (selfUsers && selfUsers.length > 0) {
+    const selfCount = selfSchedules.filter(s => s.status !== '欠席').length;
+    const selfAbsentCount = selfSchedules.filter(s => s.status === '欠席').length;
+    const selfScheduleMap = {};
+    (selfSchedules || []).forEach(s => {
+      selfScheduleMap[s.user_id] = s;
+    });
+
     container.innerHTML += `
     <div class="time-section-divider">自力参加</div>
     <div class="group-card" style="border-left: 4px solid var(--accent);">
       <div class="group-header" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
         <div class="group-title">
           🚶 自力参加
-          <span class="badge badge-gray">${selfUsers.length}名</span>
+          <span class="badge badge-gray">${selfCount}名${selfAbsentCount > 0 ? ` / 欠席${selfAbsentCount}名` : ''}</span>
         </div>
       </div>
       <div class="rider-list">
-        ${selfUsers.map(s => `
-          <div class="rider-item" style="opacity:0.85;">
+        ${selfUsers.map(s => {
+          const sched = selfScheduleMap[s.user_id];
+          const isAbsent = sched?.status === '欠席';
+          const note = s.transfer_users?.note || '';
+          return `
+          <div class="rider-item ${isAbsent?'absent':''}" style="opacity:0.85;">
             <span style="font-size:18px;margin-right:4px;">🚶</span>
             <div class="rider-name">${escHtml(s.transfer_users?.name || '不明')}</div>
+            <button class="rider-detail-btn" data-name="${escHtml(s.transfer_users?.name || '不明')}" data-note="${escHtml(note)}" onclick="showUserNote(this)">詳細</button>
+            ${sched ? `<button class="rider-absent-btn ${isAbsent?'active':''}" onclick="toggleAbsent('${sched.id}','${isAbsent}')">
+              ${isAbsent ? '出席に戻す' : '欠席'}
+            </button>` : ''}
+            ${sched ? `<button class="rider-delete-btn" onclick="deleteRiderFromSchedule('${sched.id}')">🗑</button>` : ''}
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     </div>`;
   }

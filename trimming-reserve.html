@@ -1142,6 +1142,7 @@ async function loadTimeSlots() {
     return;
   }
 
+  let anyAvailable = false;
   TIME_SLOTS.forEach(t => {
     const currentHour = parseInt(t.slice(0, 2));
     const makiBooked   = bookedSlots.some(s => {
@@ -1156,6 +1157,7 @@ async function loadTimeSlots() {
     if (fd.staff === '牧')         available = !makiBooked;
     else if (fd.staff === '椛田')  available = !kabataBooked;
     else                           available = !makiBooked || !kabataBooked;
+    if (available) anyAvailable = true;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'time-btn' + (available ? '' : ' disabled') + (t === fd.visitTime ? ' selected' : '');
@@ -1163,6 +1165,17 @@ async function loadTimeSlots() {
     if (available) btn.onclick = () => selectTime(t, btn);
     grid.appendChild(btn);
   });
+
+  if (!anyAvailable) {
+    const msg = document.createElement('div');
+    msg.style.gridColumn = '1/-1';
+    msg.style.textAlign = 'center';
+    msg.style.color = 'var(--warn)';
+    msg.style.padding = '16px';
+    msg.textContent = 'この日の予約枠は埋まっています';
+    grid.innerHTML = '';
+    grid.appendChild(msg);
+  }
 }
 
 function selectTime(time, btn) {

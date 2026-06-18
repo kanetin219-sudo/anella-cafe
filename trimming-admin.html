@@ -516,7 +516,35 @@
     <div class="section-label">予約詳細</div>
     <table class="detail-table" id="detailTable"></table>
 
-    <div class="section-label" style="margin-top:16px;">担当スタッフ割当</div>
+    <div class="section-label" style="margin-top:16px;">ペット情報編集</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+      <div>
+        <label style="font-size:12px; color:var(--text-soft); display:block; margin-bottom:4px;">ペット名</label>
+        <input type="text" id="editPetName" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-soft); display:block; margin-bottom:4px;">犬種</label>
+        <input type="text" id="editBreed" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-soft); display:block; margin-bottom:4px;">性別</label>
+        <input type="text" id="editGender" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-soft); display:block; margin-bottom:4px;">体重</label>
+        <input type="text" id="editWeight" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-soft); display:block; margin-bottom:4px;">年齢</label>
+        <input type="text" id="editPetAge" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-soft); display:block; margin-bottom:4px;">毛玉</label>
+        <input type="text" id="editMatting" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+      </div>
+    </div>
+
+    <div class="section-label">担当スタッフ割当</div>
     <div class="select-wrap-sm" style="margin-bottom:12px;">
       <select id="staffAssign" style="width:100%; padding:11px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-family:'Noto Sans JP',sans-serif; font-size:14px; color:var(--text); appearance:none; -webkit-appearance:none; outline:none;">
         <option value="どちらでもいい">どちらでもいい</option>
@@ -1055,7 +1083,7 @@ function renderReservations(list) {
         <span>👤 ${r.owner_name}</span>
         <span>📞 ${r.phone}</span>
         <span>💰 ${r.total_price > 0 ? '¥' + r.total_price.toLocaleString() : '要確認'}</span>
-        <span>👤 ${r.staff}</span>
+        <span>👤 ${r.staff || '未決定'}</span>
         <span style="font-size:11px; color:var(--text-soft);">No.${r.reservation_number}</span>
       </div>
       ${r.staff_memo ? `<div class="res-memo-preview">📝 ${r.staff_memo}</div>` : ''}
@@ -1107,6 +1135,12 @@ function openModal(r) {
   document.getElementById('detailTable').innerHTML =
     rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
 
+  document.getElementById('editPetName').value = r.pet_name || '';
+  document.getElementById('editBreed').value = r.breed || '';
+  document.getElementById('editGender').value = r.gender || '';
+  document.getElementById('editWeight').value = r.weight || '';
+  document.getElementById('editPetAge').value = r.pet_age || '';
+  document.getElementById('editMatting').value = r.matting || '';
   document.getElementById('staffAssign').value = r.staff || 'どちらでもいい';
   document.getElementById('memoArea').value = r.staff_memo || '';
   document.getElementById('saveOk').classList.remove('active');
@@ -1139,13 +1173,28 @@ async function saveMemo() {
   if (!currentResId) return;
   const memo  = document.getElementById('memoArea').value.trim();
   const staff = document.getElementById('staffAssign').value;
+  const petName = document.getElementById('editPetName').value.trim();
+  const breed = document.getElementById('editBreed').value.trim();
+  const gender = document.getElementById('editGender').value.trim();
+  const weight = document.getElementById('editWeight').value.trim();
+  const petAge = document.getElementById('editPetAge').value.trim();
+  const matting = document.getElementById('editMatting').value.trim();
   const btn   = document.getElementById('saveBtn');
   btn.disabled = true;
 
   const oldStaff = currentResData.staff;
   const { error } = await supabase
     .from('trimming_reservations')
-    .update({ staff_memo: memo || null, staff })
+    .update({
+      staff_memo: memo || null,
+      staff,
+      pet_name: petName || null,
+      breed: breed || null,
+      gender: gender || null,
+      weight: weight || null,
+      pet_age: petAge || null,
+      matting: matting || null
+    })
     .eq('id', currentResId);
 
   btn.disabled = false;
@@ -1156,30 +1205,37 @@ async function saveMemo() {
       const timeHour = parseInt(time.slice(0, 2));
       const TIME_SLOTS_ADMIN = ['10:00','11:00','12:00','13:00','14:00','15:00'];
 
-      await supabase
-        .from('blocked_times')
-        .delete()
-        .eq('block_date', date)
-        .in('staff', oldStaff === 'どちらでもいい' ? ['牧', '椛田'] : [oldStaff]);
+      // 古いブロック設定を削除
+      if (oldStaff) {
+        const oldStaffList = oldStaff === 'どちらでもいい' ? ['牧', '椛田'] : [oldStaff];
+        await supabase
+          .from('blocked_times')
+          .delete()
+          .eq('block_date', date)
+          .in('staff', oldStaffList);
+      }
 
+      // 新しいブロック設定を追加
       const blockRows = [];
-      const newStaffList = staff === 'どちらでもいい' ? ['牧', '椛田'] : [staff];
-      newStaffList.forEach(s => {
-        TIME_SLOTS_ADMIN.forEach(slot => {
-          const slotHour = parseInt(slot.slice(0, 2));
-          if (timeHour <= slotHour && slotHour < timeHour + 4) {
-            blockRows.push({
-              block_date: date,
-              block_time: slot + ':00',
-              staff: s,
-              reason: null
-            });
-          }
+      if (staff && staff !== 'どちらでもいい') {
+        const newStaffList = [staff];
+        newStaffList.forEach(s => {
+          TIME_SLOTS_ADMIN.forEach(slot => {
+            const slotHour = parseInt(slot.slice(0, 2));
+            if (timeHour <= slotHour && slotHour < timeHour + 4) {
+              blockRows.push({
+                block_date: date,
+                block_time: slot + ':00',
+                staff: s,
+                reason: null
+              });
+            }
+          });
         });
-      });
 
-      if (blockRows.length > 0) {
-        await supabase.from('blocked_times').insert(blockRows);
+        if (blockRows.length > 0) {
+          await supabase.from('blocked_times').insert(blockRows);
+        }
       }
     }
 
@@ -1322,6 +1378,7 @@ async function submitManualReservation() {
   // ブロック時間チェック（3時間のバッファを考慮） + 2人出勤チェック
   const time  = document.getElementById('manualTime').value;
   const staff = document.getElementById('manualStaff').value;
+  if (staff === 'どちらでもいい') { errEl.textContent = 'スタッフを指定してください'; errEl.style.display = 'block'; return; }
   const timeHour = parseInt(time.slice(0, 2));
   const { data: allBlocks } = await supabase
     .from('blocked_times')

@@ -844,16 +844,24 @@ async function doLogin() {
   btn.textContent = 'ログイン中...';
   err.classList.remove('active');
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  btn.disabled = false;
-  btn.textContent = 'ログイン';
+    btn.disabled = false;
+    btn.textContent = 'ログイン';
 
-  if (error) {
-    showLoginErr('メールまたはパスワードが正しくありません');
-    return;
+    if (error) {
+      console.error('Supabase auth error:', error);
+      showLoginErr(`エラー: ${error.message || 'ログインに失敗しました'}`);
+      return;
+    }
+    showMain(data.user.email);
+  } catch (ex) {
+    btn.disabled = false;
+    btn.textContent = 'ログイン';
+    console.error('Login exception:', ex);
+    showLoginErr(`エラー: ${ex.message || 'ログインに失敗しました'}`);
   }
-  showMain(data.user.email);
 }
 
 async function doLogout() {

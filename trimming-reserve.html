@@ -1115,15 +1115,11 @@ async function loadTimeSlots() {
   TIME_SLOTS.forEach(t => {
     const currentHour = parseInt(t.slice(0, 2));
     const isBlocked = blockedTimes.includes(t);
-    const makiBooked = bookedSlots.some(s => {
+    const isBooked = bookedSlots.some(s => {
       const slotHour = parseInt(s.slot_time.slice(0, 2));
-      return s.slot_staff === '牧' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
+      return currentHour < slotHour + 4 && slotHour < currentHour + 4;
     });
-    const kabataBooked = bookedSlots.some(s => {
-      const slotHour = parseInt(s.slot_time.slice(0, 2));
-      return s.slot_staff === '椛田' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
-    });
-    const available = !isBlocked && (!makiBooked || !kabataBooked);
+    const available = !isBlocked && !isBooked;
     if (available) anyAvailable = true;
     const btn = document.createElement('button');
     btn.type = 'button';

@@ -1305,7 +1305,7 @@ async function addBlock() {
     const to   = parseInt(document.getElementById('blockTimeTo').value);
     if (from >= to) { alert('終了時間は開始時間より後にしてください'); return; }
     times = [];
-    for (let h = from; h <= to; h++) {
+    for (let h = from; h < to; h++) {
       times.push(String(h).padStart(2,'0') + ':00');
     }
   }

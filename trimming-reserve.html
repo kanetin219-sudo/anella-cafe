@@ -1099,11 +1099,13 @@ async function loadTimeSlots() {
     if (!error && data) bookedSlots = data;
   } catch (e) {}
 
-  const { data: blocks } = await supabase
-    .from('blocked_times')
-    .select('block_time')
-    .eq('block_date', fd.visitDate);
-  if (blocks) blockedTimes = blocks.map(b => b.block_time.slice(0, 5));
+  try {
+    const { data: blocks } = await supabase
+      .from('blocked_times')
+      .select('block_time')
+      .eq('block_date', fd.visitDate);
+    if (blocks && Array.isArray(blocks)) blockedTimes = blocks.map(b => b.block_time.slice(0, 5));
+  } catch (e) {}
 
   loading.style.display = 'none';
   grid.style.display = 'grid';

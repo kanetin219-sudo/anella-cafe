@@ -1144,7 +1144,7 @@ async function loadTimeSlots() {
       const slotHour = parseInt(s.slot_time.slice(0, 2));
       return s.slot_staff === '椛田' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
     });
-    const available = !makiBooked && !kabataBooked;
+    const available = !makiBooked || !kabataBooked;
     if (available) anyAvailable = true;
     const btn = document.createElement('button');
     btn.type = 'button';

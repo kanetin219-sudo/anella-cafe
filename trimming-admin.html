@@ -588,16 +588,6 @@
         </div>
       </div>
     </div>
-    <div style="margin-bottom:14px;">
-      <div style="font-size:12px; color:var(--text-soft); margin-bottom:4px;">担当スタッフ</div>
-      <div class="select-wrap-sm">
-        <select id="manualStaff" style="width:100%;">
-          <option value="どちらでもいい">どちらでもいい</option>
-          <option value="牧">牧</option>
-          <option value="椛田">椛田</option>
-        </select>
-      </div>
-    </div>
 
     <div class="section-label">コース <span style="color:var(--warn); font-size:11px;">必須</span></div>
     <div class="select-wrap-sm" style="margin-bottom:14px;">
@@ -1375,10 +1365,8 @@ async function submitManualReservation() {
   if (!receptionist) { errEl.textContent = '受付担当者を選択してください'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
-  // ブロック時間チェック（3時間のバッファを考慮） + 2人出勤チェック
+  // ブロック時間チェック（3時間のバッファを考慮）
   const time  = document.getElementById('manualTime').value;
-  const staff = document.getElementById('manualStaff').value;
-  if (staff === 'どちらでもいい') { errEl.textContent = 'スタッフを指定してください'; errEl.style.display = 'block'; return; }
   const timeHour = parseInt(time.slice(0, 2));
   const { data: allBlocks } = await supabase
     .from('blocked_times')

@@ -1079,10 +1079,8 @@ function changeMonth(dir) {
 function selectDate(dateStr, el) {
   fd.visitDate = dateStr;
   fd.visitTime = '';
-  fd.staff = null;
   document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('staffSelectWrap').style.display = 'none';
   loadTimeSlots();
 }
 

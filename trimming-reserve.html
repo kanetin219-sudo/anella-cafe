@@ -1103,7 +1103,7 @@ async function loadTimeSlots() {
   grid.style.display = 'none';
 
   let bookedSlots = [];
-  let dayBlocked = false;
+  let blockedTimes = [];
   try {
     const { data, error } = await supabase.rpc('get_booked_slots', { p_date: fd.visitDate });
     if (!error && data) bookedSlots = data;
@@ -1112,30 +1112,20 @@ async function loadTimeSlots() {
   if (fd.staff === '牧' || fd.staff === '椛田') {
     const { data: blocks } = await supabase
       .from('blocked_times')
-      .select('staff')
+      .select('block_time')
       .eq('block_date', fd.visitDate)
       .eq('staff', fd.staff);
-    if (blocks && blocks.length > 0) dayBlocked = true;
+    if (blocks) blockedTimes = blocks.map(b => b.block_time.slice(0, 5));
   }
 
   loading.style.display = 'none';
   grid.style.display = 'grid';
   grid.innerHTML = '';
 
-  if (dayBlocked) {
-    const msg = document.createElement('div');
-    msg.style.gridColumn = '1/-1';
-    msg.style.textAlign = 'center';
-    msg.style.color = 'var(--warn)';
-    msg.style.padding = '16px';
-    msg.textContent = 'この日は予約が埋まっています';
-    grid.appendChild(msg);
-    return;
-  }
-
   let anyAvailable = false;
   TIME_SLOTS.forEach(t => {
     const currentHour = parseInt(t.slice(0, 2));
+    const isBlocked = blockedTimes.includes(t);
     const makiBooked = bookedSlots.some(s => {
       const slotHour = parseInt(s.slot_time.slice(0, 2));
       return s.slot_staff === '牧' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
@@ -1144,7 +1134,7 @@ async function loadTimeSlots() {
       const slotHour = parseInt(s.slot_time.slice(0, 2));
       return s.slot_staff === '椛田' && currentHour < slotHour + 4 && slotHour < currentHour + 4;
     });
-    const available = !makiBooked || !kabataBooked;
+    const available = !isBlocked && (!makiBooked || !kabataBooked);
     if (available) anyAvailable = true;
     const btn = document.createElement('button');
     btn.type = 'button';

@@ -1275,7 +1275,7 @@ async function submitReservation() {
       phone: fd.phone || '',
       line_name: fd.lineName || null,
       email: fd.email || null,
-      options: fd.options || [],
+      options: JSON.stringify(fd.options || []),
       course_price: fd.coursePrice || 0,
       options_price: fd.optionsPrice || 0,
       total_price: (fd.coursePrice || 0) + (fd.optionsPrice || 0),

@@ -419,6 +419,13 @@
                 <span class="field-unit">円</span>
               </div>
             </div>
+            <div class="field-item">
+              <div class="field-label">送迎ドライバー給与</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_sosokin_driver_kyuyo" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">円</span>
+              </div>
+            </div>
           </div>
           <div class="subtotal-row">
             <span class="subtotal-label">小計</span>
@@ -852,7 +859,7 @@ const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'sonota_uriage'];
 const COUNT_FIELDS  = ['fureai_new', 'repeater', 'trimming_count', 'joryu_riyosuu', 'joryu_kengaku', 'joryu_taiken', 'joryu_seiyaku'];
 
 const EXPENSE_GROUPS = {
-  jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho'],
+  jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho', 'sosokin_driver_kyuyo'],
   shisetsu: ['yachin', 'chushajo', 'denki', 'suido', 'gas_hi', 'gomi'],
   system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino', 'keitai'],
   shiire:   ['butsuhan_shiire', 'pet_goods', 'aroma', 'camera'],
@@ -1004,7 +1011,28 @@ async function loadMonth() {
     document.getElementById('f_memo').value = data.memo || '';
     setSaveStatus('');
   } else {
-    setSaveStatus('この月のデータはまだありません');
+    // 新しい月：直近の過去データから固定費を自動コピー
+    const FIXED_FIELDS = [
+      'shakai_hoken', 'yachin', 'chushajo', 'suido',
+      'net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino', 'keitai',
+      'aroma', 'gomi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken',
+      'hoken', 'riyosha_hoken', 'sharyo_hi', 'zappi', 'sosokin_driver_kyuyo'
+    ];
+    const { data: prevData } = await supabase
+      .from('anella_monthly_finance')
+      .select('*')
+      .lt('year_month', currentMonth)
+      .order('year_month', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (prevData) {
+      FIXED_FIELDS.forEach(f => {
+        if (prevData[f]) document.getElementById('f_' + f).value = prevData[f];
+      });
+      setSaveStatus('固定費を前月から自動入力しました（変動費は手入力してください）');
+    } else {
+      setSaveStatus('この月のデータはまだありません');
+    }
   }
   recalc();
 }

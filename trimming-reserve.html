@@ -1104,7 +1104,12 @@ async function loadTimeSlots() {
       .from('blocked_times')
       .select('block_time')
       .eq('block_date', fd.visitDate);
-    if (blocks && Array.isArray(blocks)) blockedTimes = blocks.map(b => b.block_time.slice(0, 5));
+    if (blocks && Array.isArray(blocks)) {
+      blockedTimes = blocks.map(b => {
+        const time = b.block_time.split(':')[0] + ':' + b.block_time.split(':')[1];
+        return time;
+      });
+    }
   } catch (e) {}
 
   loading.style.display = 'none';
@@ -1113,12 +1118,15 @@ async function loadTimeSlots() {
 
   let anyAvailable = false;
   TIME_SLOTS.forEach(t => {
-    const currentHour = parseInt(t.slice(0, 2));
     const isBlocked = blockedTimes.includes(t);
-    const isBooked = bookedSlots.some(s => {
-      const slotHour = parseInt(s.slot_time.slice(0, 2));
-      return currentHour < slotHour + 4 && slotHour < currentHour + 4;
-    });
+    let isBooked = false;
+    if (bookedSlots && bookedSlots.length > 0) {
+      isBooked = bookedSlots.some(s => {
+        const slotHour = parseInt(s.slot_time.slice(0, 2));
+        const currentHour = parseInt(t.slice(0, 2));
+        return Math.abs(slotHour - currentHour) < 4;
+      });
+    }
     const available = !isBlocked && !isBooked;
     if (available) anyAvailable = true;
     const btn = document.createElement('button');
@@ -1267,10 +1275,10 @@ async function submitReservation() {
       phone: fd.phone,
       line_name: fd.lineName || null,
       email: fd.email || null,
-      options: fd.options,
-      course_price: fd.coursePrice,
-      options_price: fd.optionsPrice,
-      total_price: fd.coursePrice + fd.optionsPrice,
+      options: fd.options || [],
+      course_price: fd.coursePrice || 0,
+      options_price: fd.optionsPrice || 0,
+      total_price: (fd.coursePrice || 0) + (fd.optionsPrice || 0),
     };
 
     const { error } = await supabase.from('trimming_reservations').insert(payload);

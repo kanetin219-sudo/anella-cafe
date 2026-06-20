@@ -1255,7 +1255,6 @@ async function submitReservation() {
     const reservationNumber = `${dateStr}-${String((Number(countData) || 0) + 1).padStart(3, '0')}`;
 
     const payload = {
-      reservation_number: reservationNumber,
       visit_date: fd.visitDate,
       visit_time: fd.visitTime + ':00',
       course: fd.course || '',
@@ -1267,10 +1266,8 @@ async function submitReservation() {
       pet_age: fd.petAge || '',
       pet_name: fd.petName || '',
       vaccine_status: `狂犬病:${fd.vaccineRabies || ''} / 5種:${fd.vaccine5mix || ''}`,
-      staff_note: fd.staffNote || null,
       owner_name: fd.ownerName || '',
       phone: fd.phone || '',
-      line_name: fd.lineName || null,
       email: fd.email || null,
     };
 

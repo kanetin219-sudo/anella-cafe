@@ -1256,7 +1256,7 @@ async function submitReservation() {
 
     const payload = {
       visit_date: fd.visitDate,
-      visit_time: fd.visitTime + ':00',
+      visit_time: fd.visitTime,
       course: fd.course || '',
       breed: fd.breedDisplay || '',
       gender: fd.gender || '',
@@ -1265,11 +1265,7 @@ async function submitReservation() {
       visit_experience: fd.visitExperience || '',
       pet_age: fd.petAge || '',
       pet_name: fd.petName || '',
-      vaccine_status: `狂犬病:${fd.vaccineRabies || ''} / 5種:${fd.vaccine5mix || ''}`,
-      owner_name: fd.ownerName || '',
-      phone: fd.phone || '',
-      email: fd.email || null,
-      staff: fd.staff || '',
+      staff: '',
     };
 
     console.log('Payload:', JSON.stringify(payload));

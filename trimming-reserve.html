@@ -1259,20 +1259,20 @@ async function submitReservation() {
       visit_date: fd.visitDate,
       visit_time: fd.visitTime + ':00',
       staff: null,
-      course: fd.course,
-      breed: fd.breedDisplay,
-      gender: fd.gender,
-      weight: fd.weight,
-      matting: fd.matting,
-      visit_experience: fd.visitExperience,
-      pet_age: fd.petAge,
-      pet_name: fd.petName,
-      vaccine_status: `狂犬病:${fd.vaccineRabies} / 5種:${fd.vaccine5mix}`,
-      vaccine_rabies: fd.vaccineRabies,
-      vaccine_5mix: fd.vaccine5mix,
+      course: fd.course || '',
+      breed: fd.breedDisplay || '',
+      gender: fd.gender || '',
+      weight: fd.weight || '',
+      matting: fd.matting || '',
+      visit_experience: fd.visitExperience || '',
+      pet_age: fd.petAge || '',
+      pet_name: fd.petName || '',
+      vaccine_status: `狂犬病:${fd.vaccineRabies || ''} / 5種:${fd.vaccine5mix || ''}`,
+      vaccine_rabies: fd.vaccineRabies || '',
+      vaccine_5mix: fd.vaccine5mix || '',
       staff_note: fd.staffNote || null,
-      owner_name: fd.ownerName,
-      phone: fd.phone,
+      owner_name: fd.ownerName || '',
+      phone: fd.phone || '',
       line_name: fd.lineName || null,
       email: fd.email || null,
       options: fd.options || [],
@@ -1281,6 +1281,7 @@ async function submitReservation() {
       total_price: (fd.coursePrice || 0) + (fd.optionsPrice || 0),
     };
 
+    console.log('Payload:', JSON.stringify(payload));
     const { error } = await supabase.from('trimming_reservations').insert(payload);
 
     if (error) throw error;

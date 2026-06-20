@@ -1255,6 +1255,7 @@ async function submitReservation() {
     const reservationNumber = `${dateStr}-${String((Number(countData) || 0) + 1).padStart(3, '0')}`;
 
     const payload = {
+      reservation_number: reservationNumber,
       visit_date: fd.visitDate,
       visit_time: fd.visitTime + ':00',
       course: fd.course || '',

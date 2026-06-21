@@ -216,9 +216,10 @@
     /* ── レスポンシブ ── */
     @media (max-width: 700px) {
       .result-cards { grid-template-columns: repeat(2, 1fr); }
-      .fields-grid { grid-template-columns: repeat(2, 1fr); }
+      .fields-grid { grid-template-columns: repeat(3, minmax(130px, 1fr)); overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
       .calc-grid { grid-template-columns: 1fr; }
       .admin-header { flex-direction: column; align-items: flex-start; }
+      .sec-body { padding-bottom: 20px; }
     }
     @media (max-width: 480px) {
       .result-card-value { font-size: 15px; }

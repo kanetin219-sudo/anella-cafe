@@ -1295,7 +1295,7 @@ async function addBlock() {
     const to   = parseInt(document.getElementById('blockTimeTo').value);
     if (from >= to) { alert('終了時間は開始時間より後にしてください'); return; }
     times = [];
-    for (let h = from; h < to; h++) {
+    for (let h = from; h <= to; h++) {
       times.push(String(h).padStart(2,'0') + ':00');
     }
   }
@@ -1383,9 +1383,9 @@ async function submitManualReservation() {
     });
 
     let isBlocked = false;
-    if (staff === '牧'          && makiBlocked)                      isBlocked = true;
-    if (staff === '椛田'        && kabataBlocked)                    isBlocked = true;
-    if (staff === 'どちらでもいい' && makiBlocked && kabataBlocked)  isBlocked = true;
+    if (receptionist === '牧'          && makiBlocked)                      isBlocked = true;
+    if (receptionist === '椛田'        && kabataBlocked)                    isBlocked = true;
+    if (receptionist === 'どちらでもいい' && makiBlocked && kabataBlocked)  isBlocked = true;
 
     if (isBlocked) {
       errEl.textContent = 'この日時はブロックされているため登録できません。ブロック設定を確認してください。';
@@ -1393,9 +1393,9 @@ async function submitManualReservation() {
       return;
     }
 
-    const otherStaffExists = staff !== 'どちらでもいい' && (
-      (staff === '牧' && allBlocks.some(b => b.staff === '椛田')) ||
-      (staff === '椛田' && allBlocks.some(b => b.staff === '牧'))
+    const otherStaffExists = receptionist !== 'どちらでもいい' && (
+      (receptionist === '牧' && allBlocks.some(b => b.staff === '椛田')) ||
+      (receptionist === '椛田' && allBlocks.some(b => b.staff === '牧'))
     );
 
     if (otherStaffExists) {
@@ -1428,7 +1428,7 @@ async function submitManualReservation() {
     reservation_number: reservationNumber,
     visit_date:  date,
     visit_time:  time + ':00',
-    staff:       staff,
+    staff:       receptionist,
     course:      course,
     breed:       manualBreed   || '不明',
     gender:      manualGender  || '不明',

@@ -1082,21 +1082,38 @@ JSON形式で返してください：
   "work_message": "..."
 }`;
 
-      // Supabase Edge Function API に送信
-      const supabaseUrl = 'https://abeekodehorlwsmnhoza.supabase.co/functions/v1/claude-proxy';
+      // Claude API に直接送信（CORS Proxy 経由）
+      const claudeUrl = 'https://api.anthropic.com/v1/messages';
+      const corsProxyUrl = 'https://corsproxy.io/?url=' + encodeURIComponent(claudeUrl);
 
-      console.log('📤 Sending to Supabase:', supabaseUrl);
+      const imageContents = images.map(base64 => ({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: 'image/jpeg',
+          data: base64,
+        },
+      }));
 
-      const response = await fetch(supabaseUrl, {
+      const payload = {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [...imageContents, { type: 'text', text: prompt }],
+        }],
+      };
+
+      console.log('📤 Sending to Claude API via CORS Proxy...');
+
+      const response = await fetch(corsProxyUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-api-key': claudeKey,
+          'anthropic-version': '2023-06-01',
         },
-        body: JSON.stringify({
-          images: images,
-          prompt: prompt,
-          apiKey: claudeKey
-        })
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

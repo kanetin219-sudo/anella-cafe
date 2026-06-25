@@ -1042,6 +1042,16 @@
       // Netlify Functions endpoint
       const images = uploadedPhotos.map(photo => photo.data.split(',')[1]);
 
+      // 画像コンテンツを作成
+      const imageContents = images.map(base64 => ({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: 'image/jpeg',
+          data: base64
+        }
+      }));
+
       const prompt = `あなたはアネラカフェ大分店の就労継続支援B型事業所の週報を作成するアシスタントです。
 週報は利用者の家族に向けて配信されます。
 

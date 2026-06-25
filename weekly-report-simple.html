@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アネラカフェ 週報生成（テンプレート版）</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #FDF6EE 0%, #F5EDE2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .title {
+      font-size: 24px;
+      color: #C96A3B;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #999;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #C96A3B;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #B85A2D;
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .preview {
+      background: #FDF6EE;
+      border: 2px dashed #C96A3B;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .preview-title {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .preview-content {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="title">🐾 週報生成</div>
+        <div class="subtitle">アネラカフェ大分店</div>
+      </div>
+
+      <div class="form-group">
+        <label>📅 週の開始日</label>
+        <input type="date" id="weekStart">
+      </div>
+
+      <div class="form-group">
+        <label>今週のひとことを選んでください</label>
+        <select id="messageType">
+          <option value="">-- テンプレートを選択 --</option>
+          <option value="1">今週も利用者さんたちが元気いっぱい過ごしました！🌟</option>
+          <option value="2">天気の良い中、皆さん笑顔で活動できました💪</option>
+          <option value="3">新しい仲間も加わり、より楽しくなりました😊</option>
+          <option value="4">みんなの協力で素晴らしい一週間でした✨</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>🐶 動物（犬猫）との触れ合いの様子</label>
+        <textarea id="animalMessage" placeholder="例：ワンちゃんたちが利用者さんに甘えて、みんなほっこり😍">可愛い子たちも利用者さんの癒しになってくれました🐱</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>💼 みんなの作業風景</label>
+        <textarea id="workMessage" placeholder="例：作業風景を具体的に">皆さん丁寧に作業に取り組み、良い成果が出ました！</textarea>
+      </div>
+
+      <button onclick="generateReport()">📝 週報を生成する</button>
+
+      <div id="preview" class="preview" style="display:none;">
+        <div class="preview-title">📋 プレビュー</div>
+        <div class="preview-content" id="previewContent"></div>
+        <div class="success" style="display:none;" id="copySuccess">✅ コピーしました！</div>
+        <button onclick="copyToClipboard()" style="margin-top: 12px; background: #4A7C6F;">📋 コピーして LINE に送信</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 今週の日付を自動入力
+    function setDefaultDate() {
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const monday = new Date(today.setDate(diff));
+
+      const year = monday.getFullYear();
+      const month = String(monday.getMonth() + 1).padStart(2, '0');
+      const day = String(monday.getDate()).padStart(2, '0');
+
+      document.getElementById('weekStart').value = `${year}-${month}-${day}`;
+    }
+
+    function generateReport() {
+      const weekStart = document.getElementById('weekStart').value;
+      const messageType = document.getElementById('messageType').value;
+      const animalMessage = document.getElementById('animalMessage').value;
+      const workMessage = document.getElementById('workMessage').value;
+
+      if (!messageType || !animalMessage || !workMessage) {
+        alert('すべてのフィールドを入力してください');
+        return;
+      }
+
+      const templates = {
+        '1': '今週も利用者さんたちが元気いっぱい過ごしました！🌟',
+        '2': '天気の良い中、皆さん笑顔で活動できました💪',
+        '3': '新しい仲間も加わり、より楽しくなりました😊',
+        '4': 'みんなの協力で素晴らしい一週間でした✨'
+      };
+
+      const date = new Date(weekStart);
+      const weekNum = Math.ceil(date.getDate() / 7);
+      const monthYear = `${date.getFullYear()}年${date.getMonth() + 1}月 第${weekNum}週`;
+
+      const report = `
+🐾 アネラカフェ大分店 週報
+📅 ${monthYear}
+
+【今週のひとこと】
+${templates[messageType]}
+
+【今週の子たち🐶🐱】
+${animalMessage}
+
+【みんなの作業風景✨】
+${workMessage}
+
+═══════════════════
+👨‍👩‍👧‍👦 ご家族の皆様へ
+
+いつもお子さんをお預けいただき、ありがとうございます。
+今週も元気に過ごしてくれました。
+
+来週も楽しく、安心して過ごせるよう頑張ります！
+
+📍 アネラカフェ大分店
+      `.trim();
+
+      document.getElementById('previewContent').textContent = report;
+      document.getElementById('preview').style.display = 'block';
+    }
+
+    function copyToClipboard() {
+      const text = document.getElementById('previewContent').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const successDiv = document.getElementById('copySuccess');
+        successDiv.style.display = 'block';
+        setTimeout(() => {
+          successDiv.style.display = 'none';
+        }, 2000);
+      });
+    }
+
+    // 初期化
+    setDefaultDate();
+  </script>
+</body>
+</html>

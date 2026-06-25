@@ -1082,9 +1082,8 @@ JSON形式で返してください：
   "work_message": "..."
 }`;
 
-      // Claude API に直接リクエスト
       // GAS Web App API に送信
-      const gasUrl = 'https://script.google.com/macros/s/AKfycbzsUXUqFOryH7lC2NPJEq8ttT0tn2xkaQp2hwDgV1QI/usercurrentappinstall';
+      const gasUrl = 'https://script.google.com/macros/s/AKfycbzsUXUqFOryH7lC2NPJEq8ttT0tn2xkaQp2hwDgV1QI/doPost';
 
       const response = await fetch(gasUrl, {
         method: 'POST',

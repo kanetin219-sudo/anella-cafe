@@ -1086,15 +1086,6 @@ JSON形式で返してください：
       const claudeUrl = 'https://api.anthropic.com/v1/messages';
       const corsProxyUrl = 'https://corsproxy.io/?url=' + encodeURIComponent(claudeUrl);
 
-      const imageContents = images.map(base64 => ({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: 'image/jpeg',
-          data: base64,
-        },
-      }));
-
       const payload = {
         model: 'claude-sonnet-4-6',
         max_tokens: 1024,

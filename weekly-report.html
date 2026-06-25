@@ -702,6 +702,14 @@
     </div>
 
     <div class="settings-card">
+      <div class="settings-title">🤖 Claude API プロキシ（GAS）</div>
+      <div class="form-group">
+        <label class="form-label">Google Apps Script Web App URL</label>
+        <input type="text" class="form-input" id="gasProxyUrl" placeholder="https://script.google.com/macros/d/...">
+      </div>
+    </div>
+
+    <div class="settings-card">
       <div class="settings-title">💬 LINE Messaging API</div>
       <div class="form-group">
         <label class="form-label">チャンネルアクセストークン</label>
@@ -883,6 +891,7 @@
     // 既存の設定を読み込む
     document.getElementById('settingsPassword').value = localStorage.getItem('anella_weekly_password') || '';
     document.getElementById('claudeApiKey').value = localStorage.getItem('anella_claude_key') || '';
+    document.getElementById('gasProxyUrl').value = localStorage.getItem('anella_gas_proxy_url') || '';
     document.getElementById('lineChannelToken').value = localStorage.getItem('anella_line_token') || '';
     document.getElementById('lineUserId').value = localStorage.getItem('anella_line_userid') || '';
   });
@@ -895,16 +904,18 @@
   document.getElementById('saveSettingsBtn').addEventListener('click', () => {
     const password = document.getElementById('settingsPassword').value.trim();
     const claudeKey = document.getElementById('claudeApiKey').value.trim();
+    const gasProxyUrl = document.getElementById('gasProxyUrl').value.trim();
     const lineToken = document.getElementById('lineChannelToken').value.trim();
     const lineUserId = document.getElementById('lineUserId').value.trim();
 
-    if (!password || !claudeKey || !lineToken) {
-      alert('パスワード・Claude APIキー・LINE トークンは必須です');
+    if (!password || !claudeKey || !gasProxyUrl || !lineToken) {
+      alert('パスワード・Claude APIキー・GAS URL・LINE トークンは必須です');
       return;
     }
 
     localStorage.setItem('anella_weekly_password', password);
     localStorage.setItem('anella_claude_key', claudeKey);
+    localStorage.setItem('anella_gas_proxy_url', gasProxyUrl);
     localStorage.setItem('anella_line_token', lineToken);
     localStorage.setItem('anella_line_userid', lineUserId);
 
@@ -1038,14 +1049,13 @@
 
     try {
       // Claude API に画像を送信して週報を生成
-      const imageContents = uploadedPhotos.map(photo => ({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: 'image/jpeg',
-          data: photo.data.split(',')[1]
-        }
-      }));
+      const gasProxyUrl = localStorage.getItem('anella_gas_proxy_url');
+
+      if (!gasProxyUrl) {
+        throw new Error('GAS Proxy URL が設定されていません');
+      }
+
+      const images = uploadedPhotos.map(photo => photo.data.split(',')[1]);
 
       const prompt = `あなたはアネラカフェ大分店の就労継続支援B型事業所の週報を作成するアシスタントです。
 週報は利用者の家族に向けて配信されます。
@@ -1077,26 +1087,15 @@ JSON形式で返してください：
   "work_message": "..."
 }`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(gasProxyUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': claudeKey,
-          'anthropic-version': '2023-06-01'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: [
-              ...imageContents,
-              {
-                type: 'text',
-                text: prompt
-              }
-            ]
-          }]
+          images: images,
+          prompt: prompt,
+          apiKey: claudeKey
         })
       });
 

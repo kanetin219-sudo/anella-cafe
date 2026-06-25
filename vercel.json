@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/claude-proxy.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/claude-proxy",
+      "dest": "api/claude-proxy.ts"
+    }
+  ]
+}

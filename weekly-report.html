@@ -1082,27 +1082,21 @@ JSON形式で返してください：
   "work_message": "..."
 }`;
 
-      // Claude API に直接送信（CORS Proxy 経由）
-      const claudeUrl = 'https://api.anthropic.com/v1/messages';
-      const corsProxyUrl = 'https://corsproxy.io/?url=' + encodeURIComponent(claudeUrl);
+      // Supabase Edge Function 経由で Claude API に送信
+      const supabaseUrl = 'https://abeekodehorlwsmnhoza.supabase.co/functions/v1/claude-proxy';
 
       const payload = {
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: [...imageContents, { type: 'text', text: prompt }],
-        }],
+        images: uploadedPhotos.map(p => p.data.split(',')[1]),
+        prompt: prompt,
+        apiKey: claudeKey,
       };
 
-      console.log('📤 Sending to Claude API via CORS Proxy...');
+      console.log('📤 Sending to Supabase Edge Function...');
 
-      const response = await fetch(corsProxyUrl, {
+      const response = await fetch(supabaseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': claudeKey,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify(payload),
       });

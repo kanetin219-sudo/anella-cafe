@@ -1083,26 +1083,18 @@ JSON形式で返してください：
 }`;
 
       // Claude API に直接リクエスト
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // GAS Web App API に送信
+      const gasUrl = 'https://script.google.com/macros/s/AKfycbwqDDOct3Q7IWyNAQUALU6rybcF5rPFsx6YHvFnvK3I1JAJCrLW2EP0QN52IFGjQ3pquw/usercurrentappinstall';
+
+      const response = await fetch(gasUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': claudeKey,
-          'anthropic-version': '2023-06-01'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: [
-              ...imageContents,
-              {
-                type: 'text',
-                text: prompt
-              }
-            ]
-          }]
+          images: images,
+          prompt: prompt,
+          apiKey: claudeKey
         })
       });
 

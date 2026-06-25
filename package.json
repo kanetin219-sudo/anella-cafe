@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "description": "Claude API Proxy for Anella Weekly Report",
   "private": true,
-  "dependencies": {
-    "node-fetch": "^2.7.0"
-  },
+  "dependencies": {},
   "devDependencies": {}
 }

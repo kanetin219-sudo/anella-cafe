@@ -1085,6 +1085,8 @@ JSON形式で返してください：
       // GAS Web App API に送信
       const gasUrl = 'https://script.google.com/macros/s/AKfycbzsUXUqFOryH7lC2NPJEq8ttT0tn2xkaQp2hwDgV1QI/usercurrentappinstall';
 
+      console.log('📤 Sending to GAS:', gasUrl);
+
       const response = await fetch(gasUrl, {
         method: 'POST',
         headers: {

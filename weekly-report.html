@@ -1039,8 +1039,8 @@
 
     try {
       // Claude API に画像を送信して週報を生成
-      // Vercel API endpoint
-      const proxyUrl = 'https://anella-cafe.vercel.app/api/claude-proxy';
+      // Netlify Functions endpoint
+      const proxyUrl = '/.netlify/functions/claude-proxy';
 
       const images = uploadedPhotos.map(photo => photo.data.split(',')[1]);
 

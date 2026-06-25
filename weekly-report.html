@@ -898,8 +898,8 @@
     const lineToken = document.getElementById('lineChannelToken').value.trim();
     const lineUserId = document.getElementById('lineUserId').value.trim();
 
-    if (!password || !claudeKey || !lineToken || !lineUserId) {
-      alert('全ての項目を入力してください');
+    if (!password || !claudeKey || !lineToken) {
+      alert('パスワード・Claude APIキー・LINE トークンは必須です');
       return;
     }
 

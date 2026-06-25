@@ -1082,8 +1082,8 @@ JSON形式で返してください：
   "work_message": "..."
 }`;
 
-      // Supabase Edge Function 経由で Claude API に送信
-      const supabaseUrl = 'https://abeekodehorlwsmnhoza.supabase.co/functions/v1/claude-proxy';
+      // GAS Web App 経由で Claude API に送信
+      const gasUrl = 'https://script.google.com/macros/d/1j53tMZ7H2hvNWvPOGFh5iIf227UYc-RvwM_D9uWfCLvPJUhUDXi-BR7A/usercurrentappinstall';
 
       const payload = {
         images: uploadedPhotos.map(p => p.data.split(',')[1]),
@@ -1091,9 +1091,9 @@ JSON形式で返してください：
         apiKey: claudeKey,
       };
 
-      console.log('📤 Sending to Supabase Edge Function...');
+      console.log('📤 Sending to GAS Web App...');
 
-      const response = await fetch(supabaseUrl, {
+      const response = await fetch(gasUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

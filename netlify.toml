@@ -3,6 +3,14 @@
   functions = "netlify/functions"
   publish = "."
 
+# API は除外
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# SPA リダイレクト
 [[redirects]]
   from = "/*"
   to = "/weekly-report.html"

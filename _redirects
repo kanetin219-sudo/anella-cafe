@@ -1,6 +1,2 @@
-# Netlify リダイレクトルール
-# API は保護
-/.netlify/functions/*  /.netlify/functions/:splat  200
-
-# SPA リダイレクト
-/*  /weekly-report.html  200
+# すべてのファイルをそのまま公開（リダイレクトなし）
+# API も含めて直接提供

@@ -1082,12 +1082,12 @@ JSON形式で返してください：
   "work_message": "..."
 }`;
 
-      // GAS Web App API に送信
-      const gasUrl = 'https://script.google.com/macros/s/AKfycbzsUXUqFOryH7lC2NPJEq8ttT0tn2xkaQp2hwDgV1QI/usercurrentappinstall';
+      // Supabase Edge Function API に送信
+      const supabaseUrl = 'https://abeekodehorlwsmnhoza.supabase.co/functions/v1/claude-proxy';
 
-      console.log('📤 Sending to GAS:', gasUrl);
+      console.log('📤 Sending to Supabase:', supabaseUrl);
 
-      const response = await fetch(gasUrl, {
+      const response = await fetch(supabaseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

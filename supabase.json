@@ -1,0 +1,8 @@
+{
+  "project_id": "abeekodehorlwsmnhoza",
+  "api": {
+    "port": 54321,
+    "schemas": ["public"],
+    "extra_search_path": ["public", "extensions"]
+  }
+}

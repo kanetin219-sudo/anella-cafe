@@ -134,27 +134,15 @@ ${theme ? `テーマ：${theme}` : ''}
   "message3": "みんなの作業風景（50-80字）"
 }`;
 
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch('/api/claude', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true',
           },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 1024,
-            messages: [{
-              role: 'user',
-              content: [
-                ...images.map((base64, i) => ({
-                  type: 'image',
-                  source: { type: 'base64', media_type: 'image/jpeg', data: base64 }
-                })),
-                { type: 'text', text: prompt }
-              ]
-            }]
+            images: images.map(base64 => base64.split(',')[1] || base64),
+            prompt: prompt,
+            apiKey: apiKey,
           })
         });
 

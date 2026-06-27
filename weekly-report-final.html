@@ -134,7 +134,7 @@ ${theme ? `テーマ：${theme}` : ''}
   "message3": "みんなの作業風景（50-80字）"
 }`;
 
-        const response = await fetch('/api/claude', {
+        const response = await fetch('https://abeekodehorlwsmnhoza.supabase.co/functions/v1/claude-proxy', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

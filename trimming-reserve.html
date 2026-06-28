@@ -1164,6 +1164,20 @@ function onVaccineChange() {
 }
 
 function validateStep5() {
+  // ワクチン選択の必須チェック（明示的）
+  const vaccineRabies = document.getElementById('vaccineRabies').value.trim();
+  const vaccine5mix = document.getElementById('vaccine5mix').value.trim();
+
+  if (!vaccineRabies) {
+    showErr(5, '狂犬病ワクチン接種を選択してください。');
+    return false;
+  }
+
+  if (!vaccine5mix) {
+    showErr(5, '5種混合ワクチン接種を選択してください。');
+    return false;
+  }
+
   const fields = [
     ['petName', 'ペットのお名前'],
     ['gender', '性別'],

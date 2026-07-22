@@ -284,8 +284,12 @@
           <div class="result-card-value rv-expense" id="rc_expense">¥0</div>
         </div>
         <div class="result-card">
-          <div class="result-card-label">収支</div>
-          <div class="result-card-value rv-plus" id="rc_balance">¥0</div>
+          <div class="result-card-label">営業利益</div>
+          <div class="result-card-value rv-plus" id="rc_operating">¥0</div>
+        </div>
+        <div class="result-card">
+          <div class="result-card-label">最終利益</div>
+          <div class="result-card-value rv-plus" id="rc_final">¥0</div>
         </div>
         <div class="result-card">
           <div class="result-card-label">利益（税引後）</div>
@@ -865,7 +869,7 @@ const EXPENSE_GROUPS = {
   system:   ['net_phone', 'knowbee', 'smaregi', 'elearning', 'retailzino', 'keitai'],
   shiire:   ['butsuhan_shiire', 'pet_goods', 'aroma', 'camera'],
   hoken:    ['sharyo_hi', 'hoken', 'riyosha_hoken'],
-  kotei:    ['kokoku_hi', 'hensei', 'royalty', 'jiraiino', 'chiiki_koken', 'zappi', 'riyosha_shokuhi'],
+  kotei:    ['kokoku_hi', 'royalty', 'jiraiino', 'chiiki_koken', 'zappi', 'riyosha_shokuhi'],
 };
 
 const ALL_EXPENSE_FIELDS = Object.values(EXPENSE_GROUPS).flat();
@@ -982,7 +986,7 @@ function recalc() {
   document.getElementById('rc_income').textContent  = fmt(totalIncome);
   document.getElementById('rc_expense').textContent = fmt(totalExpense);
 
-  const rcBal = document.getElementById('rc_balance');
+  const rcBal = document.getElementById('rc_operating');
   rcBal.textContent = fmt(balance);
   rcBal.className = 'result-card-value ' + (balance >= 0 ? 'rv-plus' : 'rv-minus');
 

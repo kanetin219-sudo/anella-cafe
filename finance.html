@@ -722,17 +722,11 @@
           </div>
 
           <div class="adj-row">
-            <span class="adj-label">控除</span>
-            <input type="number" class="adj-input" id="f_kojo" min="0" placeholder="0" oninput="recalc()">
+            <span class="adj-label">返済</span>
+            <input type="number" class="adj-input" id="f_hensei" min="0" placeholder="0" oninput="recalc()">
             <span class="adj-unit">円</span>
-            <span class="adj-result-label">利益前金額：</span>
-            <span class="adj-result-value cv-plus" id="calc_mae">¥0</span>
-          </div>
-
-          <div class="adj-row" style="border-top: none; padding-top: 0;">
-            <span class="adj-label">利益（税引後）</span>
-            <input type="number" class="adj-input" id="f_rieki_zei" min="0" placeholder="未入力時は利益前を表示" oninput="recalc()">
-            <span class="adj-unit">円</span>
+            <span class="adj-result-label">最終利益：</span>
+            <span class="adj-result-value cv-plus" id="calc_final">¥0</span>
           </div>
 
           <div style="margin-top: 12px;">
@@ -871,7 +865,7 @@ const EXPENSE_GROUPS = {
 };
 
 const ALL_EXPENSE_FIELDS = Object.values(EXPENSE_GROUPS).flat();
-const ALL_NUM_FIELDS = [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, ...COUNT_FIELDS, 'kojo', 'rieki_zei'];
+const ALL_NUM_FIELDS = [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, ...COUNT_FIELDS, 'hensei'];
 
 // ── 認証 ──────────────────────────────────────────
 async function checkAuth() {
@@ -961,36 +955,34 @@ function recalc() {
     totalExpense += sub;
   }
 
-  const balance   = totalIncome - totalExpense;
-  const kojo      = fval('f_kojo');
-  const riekiMae  = balance - kojo;
-  const riekiZei  = fval('f_rieki_zei');
-  const showProfit = riekiZei || riekiMae;
+  const operatingProfit = totalIncome - totalExpense;
+  const hensei = fval('f_hensei');
+  const finalProfit = operatingProfit - hensei;
 
   // 小計・計算表示
   document.getElementById('sub_income').textContent    = fmt(totalIncome);
   document.getElementById('calc_income').textContent   = fmt(totalIncome);
   document.getElementById('calc_expense').textContent  = fmt(totalExpense);
 
-  const balEl = document.getElementById('calc_balance');
-  balEl.textContent = fmt(balance);
-  balEl.className = 'calc-value ' + (balance >= 0 ? 'cv-plus' : 'cv-minus');
+  const opEl = document.getElementById('calc_balance');
+  opEl.textContent = fmt(operatingProfit);
+  opEl.className = 'calc-value ' + (operatingProfit >= 0 ? 'cv-plus' : 'cv-minus');
 
-  const maeEl = document.getElementById('calc_mae');
-  maeEl.textContent = fmt(riekiMae);
-  maeEl.className = 'adj-result-value ' + (riekiMae >= 0 ? 'cv-plus' : 'cv-minus');
+  const finalEl = document.getElementById('calc_final');
+  finalEl.textContent = fmt(finalProfit);
+  finalEl.className = 'adj-result-value ' + (finalProfit >= 0 ? 'cv-plus' : 'cv-minus');
 
   // サマリーカード
   document.getElementById('rc_income').textContent  = fmt(totalIncome);
   document.getElementById('rc_expense').textContent = fmt(totalExpense);
 
-  const rcBal = document.getElementById('rc_operating');
-  rcBal.textContent = fmt(balance);
-  rcBal.className = 'result-card-value ' + (balance >= 0 ? 'rv-plus' : 'rv-minus');
+  const rcOp = document.getElementById('rc_operating');
+  rcOp.textContent = fmt(operatingProfit);
+  rcOp.className = 'result-card-value ' + (operatingProfit >= 0 ? 'rv-plus' : 'rv-minus');
 
-  const rcProfit = document.getElementById('rc_profit');
-  rcProfit.textContent = fmt(showProfit);
-  rcProfit.className = 'result-card-value ' + (showProfit >= 0 ? 'rv-plus' : 'rv-minus');
+  const rcFinal = document.getElementById('rc_final');
+  rcFinal.textContent = fmt(finalProfit);
+  rcFinal.className = 'result-card-value ' + (finalProfit >= 0 ? 'rv-plus' : 'rv-minus');
 }
 
 // ── 月データ読み込み ──────────────────────────────

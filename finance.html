@@ -751,14 +751,12 @@
               <th>月</th>
               <th>合計売上</th>
               <th>支出合計</th>
-              <th>収支</th>
-              <th>控除</th>
-              <th>利益前金額</th>
-              <th>利益（税引後）</th>
+              <th>営業利益</th>
+              <th>最終利益</th>
             </tr>
           </thead>
           <tbody id="yearTableBody">
-            <tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-soft);">読み込み中...</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:24px; color:var(--text-soft);">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1079,7 +1077,7 @@ async function loadYearView() {
 
   const { data } = await supabase
     .from('anella_monthly_finance')
-    .select('year_month,' + [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, 'kojo', 'rieki_zei'].join(','))
+    .select('year_month,' + [...INCOME_FIELDS, ...ALL_EXPENSE_FIELDS, 'hensei'].join(','))
     .gte('year_month', year + '-01')
     .lte('year_month', year + '-12')
     .order('year_month');
@@ -1089,7 +1087,7 @@ async function loadYearView() {
   const byMonth = {};
   (data || []).forEach(r => { byMonth[r.year_month] = r; });
 
-  let sumInc = 0, sumExp = 0, sumBal = 0, sumKojo = 0, sumMae = 0, sumProfit = 0;
+  let sumInc = 0, sumExp = 0, sumOp = 0, sumFinal = 0;
 
   const tbody = document.getElementById('yearTableBody');
   const rows = [];
@@ -1098,27 +1096,23 @@ async function loadYearView() {
     const ym = year + '-' + String(m).padStart(2, '0');
     const r  = byMonth[ym];
     if (!r) {
-      rows.push(`<tr><td onclick="jumpToMonth('${ym}')">${m}月</td><td class="no-data" colspan="6">-</td></tr>`);
+      rows.push(`<tr><td onclick="jumpToMonth('${ym}')">${m}月</td><td class="no-data" colspan="4">-</td></tr>`);
       continue;
     }
     const inc  = INCOME_FIELDS.reduce((s, f) => s + (r[f] || 0), 0);
     const exp  = ALL_EXPENSE_FIELDS.reduce((s, f) => s + (r[f] || 0), 0);
-    const bal  = inc - exp;
-    const kojo = r.kojo || 0;
-    const mae  = bal - kojo;
-    const prof = r.rieki_zei || mae;
+    const op   = inc - exp;
+    const hensei = r.hensei || 0;
+    const final = op - hensei;
 
-    sumInc += inc; sumExp += exp; sumBal += bal;
-    sumKojo += kojo; sumMae += mae; sumProfit += prof;
+    sumInc += inc; sumExp += exp; sumOp += op; sumFinal += final;
 
     rows.push(`<tr onclick="jumpToMonth('${ym}')">
       <td>${m}月</td>
       <td>${fmt(inc)}</td>
       <td>${fmt(exp)}</td>
-      <td class="${bal >= 0 ? 'plus' : 'minus'}">${fmt(bal)}</td>
-      <td>${kojo ? fmt(kojo) : '-'}</td>
-      <td class="${mae >= 0 ? 'plus' : 'minus'}">${fmt(mae)}</td>
-      <td class="${prof >= 0 ? 'plus' : 'minus'}">${fmt(prof)}</td>
+      <td class="${op >= 0 ? 'plus' : 'minus'}">${fmt(op)}</td>
+      <td class="${final >= 0 ? 'plus' : 'minus'}">${fmt(final)}</td>
     </tr>`);
   }
 
@@ -1126,9 +1120,8 @@ async function loadYearView() {
     <td>年計</td>
     <td>${fmt(sumInc)}</td>
     <td>${fmt(sumExp)}</td>
-    <td class="${sumBal >= 0 ? 'plus' : 'minus'}">${fmt(sumBal)}</td>
-    <td>${fmt(sumKojo)}</td>
-    <td class="${sumMae >= 0 ? 'plus' : 'minus'}">${fmt(sumMae)}</td>
+    <td class="${sumOp >= 0 ? 'plus' : 'minus'}">${fmt(sumOp)}</td>
+    <td class="${sumFinal >= 0 ? 'plus' : 'minus'}">${fmt(sumFinal)}</td>
     <td class="${sumProfit >= 0 ? 'plus' : 'minus'}">${fmt(sumProfit)}</td>
   </tr>`);
 

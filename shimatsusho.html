@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>始末書 | アネラカフェ</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <style>
     * {
       margin: 0;
@@ -17,6 +19,44 @@
       background: #F7F5F2;
       padding: 20px;
       line-height: 1.6;
+    }
+
+    /* タブシステム */
+    .tab-container {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .tab-button {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      color: #999;
+      transition: all 0.2s;
+      font-family: "Noto Sans JP", sans-serif;
+    }
+
+    .tab-button.active {
+      color: #1A3A5C;
+      border-bottom-color: #1A3A5C;
+    }
+
+    .tab-button:hover {
+      color: #1A3A5C;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .container {
@@ -216,6 +256,122 @@
       background: #e0e0e0;
     }
 
+    .btn-save {
+      background: #2E7D32;
+      color: white;
+      margin-right: 10px;
+    }
+
+    .btn-save:hover {
+      background: #1b5e20;
+    }
+
+    .btn-save:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 履歴管理 */
+    .history-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .history-filters input {
+      flex: 1;
+      min-width: 150px;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .history-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      background: #f0f0f0;
+      border-color: #1A3A5C;
+      box-shadow: 0 2px 8px rgba(26, 58, 92, 0.1);
+    }
+
+    .history-item-header {
+      display: grid;
+      grid-template-columns: 150px 1fr 150px;
+      gap: 15px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .history-item-staff {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .history-item-date {
+      color: #999;
+      font-size: 12px;
+    }
+
+    .history-item-status {
+      text-align: right;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #e8f5e9;
+      color: #2E7D32;
+    }
+
+    .history-item-status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .history-item-content {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+    }
+
+    .message {
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 13px;
+    }
+
+    .message.success {
+      background: #e8f5e9;
+      color: #2E7D32;
+      border: 1px solid #81c784;
+    }
+
+    .message.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef5350;
+    }
+
     /* 署名欄（印刷時のみ表示） */
     .signature-section {
       display: none;
@@ -353,6 +509,15 @@
 </head>
 <body>
   <div class="container">
+    <!-- タブシステム -->
+    <div class="tab-container">
+      <button class="tab-button active" onclick="switchTab('form')">記入フォーム</button>
+      <button class="tab-button" onclick="switchTab('history')">履歴管理</button>
+    </div>
+
+    <!-- タブ1: 記入フォーム -->
+    <div id="form-tab" class="tab-content active">
+
     <div class="print-title">
       始　末　書
       <div class="print-title-company">株式会社かねちん</div>
@@ -463,12 +628,34 @@
 
     <!-- ボタン -->
     <div class="button-group">
+      <button class="btn-save" id="saveBtn" onclick="handleSave()">💾 記録を保存</button>
       <button class="btn-print" onclick="handlePrint()">🖨️ 印刷する</button>
       <button class="btn-reset" onclick="handleReset()">リセット</button>
+    </div>
+    </div>
+
+    <!-- タブ2: 履歴管理 -->
+    <div id="history-tab" class="tab-content">
+      <h2 style="margin-bottom: 20px;">指導記録の履歴</h2>
+
+      <div class="history-filters">
+        <input type="text" id="searchStaffName" placeholder="スタッフ名で検索...">
+        <input type="date" id="searchFromDate" placeholder="開始日">
+        <input type="date" id="searchToDate" placeholder="終了日">
+        <button onclick="loadHistory()" style="background: #1A3A5C; color: white;">検索</button>
+      </div>
+
+      <div id="messageContainer"></div>
+      <div id="historyContainer" class="history-list">
+        <div class="loading">読み込み中...</div>
+      </div>
     </div>
   </div>
 
   <script>
+    // Supabase接続確認
+    const supabaseUrl = window.supabase ? 'connected' : 'error';
+
     // 今日の日付をデフォルトに設定
     function setDefaultDates() {
       const today = new Date();
@@ -479,6 +666,141 @@
 
       document.getElementById('instructionDate').value = dateString;
       document.getElementById('staffDate').value = dateString;
+    }
+
+    // タブ切り替え
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(tabName + '-tab').classList.add('active');
+
+      if (tabName === 'history') {
+        loadHistory();
+      }
+    }
+
+    // メッセージ表示
+    function showMessage(message, type = 'success') {
+      const container = document.getElementById('messageContainer');
+      container.innerHTML = `<div class="message ${type}">${message}</div>`;
+      setTimeout(() => container.innerHTML = '', 3000);
+    }
+
+    // Supabaseに保存
+    async function handleSave() {
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = '保存中...';
+
+      try {
+        const instructorName = document.getElementById('instructorName').value.trim();
+        const staffName = document.getElementById('staffName').value.trim();
+
+        if (!instructorName || !staffName) {
+          showMessage('指導担当者名とスタッフ名を入力してください', 'error');
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 記録を保存';
+          return;
+        }
+
+        const selectedCategories = Array.from(document.querySelectorAll('.chip.selected'))
+          .map(chip => chip.getAttribute('data-category'));
+
+        const data = {
+          created_by: instructorName,
+          staff_name: staffName,
+          instruction_date: document.getElementById('instructionDate').value,
+          incident_datetime: document.getElementById('incidentDateTime').value,
+          categories: selectedCategories,
+          instruction_content: document.getElementById('instructionContent').value,
+          company_impact: document.getElementById('companyImpact').value,
+          fact_confirmation: document.getElementById('factConfirmation').value,
+          reflection: document.getElementById('reflection').value,
+          improvement_plan: document.getElementById('improvementPlan').value,
+          prevention_pledge: document.getElementById('preventionPledge').value,
+          staff_signature: document.getElementById('staffSignature').value,
+          staff_date: document.getElementById('staffDate').value,
+          is_submitted: !!document.getElementById('staffSignature').value
+        };
+
+        const { error } = await window.supabase
+          .from('shimatsusho_records')
+          .insert([data]);
+
+        if (error) throw error;
+
+        showMessage('✅ 記録を保存しました！');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 記録を保存';
+      } catch (error) {
+        console.error('保存エラー:', error);
+        showMessage('保存に失敗しました: ' + error.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 記録を保存';
+      }
+    }
+
+    // 履歴を読み込み
+    async function loadHistory() {
+      const container = document.getElementById('historyContainer');
+      container.innerHTML = '<div class="loading">読み込み中...</div>';
+
+      try {
+        const staffName = document.getElementById('searchStaffName').value.trim();
+        const fromDate = document.getElementById('searchFromDate').value;
+        const toDate = document.getElementById('searchToDate').value;
+
+        let query = window.supabase.from('shimatsusho_records').select('*');
+
+        if (staffName) {
+          query = query.ilike('staff_name', `%${staffName}%`);
+        }
+        if (fromDate) {
+          query = query.gte('instruction_date', fromDate);
+        }
+        if (toDate) {
+          query = query.lte('instruction_date', toDate);
+        }
+
+        const { data, error } = await query.order('instruction_date', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="loading">該当する記録がありません</div>';
+          return;
+        }
+
+        container.innerHTML = data.map(record => `
+          <div class="history-item">
+            <div class="history-item-header">
+              <div class="history-item-staff">${escapeHtml(record.staff_name)}</div>
+              <div class="history-item-date">${record.instruction_date} 記録</div>
+              <div class="history-item-status ${record.is_submitted ? '' : 'pending'}">
+                ${record.is_submitted ? '提出済み' : '作成中'}
+              </div>
+            </div>
+            <div class="history-item-content">
+              <strong>指導内容:</strong> ${escapeHtml(record.instruction_content || '未記入')} <br>
+              <strong>指導者:</strong> ${escapeHtml(record.created_by || '')} <br>
+              <strong>種別:</strong> ${(record.categories || []).join('、') || '未設定'}
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('読み込みエラー:', error);
+        container.innerHTML = '<div class="loading">読み込みエラー: ' + error.message + '</div>';
+      }
+    }
+
+    // XSS対策
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     // チップのクリック処理

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>始末書 | アネラカフェ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background: #F7F5F2;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 印刷タイトル（印刷時のみ表示） */
+    .print-title {
+      display: none;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 20pt;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .print-title-company {
+      font-size: 12pt;
+      margin-top: 5px;
+      font-weight: normal;
+    }
+
+    /* 見出しスタイル */
+    h1 {
+      font-family: "Noto Serif JP", serif;
+      font-size: 18px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* セクション */
+    .section {
+      margin-bottom: 30px;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      padding: 10px 15px;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+
+    .section-header.part-a {
+      background: #1A3A5C;
+    }
+
+    .section-header.part-b {
+      background: #C53030;
+    }
+
+    /* フォーム行 */
+    .form-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+      align-items: start;
+    }
+
+    .form-row.full {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row.two-col {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-row.two-col > div {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .form-label {
+      font-weight: bold;
+      font-size: 13px;
+      padding: 8px 0;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      font-family: "Noto Sans JP", sans-serif;
+      font-size: 12px;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      background: #fafafa;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+      font-size: 11px;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    textarea:focus {
+      outline: none;
+      background: #fff;
+      border-color: #1A3A5C;
+      box-shadow: 0 0 3px rgba(26, 58, 92, 0.2);
+    }
+
+    /* チップ（複数選択） */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #bbb;
+      border-radius: 20px;
+      background: white;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .chip:hover {
+      border-color: #1A3A5C;
+      background: #f0f5f9;
+    }
+
+    .chip.selected {
+      background: #1A3A5C;
+      color: white;
+      border-color: #1A3A5C;
+    }
+
+    /* 選択済み種別の表示（印刷時のみ） */
+    .selected-category {
+      display: none;
+      font-size: 12px;
+      color: #333;
+      line-height: 1.8;
+    }
+
+    .selected-category-item {
+      display: inline;
+      margin-right: 15px;
+    }
+
+    /* ボタングループ */
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+      justify-content: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: "Noto Sans JP", sans-serif;
+    }
+
+    .btn-print {
+      background: #1A3A5C;
+      color: white;
+    }
+
+    .btn-print:hover {
+      background: #0f2340;
+    }
+
+    .btn-reset {
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    .btn-reset:hover {
+      background: #e0e0e0;
+    }
+
+    /* 署名欄（印刷時のみ表示） */
+    .signature-section {
+      display: none;
+      margin-top: 40px;
+      page-break-inside: avoid;
+    }
+
+    .signature-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .signature-box {
+      border: 1px solid #333;
+      padding: 60px 10px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      position: relative;
+    }
+
+    .signature-box-label {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+    }
+
+    /* 印刷用スタイル */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 100%;
+        padding: 12mm 15mm;
+        box-shadow: none;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 12mm 15mm;
+      }
+
+      .print-title {
+        display: block;
+      }
+
+      .print-title-company {
+        display: block;
+      }
+
+      .button-group {
+        display: none;
+      }
+
+      .chip {
+        display: none;
+      }
+
+      .selected-category {
+        display: block;
+      }
+
+      .signature-section {
+        display: block;
+      }
+
+      /* 印刷時はモノクロ */
+      .section-header.part-a {
+        background: #333 !important;
+        color: white !important;
+      }
+
+      .section-header.part-b {
+        background: #666 !important;
+        color: white !important;
+      }
+
+      /* 入力欄は下線のみ */
+      input[type="text"],
+      input[type="date"],
+      textarea {
+        border: none;
+        border-bottom: 1px solid #333;
+        background: transparent;
+        padding: 2px 0;
+        font-size: 10pt;
+      }
+
+      textarea {
+        min-height: 48pt;
+      }
+
+      body {
+        font-size: 10pt;
+      }
+
+      .section {
+        page-break-inside: avoid;
+      }
+
+      /* 塗りつぶしを削除 */
+      input:focus,
+      textarea:focus {
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+
+      .form-row.two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row.two-col > div {
+        grid-template-columns: 80px 1fr;
+      }
+
+      .signature-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="print-title">
+      始　末　書
+      <div class="print-title-company">株式会社かねちん</div>
+    </div>
+
+    <!-- PART A: 指導内容（管理者・上長が記入） -->
+    <div class="section">
+      <div class="section-header part-a">PART A: 指導内容（管理者・上長が記入）</div>
+
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">指導日付</label>
+          <input type="date" id="instructionDate">
+        </div>
+        <div>
+          <label class="form-label">指導担当者名</label>
+          <input type="text" id="instructorName" placeholder="例：田中太郎">
+        </div>
+      </div>
+
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">スタッフ名</label>
+          <input type="text" id="staffName" placeholder="例：山田花子">
+        </div>
+        <div>
+          <label class="form-label">発生日時</label>
+          <input type="text" id="incidentDateTime" placeholder="例：2026年8月7日 14:30頃">
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <label class="form-label">指導の種別（複数選択可）</label>
+        <div class="chip-group" id="categoryChips">
+          <span class="chip" data-category="遅刻・早退">遅刻・早退</span>
+          <span class="chip" data-category="無断欠勤">無断欠勤</span>
+          <span class="chip" data-category="業務上のミス">業務上のミス</span>
+          <span class="chip" data-category="接客態度">接客態度</span>
+          <span class="chip" data-category="報告・連絡・相談の不足">報告・連絡・相談の不足</span>
+          <span class="chip" data-category="規則違反">規則違反</span>
+          <span class="chip" data-category="安全管理">安全管理</span>
+          <span class="chip" data-category="その他">その他</span>
+        </div>
+        <div class="selected-category" id="selectedCategoryDisplay"></div>
+      </div>
+
+      <div class="form-row full">
+        <label class="form-label">指導の内容・事実経緯</label>
+        <textarea id="instructionContent" placeholder="具体的な出来事や状況を記入してください"></textarea>
+      </div>
+
+      <div class="form-row full">
+        <label class="form-label">会社・組織への影響</label>
+        <textarea id="companyImpact" placeholder="この行為がもたらした影響について記入してください"></textarea>
+      </div>
+    </div>
+
+    <!-- PART B: 改善案・反省文（スタッフが記入） -->
+    <div class="section">
+      <div class="section-header part-b">PART B: 改善案・反省文（指導を受けたスタッフが記入）</div>
+
+      <div class="form-row full">
+        <label class="form-label">事実の確認・自己の認識</label>
+        <textarea id="factConfirmation" placeholder="指導内容をどう認識しているか、自分の理解を記入してください"></textarea>
+      </div>
+
+      <div class="form-row full">
+        <label class="form-label">反省文</label>
+        <textarea id="reflection" placeholder="反省の気持ちを素直に記入してください"></textarea>
+      </div>
+
+      <div class="form-row full">
+        <label class="form-label">改善策・具体的な行動計画</label>
+        <textarea id="improvementPlan" placeholder="今後どのように改善するか、具体的に記入してください"></textarea>
+      </div>
+
+      <div class="form-row full">
+        <label class="form-label">再発防止への誓い</label>
+        <textarea id="preventionPledge" placeholder="二度と繰り返さないという決意を記入してください"></textarea>
+      </div>
+
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">記入日</label>
+          <input type="date" id="staffDate">
+        </div>
+        <div>
+          <label class="form-label">スタッフ署名</label>
+          <input type="text" id="staffSignature" placeholder="署名欄">
+        </div>
+      </div>
+    </div>
+
+    <!-- 署名欄（印刷時のみ） -->
+    <div class="signature-section">
+      <div class="signature-row">
+        <div class="signature-box">
+          <div class="signature-box-label">スタッフ</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-box-label">直属上長</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-box-label">代表確認</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ボタン -->
+    <div class="button-group">
+      <button class="btn-print" onclick="handlePrint()">🖨️ 印刷する</button>
+      <button class="btn-reset" onclick="handleReset()">リセット</button>
+    </div>
+  </div>
+
+  <script>
+    // 今日の日付をデフォルトに設定
+    function setDefaultDates() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+
+      document.getElementById('instructionDate').value = dateString;
+      document.getElementById('staffDate').value = dateString;
+    }
+
+    // チップのクリック処理
+    function setupChipListeners() {
+      const chips = document.querySelectorAll('.chip');
+      chips.forEach(chip => {
+        chip.addEventListener('click', function() {
+          this.classList.toggle('selected');
+          updateSelectedCategoryDisplay();
+        });
+      });
+    }
+
+    // 選択済みカテゴリーの表示を更新
+    function updateSelectedCategoryDisplay() {
+      const selected = Array.from(document.querySelectorAll('.chip.selected'))
+        .map(chip => chip.getAttribute('data-category'));
+
+      const display = document.getElementById('selectedCategoryDisplay');
+      if (selected.length > 0) {
+        display.innerHTML = selected
+          .map(cat => `<span class="selected-category-item">・${cat}</span>`)
+          .join('');
+      } else {
+        display.innerHTML = '';
+      }
+    }
+
+    // 印刷処理
+    function handlePrint() {
+      window.print();
+    }
+
+    // リセット処理
+    function handleReset() {
+      if (confirm('本当に全ての入力内容をリセットしますか？')) {
+        document.getElementById('instructionDate').value = '';
+        document.getElementById('instructorName').value = '';
+        document.getElementById('staffName').value = '';
+        document.getElementById('incidentDateTime').value = '';
+        document.getElementById('instructionContent').value = '';
+        document.getElementById('companyImpact').value = '';
+        document.getElementById('factConfirmation').value = '';
+        document.getElementById('reflection').value = '';
+        document.getElementById('improvementPlan').value = '';
+        document.getElementById('preventionPledge').value = '';
+        document.getElementById('staffDate').value = '';
+        document.getElementById('staffSignature').value = '';
+
+        // チップを全て選択解除
+        document.querySelectorAll('.chip').forEach(chip => {
+          chip.classList.remove('selected');
+        });
+        updateSelectedCategoryDisplay();
+
+        // 日付をリセット
+        setDefaultDates();
+      }
+    }
+
+    // 初期化
+    window.addEventListener('DOMContentLoaded', function() {
+      setDefaultDates();
+      setupChipListeners();
+    });
+  </script>
+</body>
+</html>

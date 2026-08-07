@@ -520,6 +520,16 @@
         outline: none;
         box-shadow: none;
       }
+
+      /* リンクのテキスト表示を非表示 */
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      a::after {
+        content: "";
+      }
     }
 
     /* レスポンシブ */

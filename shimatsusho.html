@@ -372,6 +372,28 @@
       border: 1px solid #ef5350;
     }
 
+    .btn-delete {
+      background: #d32f2f;
+      color: white;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-delete:hover {
+      background: #b71c1c;
+    }
+
+    .history-item-delete {
+      display: none;
+    }
+
+    .history-item:hover .history-item-delete {
+      display: inline-block;
+    }
+
     /* 署名欄（印刷時のみ表示） */
     .signature-section {
       display: none;
@@ -758,15 +780,16 @@
         }
 
         container.innerHTML = data.map(record => `
-          <div class="history-item" onclick="loadRecordToForm('${record.id}')">
+          <div class="history-item">
             <div class="history-item-header">
-              <div class="history-item-staff">${escapeHtml(record.staff_name)}</div>
-              <div class="history-item-date">${record.instruction_date} 記録</div>
-              <div class="history-item-status ${record.is_submitted ? '' : 'pending'}">
+              <div class="history-item-staff" onclick="loadRecordToForm('${record.id}')">${escapeHtml(record.staff_name)}</div>
+              <div class="history-item-date" onclick="loadRecordToForm('${record.id}')">${record.instruction_date} 記録</div>
+              <div class="history-item-status ${record.is_submitted ? '' : 'pending'}" onclick="loadRecordToForm('${record.id}')">
                 ${record.is_submitted ? '提出済み' : '作成中'}
               </div>
+              <button class="btn-delete history-item-delete" onclick="deleteRecord('${record.id}', '${escapeHtml(record.staff_name)}')">削除</button>
             </div>
-            <div class="history-item-content">
+            <div class="history-item-content" onclick="loadRecordToForm('${record.id}')">
               <strong>指導内容:</strong> ${escapeHtml(record.instruction_content || '未記入')} <br>
               <strong>指導者:</strong> ${escapeHtml(record.created_by || '')} <br>
               <strong>種別:</strong> ${(record.categories || []).join('、') || '未設定'}
@@ -785,6 +808,28 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // 記録を削除
+    async function deleteRecord(recordId, staffName) {
+      if (!confirm(`${staffName}の記録を削除してもよろしいですか？\nこの操作は取り消せません。`)) {
+        return;
+      }
+
+      try {
+        const { error } = await window.supabase
+          .from('shimatsusho_records')
+          .delete()
+          .eq('id', recordId);
+
+        if (error) throw error;
+
+        showMessage(`✅ ${staffName}の記録を削除しました`);
+        loadHistory(); // 履歴を再読み込み
+      } catch (error) {
+        console.error('削除エラー:', error);
+        showMessage('削除に失敗しました: ' + error.message, 'error');
+      }
     }
 
     // 履歴から記録をフォームに読み込み

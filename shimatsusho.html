@@ -585,11 +585,6 @@
       </div>
 
       <div class="form-row full">
-        <label class="form-label">反省文</label>
-        <textarea id="reflection" placeholder="反省の気持ちを素直に記入してください"></textarea>
-      </div>
-
-      <div class="form-row full">
         <label class="form-label">改善策・具体的な行動計画</label>
         <textarea id="improvementPlan" placeholder="今後どのように改善するか、具体的に記入してください"></textarea>
       </div>
@@ -705,7 +700,6 @@
           instruction_content: document.getElementById('instructionContent').value,
           company_impact: document.getElementById('companyImpact').value,
           fact_confirmation: document.getElementById('factConfirmation').value,
-          reflection: document.getElementById('reflection').value,
           improvement_plan: document.getElementById('improvementPlan').value,
           prevention_pledge: document.getElementById('preventionPledge').value,
           is_submitted: true
@@ -830,7 +824,6 @@
         document.getElementById('instructionContent').value = '';
         document.getElementById('companyImpact').value = '';
         document.getElementById('factConfirmation').value = '';
-        document.getElementById('reflection').value = '';
         document.getElementById('improvementPlan').value = '';
         document.getElementById('preventionPledge').value = '';
 

@@ -758,7 +758,7 @@
         }
 
         container.innerHTML = data.map(record => `
-          <div class="history-item">
+          <div class="history-item" onclick="loadRecordToForm('${record.id}')">
             <div class="history-item-header">
               <div class="history-item-staff">${escapeHtml(record.staff_name)}</div>
               <div class="history-item-date">${record.instruction_date} 記録</div>
@@ -785,6 +785,57 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // 履歴から記録をフォームに読み込み
+    async function loadRecordToForm(recordId) {
+      try {
+        const { data, error } = await window.supabase
+          .from('shimatsusho_records')
+          .select('*')
+          .eq('id', recordId)
+          .single();
+
+        if (error) throw error;
+        if (!data) {
+          showMessage('記録が見つかりません', 'error');
+          return;
+        }
+
+        // フォームに読み込み
+        document.getElementById('instructionDate').value = data.instruction_date || '';
+        document.getElementById('instructorName').value = data.created_by || '';
+        document.getElementById('staffName').value = data.staff_name || '';
+        document.getElementById('incidentDateTime').value = data.incident_datetime || '';
+        document.getElementById('instructionContent').value = data.instruction_content || '';
+        document.getElementById('companyImpact').value = data.company_impact || '';
+        document.getElementById('factConfirmation').value = data.fact_confirmation || '';
+        document.getElementById('improvementPlan').value = data.improvement_plan || '';
+        document.getElementById('preventionPledge').value = data.prevention_pledge || '';
+
+        // カテゴリーをリセットして、保存されたものを選択
+        document.querySelectorAll('.chip').forEach(chip => {
+          chip.classList.remove('selected');
+        });
+        if (data.categories && Array.isArray(data.categories)) {
+          data.categories.forEach(category => {
+            const chip = document.querySelector(`.chip[data-category="${category}"]`);
+            if (chip) chip.classList.add('selected');
+          });
+        }
+        updateSelectedCategoryDisplay();
+
+        // 「記入フォーム」タブに切り替え
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelector('.tab-button:first-child').classList.add('active');
+        document.getElementById('form-tab').classList.add('active');
+
+        showMessage(`✅ 記録を読み込みました（${data.staff_name}）`);
+      } catch (error) {
+        console.error('読み込みエラー:', error);
+        showMessage('読み込みに失敗しました: ' + error.message, 'error');
+      }
     }
 
     // チップのクリック処理

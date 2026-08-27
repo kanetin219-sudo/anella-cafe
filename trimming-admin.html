@@ -1364,9 +1364,10 @@ async function submitManualReservation() {
   if (!receptionist) { errEl.textContent = '受付担当者を選択してください'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
 
-  // ブロック時間チェック（3時間のバッファを考慮）
+  // ブロック時間チェック（施術3時間と重なるブロックがあれば登録不可）
   const time  = document.getElementById('manualTime').value;
   const timeHour = parseInt(time.slice(0, 2));
+  const SERVICE_HOURS = 3;
   const { data: allBlocks } = await supabase
     .from('blocked_times')
     .select('staff, block_time')
@@ -1375,11 +1376,11 @@ async function submitManualReservation() {
   if (allBlocks && allBlocks.length > 0) {
     const makiBlocked = allBlocks.some(b => {
       const blockHour = parseInt(b.block_time.slice(0, 2));
-      return b.staff === '牧' && blockHour <= timeHour && timeHour < blockHour + 4;
+      return b.staff === '牧' && blockHour >= timeHour && blockHour <= timeHour + SERVICE_HOURS - 1;
     });
     const kabataBlocked = allBlocks.some(b => {
       const blockHour = parseInt(b.block_time.slice(0, 2));
-      return b.staff === '椛田' && blockHour <= timeHour && timeHour < blockHour + 4;
+      return b.staff === '椛田' && blockHour >= timeHour && blockHour <= timeHour + SERVICE_HOURS - 1;
     });
 
     let isBlocked = false;

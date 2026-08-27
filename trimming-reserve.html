@@ -1117,15 +1117,20 @@ async function loadTimeSlots() {
   grid.style.display = 'grid';
   grid.innerHTML = '';
 
+  // 施術1回あたりの拘束時間（時間）
+  const SERVICE_HOURS = 3;
+  const blockedHours = blockedTimes.map(t => parseInt(t.slice(0, 2)));
+
   let anyAvailable = false;
   TIME_SLOTS.forEach(t => {
-    const isBlocked = blockedTimes.includes(t);
+    const startHour = parseInt(t.slice(0, 2));
+    // 施術時間（startHour 〜 startHour+SERVICE_HOURS-1）にブロックが1つでも重なれば予約不可
+    const isBlocked = blockedHours.some(b => b >= startHour && b <= startHour + SERVICE_HOURS - 1);
     let isBooked = false;
     if (bookedSlots && bookedSlots.length > 0) {
       isBooked = bookedSlots.some(s => {
         const slotHour = parseInt(s.slot_time.slice(0, 2));
-        const currentHour = parseInt(t.slice(0, 2));
-        return Math.abs(slotHour - currentHour) < 4;
+        return Math.abs(slotHour - startHour) < 4;
       });
     }
     const available = !isBlocked && !isBooked;

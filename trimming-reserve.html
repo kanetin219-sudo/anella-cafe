@@ -691,6 +691,37 @@ const OPTIONS_LIST = [
 ];
 
 const TIME_SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
+// 施術1回あたりトリマーを拘束する時間（時間）
+const SERVICE_HOURS = 3;
+// 日付ごとの空き状況キャッシュ { 'YYYY-MM-DD': {blocked:[時], booked:[時]} }
+let availabilityCache = {};
+
+// 予約できる開始時刻を返す（カレンダーと時間枠で同じルールを使う）
+function availableSlots(blockedHours, bookedHours) {
+  return TIME_SLOTS.filter(t => {
+    const startHour = parseInt(t.slice(0, 2));
+    // 施術時間（startHour 〜 startHour+SERVICE_HOURS-1）にブロックが重なれば不可
+    const isBlocked = blockedHours.some(b => b >= startHour && b <= startHour + SERVICE_HOURS - 1);
+    // 既存の予約とは前後4時間あける
+    const isBooked = bookedHours.some(r => Math.abs(r - startHour) < 4);
+    return !isBlocked && !isBooked;
+  });
+}
+
+// 期間分の予約・ブロックをまとめて取得してキャッシュする
+async function loadAvailability(fromStr, toStr) {
+  try {
+    const { data, error } = await supabase.rpc('get_availability_slots', { p_from: fromStr, p_to: toStr });
+    if (error || !Array.isArray(data)) return false;
+    data.forEach(row => {
+      const d = String(row.slot_date).slice(0, 10);
+      if (!availabilityCache[d]) availabilityCache[d] = { blocked: [], booked: [] };
+      if (row.kind === 'block') availabilityCache[d].blocked.push(Number(row.hour));
+      else availabilityCache[d].booked.push(Number(row.hour));
+    });
+    return true;
+  } catch (e) { return false; }
+}
 
 // ── リピーター状態 ───────────────────────────────
 let visitType = '';
@@ -1019,7 +1050,26 @@ function updateTotal() {
 }
 
 // ── STEP 4: カレンダー ────────────────────────────
-function renderCalendar() {
+// その日が満枠（予約できる時間が1つも無い）かどうか
+function isDayFull(dateStr) {
+  const day = availabilityCache[dateStr];
+  if (!day) return false; // 未取得の日は閉じない（安全側）
+  return availableSlots(day.blocked, day.booked).length === 0;
+}
+
+let calRenderToken = 0;
+async function renderCalendar() {
+  // 表示中の月ぶんの予約・ブロックをまとめて取得（満枠日をグレーアウトするため）
+  const token = ++calRenderToken;
+  const y = calYear, m = calMonth;
+  const mFrom = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+  const lastD = new Date(y, m + 1, 0).getDate();
+  const mTo   = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastD).padStart(2, '0')}`;
+  availabilityCache = {};
+  await loadAvailability(mFrom, mTo);
+  // 月を素早く切り替えた場合、古い取得結果で描画しない
+  if (token !== calRenderToken) return;
+
   const label = document.getElementById('calMonthLabel');
   label.textContent = `${calYear}年 ${calMonth + 1}月`;
 
@@ -1056,11 +1106,14 @@ function renderCalendar() {
     if (dow === 0) cls += ' sun';
     if (dow === 6) cls += ' sat';
     if (date.getTime() === today.getTime()) cls += ' today';
-    if (date < today || date > maxDate) cls += ' disabled';
+    const inRange = (date >= today && date <= maxDate);
+    const full = inRange && isDayFull(dateStr);
+    if (!inRange || full) cls += ' disabled';
     if (dateStr === fd.visitDate) cls += ' selected';
     el.className = cls;
     el.textContent = d;
-    if (date >= today && date <= maxDate) {
+    if (full) el.title = 'この日は予約できません';
+    if (inRange && !full) {
       el.onclick = () => selectDate(dateStr, el);
     }
     grid.appendChild(el);
@@ -1093,47 +1146,20 @@ async function loadTimeSlots() {
   loading.style.display = 'block';
   grid.style.display = 'none';
 
-  let bookedSlots = [];
-  let blockedTimes = [];
-  try {
-    const { data, error } = await supabase.rpc('get_booked_slots', { p_date: fd.visitDate });
-    if (!error && data) bookedSlots = data;
-  } catch (e) {}
-
-  try {
-    const { data: blocks } = await supabase
-      .from('blocked_times')
-      .select('block_time')
-      .eq('block_date', fd.visitDate);
-    if (blocks && Array.isArray(blocks)) {
-      blockedTimes = blocks.map(b => {
-        const time = b.block_time.split(':')[0] + ':' + b.block_time.split(':')[1];
-        return time;
-      });
-    }
-  } catch (e) {}
+  // 常に最新を取得し直す（他のお客様の予約・管理側のブロックを反映するため）
+  delete availabilityCache[fd.visitDate];
+  await loadAvailability(fd.visitDate, fd.visitDate);
 
   loading.style.display = 'none';
   grid.style.display = 'grid';
   grid.innerHTML = '';
 
-  // 施術1回あたりの拘束時間（時間）
-  const SERVICE_HOURS = 3;
-  const blockedHours = blockedTimes.map(t => parseInt(t.slice(0, 2)));
+  const day = availabilityCache[fd.visitDate] || { blocked: [], booked: [] };
+  const openSlots = availableSlots(day.blocked, day.booked);
 
   let anyAvailable = false;
   TIME_SLOTS.forEach(t => {
-    const startHour = parseInt(t.slice(0, 2));
-    // 施術時間（startHour 〜 startHour+SERVICE_HOURS-1）にブロックが1つでも重なれば予約不可
-    const isBlocked = blockedHours.some(b => b >= startHour && b <= startHour + SERVICE_HOURS - 1);
-    let isBooked = false;
-    if (bookedSlots && bookedSlots.length > 0) {
-      isBooked = bookedSlots.some(s => {
-        const slotHour = parseInt(s.slot_time.slice(0, 2));
-        return Math.abs(slotHour - startHour) < 4;
-      });
-    }
-    const available = !isBlocked && !isBooked;
+    const available = openSlots.includes(t);
     if (available) anyAvailable = true;
     const btn = document.createElement('button');
     btn.type = 'button';

@@ -360,6 +360,13 @@
               </div>
             </div>
             <div class="field-item">
+              <div class="field-label">ペットホテル</div>
+              <div class="field-wrap">
+                <input type="number" class="field-input" id="f_pet_hotel" min="0" placeholder="0" oninput="recalc()">
+                <span class="field-unit">件</span>
+              </div>
+            </div>
+            <div class="field-item">
               <div class="field-label">就労利用数</div>
               <div class="field-wrap">
                 <input type="number" class="field-input" id="f_joryu_riyosuu" min="0" placeholder="0" oninput="recalc()">
@@ -849,7 +856,7 @@ let activeTab = 1;
 
 // ── フィールド定義 ─────────────────────────────────
 const INCOME_FIELDS = ['cafe_uriage', 'kyufu_hi', 'sonota_uriage'];
-const COUNT_FIELDS  = ['fureai_new', 'repeater', 'trimming_count', 'joryu_riyosuu', 'joryu_kengaku', 'joryu_taiken', 'joryu_seiyaku'];
+const COUNT_FIELDS  = ['fureai_new', 'repeater', 'trimming_count', 'pet_hotel', 'joryu_riyosuu', 'joryu_kengaku', 'joryu_taiken', 'joryu_seiyaku'];
 
 const EXPENSE_GROUPS = {
   jinken:   ['jinken_hi', 'shakai_hoken', 'roshu_kocho', 'sosokin_driver_kyuyo'],

@@ -1,0 +1,6 @@
+*.sql
+*.gs
+gas-*.js
+*.md
+docs/
+_dev/

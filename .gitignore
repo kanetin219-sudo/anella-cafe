@@ -3,3 +3,11 @@ package-lock.json
 .vercel/
 .env
 .env.local
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+*-secret*
+*-private*

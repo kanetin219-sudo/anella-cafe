@@ -299,10 +299,7 @@
       <label>記入者</label>
       <select id="f-author">
         <option value="">-- 選択してください --</option>
-        <option>坂本</option>
         <option>三浦</option>
-        <option>三浦母</option>
-        <option>小嶋</option>
         <option>平迫</option>
         <option>須崎</option>
         <option>池田</option>
@@ -313,7 +310,6 @@
         <option>牧</option>
         <option>椛田</option>
         <option>後藤</option>
-        <option>佐藤</option>
       </select>
     </div>
   </div>
@@ -366,7 +362,7 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const STAFF = ['坂本','三浦','三浦母','小嶋','平迫','須崎','池田','末光','今本','名倉','篠田','牧','椛田','後藤','佐藤'];
+  const STAFF = ['三浦','平迫','須崎','池田','末光','今本','名倉','篠田','牧','椛田','後藤'];
 
   // 初期値
   const now = new Date();

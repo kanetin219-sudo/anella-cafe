@@ -826,7 +826,7 @@ async function lookupPastReservation() {
 
   const [{ data, error }, { data: karteData }] = await Promise.all([
     supabase.rpc('lookup_reservation_by_phone', { p_phone: phone }),
-    supabase.from('pet_kartes').select('*').eq('phone', phone).maybeSingle(),
+    supabase.rpc('lookup_karte_by_phone', { p_phone: phone }),
   ]);
 
   btn.disabled = false;

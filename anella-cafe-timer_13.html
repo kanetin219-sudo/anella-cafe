@@ -741,7 +741,7 @@ async function openCheckinFromConsent(id) {
   pendingConsentSeq = f.day_seq || null;
   pendingSignature  = extractSig(f.signatures);
   mAdults   = f.adults || 0;
-  mChildren = (f.children || 0) + (f.preschool || 0);
+  mChildren = f.children || 0;
   mDisc     = { senior: false, disability: false, review: false };
   mVisit    = mapVisitCount(f.visit_count);
   document.getElementById('mAdult').textContent = mAdults;

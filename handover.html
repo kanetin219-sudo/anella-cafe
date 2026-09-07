@@ -267,9 +267,40 @@
     .toast.show    { opacity: 1; }
     .toast.success { background: #388E3C; }
     .toast.error   { background: #C62828; }
-  </style>
+  
+    /* ===== ログイン画面 ===== */
+    #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: #eef2f7; position: fixed; inset: 0; z-index: 9999; }
+    #loginScreen .login-card { background: #fff; border: 1px solid #d8dee6; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+    #loginScreen .login-logo { font-size: 24px; font-weight: 700; color: #1a5276; text-align: center; margin-bottom: 4px; }
+    #loginScreen .login-sub { font-size: 13px; color: #7a8794; text-align: center; margin-bottom: 28px; }
+    #loginScreen .login-field { margin-bottom: 16px; }
+    #loginScreen .login-field label { display: block; font-size: 13px; font-weight: 700; color: #48545f; margin-bottom: 6px; }
+    #loginScreen .login-field input { width: 100%; padding: 13px 14px; background: #f7f9fb; border: 1px solid #d8dee6; border-radius: 10px; font-family: inherit; font-size: 16px; outline: none; }
+    #loginScreen .login-field input:focus { border-color: #1a5276; }
+    #loginScreen .login-btn { width: 100%; padding: 15px; background: #1a5276; color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    #loginScreen .login-btn:disabled { opacity: .5; cursor: not-allowed; }
+    #loginScreen .login-err { color: #c0392b; font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+    #loginScreen .login-err.active { display: block; }
+</style>
 </head>
 <body>
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">ANELLA CAFE</div>
+    <div class="login-sub">申し送り</div>
+    <div class="login-field">
+      <label>メールアドレス</label>
+      <input type="email" id="loginEmail" placeholder="anellacafeoita@gmail.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>パスワード</label>
+      <input type="password" id="loginPassword" placeholder="パスワード" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
 
 <header>
   <h1>📋 申し送りツール</h1>
@@ -383,7 +414,34 @@
       loadList();
     }
   }
-  window.addEventListener('load', initFromUrl);
+
+// ===== ログイン（個人情報保護のため必須）=====
+function showLoginErr(m) {
+  const e = document.getElementById('loginErr');
+  e.textContent = m; e.classList.add('active');
+}
+function unlockApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  initFromUrl();
+}
+async function doLogin() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn      = document.getElementById('loginBtn');
+  if (!email || !password) { showLoginErr('メールとパスワードを入力してください'); return; }
+  btn.disabled = true; btn.textContent = 'ログイン中...';
+  document.getElementById('loginErr').classList.remove('active');
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'ログイン';
+  if (error) { showLoginErr('メールまたはパスワードが正しくありません'); return; }
+  unlockApp();
+}
+async function checkAuth() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) unlockApp();
+}
+checkAuth();
+
 
   /* ===== タブ切替 ===== */
   function switchTab(name, btn) {

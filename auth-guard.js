@@ -80,6 +80,7 @@
   async function run() {
     const client = await getAuthClient();
     if (!client) { reveal(); return; }
+    window.__anellaAuth.client = client;
     const { data: { session } } = await client.auth.getSession();
     window.__anellaAuth.session = session;
     window.__anellaAuth.ready = true;

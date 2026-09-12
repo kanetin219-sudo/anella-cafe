@@ -674,10 +674,18 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 async function sbFetch(path, options = {}) {
   let token = SUPABASE_KEY;
   try {
-    const raw = localStorage.getItem('sb-abeekodehorlwsmnhoza-auth-token');
-    if (raw) {
-      const p = JSON.parse(raw);
-      if (p && p.access_token) token = p.access_token;
+    // ログイン済みなら、その都度セッションを取り直す。
+    // localStorage を直読みすると期限切れのトークンを掴み、JWT expired になるため。
+    const client = window.__anellaAuth && window.__anellaAuth.client;
+    if (client) {
+      const { data: { session } } = await client.auth.getSession();
+      if (session && session.access_token) token = session.access_token;
+    } else {
+      const raw = localStorage.getItem('sb-abeekodehorlwsmnhoza-auth-token');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && p.access_token) token = p.access_token;
+      }
     }
   } catch (e) {}
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {

@@ -1601,12 +1601,12 @@ async function loadUsersPage() {
       <td><b>${u.name}</b></td>
       <td style="color:var(--text-soft);">${u.kana||''}</td>
       <td>${u.needs_transfer === false ? '🚶 自力' : (u.car||'')}</td>
-      <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'有効':'無効'}</span></td>
+      <td><span class="badge ${u.is_active?'badge-green':'badge-gray'}">${u.is_active?'利用中':'終了'}</span></td>
       <td>
         <div class="actions">
           <button class="btn btn-ghost btn-sm" onclick="openSchedulePanel('${u.id}','${u.name}')">予定</button>
           <button class="btn btn-outline btn-sm" onclick="openUserModal('${u.id}')">編集</button>
-          <button class="btn btn-warn btn-sm" onclick="deleteUser('${u.id}','${u.name}')">削除</button>
+          <button class="btn ${u.is_active?'btn-warn':'btn-ghost'} btn-sm" onclick="toggleUserActive('${u.id}','${(u.name||'').replace(/'/g,"\\\\'")}',${!!u.is_active})">${u.is_active?'利用終了':'再開'}</button>
         </div>
       </td>
     </tr>
@@ -1666,11 +1666,15 @@ async function saveUser() {
   loadUsersPage();
 }
 
-async function deleteUser(id, name) {
-  if (!confirm(`「${name}」を削除しますか？`)) return;
-  const { error } = await supabase.from('transfer_users').delete().eq('id', id);
-  if (error) { toast('削除失敗: ' + error.message, 'warn'); return; }
-  toast('削除しました', '');
+// 過去の送迎記録を守るため利用者データは削除せず、利用中/終了を切り替える
+async function toggleUserActive(id, name, isActive) {
+  const msg = isActive
+    ? `「${name}」を利用終了にしますか？\n\n送迎表に出なくなります\n過去の記録は残ります`
+    : `「${name}」の利用を再開しますか？`;
+  if (!confirm(msg)) return;
+  const { error } = await supabase.from('transfer_users').update({ is_active: !isActive }).eq('id', id);
+  if (error) { toast('変更失敗: ' + error.message, 'warn'); return; }
+  toast(isActive ? '利用終了にしました' : '利用を再開しました', '');
   loadUsersPage();
 }
 

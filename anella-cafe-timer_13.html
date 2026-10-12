@@ -539,6 +539,17 @@
           <button class="counter-btn" onclick="mChange('child',1)">＋</button>
         </div>
       </div>
+      <div class="guest-row">
+        <div>
+          <div class="guest-row-label">👶 未就学</div>
+          <div class="guest-row-price">無料</div>
+        </div>
+        <div class="counter">
+          <button class="counter-btn" onclick="mChange('preschool',-1)">−</button>
+          <div class="counter-num" id="mPreschool">0</div>
+          <button class="counter-btn" onclick="mChange('preschool',1)">＋</button>
+        </div>
+      </div>
       <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:2px dashed var(--border);">
         <div class="guest-row-label" style="margin-bottom:8px;">📅 来店回数</div>
         <select id="mVisitSelect" onchange="selectVisit(this.value)"
@@ -637,7 +648,7 @@ function saveData() {
 
 let groups = loadData();
 let nextId = groups.length ? Math.max(...groups.map(g=>g.id)) + 1 : 1;
-let mAdults = 1, mChildren = 0;
+let mAdults = 1, mChildren = 0, mPreschool = 0;
 let mDisc = { senior: false, disability: false, review: false };
 let mVisit = '';
 let checkoutTargetId = null;
@@ -741,12 +752,14 @@ async function openCheckinFromConsent(id) {
   pendingConsentId  = id;
   pendingConsentSeq = f.day_seq || null;
   pendingSignature  = extractSig(f.signatures);
-  mAdults   = f.adults || 0;
-  mChildren = (f.children || 0) + (f.preschool || 0);
+  mAdults    = f.adults || 0;
+  mChildren  = f.children || 0;
+  mPreschool = f.preschool || 0;
   mDisc     = { senior: false, disability: false, review: false };
   mVisit    = mapVisitCount(f.visit_count);
   document.getElementById('mAdult').textContent = mAdults;
   document.getElementById('mChild').textContent = mChildren;
+  document.getElementById('mPreschool').textContent = mPreschool;
   document.getElementById('mName').value        = '';
   document.getElementById('mName').placeholder  = '読み取り中...';
   document.getElementById('mVisitSelect').value = mVisit;
@@ -855,7 +868,7 @@ setInterval(() => {
 // ── レンダリング ──
 function render() {
   document.getElementById('statGroups').textContent = groups.length;
-  document.getElementById('statPeople').textContent = groups.reduce((s,g)=>s+g.adults+g.children,0);
+  document.getElementById('statPeople').textContent = groups.reduce((s,g)=>s+g.adults+g.children+(g.preschool||0),0);
 
   const list = document.getElementById('groupsList');
   if (!groups.length) {
@@ -877,6 +890,7 @@ function render() {
     let summary = [];
     if (g.adults>0) summary.push(`大人${g.adults}名`);
     if (g.children>0) summary.push(`子供${g.children}名`);
+    if ((g.preschool||0)>0) summary.push(`未就学${g.preschool}名`);
     if (g.disc.senior) summary.push('シニア割');
     if (g.disc.disability) summary.push('障害者割引');
     if (g.disc.review) summary.push('口コミ割');
@@ -889,6 +903,7 @@ function render() {
       if (g.adults>0) breakdown.push(`大人¥${fee.aTotal.toLocaleString()}`);
       if (g.children>0) breakdown.push(`子供¥${fee.cTotal.toLocaleString()}`);
     }
+    if ((g.preschool||0)>0) breakdown.push(`未就学${g.preschool}名 無料`);
     if ((g.gacha||0)>0) breakdown.push(`ガチャ¥${fee.gachaTotal.toLocaleString()}`);
 
     return `<div class="group-card ${warn?'warn-card':''}">
@@ -928,9 +943,10 @@ render();
 function openCheckinModal() {
   pendingConsentId = null;
   pendingSignature = null;
-  mAdults=1; mChildren=0; mDisc={senior:false,disability:false,review:false};
+  mAdults=1; mChildren=0; mPreschool=0; mDisc={senior:false,disability:false,review:false};
   document.getElementById('mAdult').textContent=1;
   document.getElementById('mChild').textContent=0;
+  document.getElementById('mPreschool').textContent=0;
   document.getElementById('mName').value='';
   mVisit='';
   document.getElementById('mVisitSelect').value='';
@@ -943,6 +959,7 @@ function openCheckinModal() {
 }
 function mChange(type, delta) {
   if (type==='adult') { mAdults=Math.max(0,mAdults+delta); document.getElementById('mAdult').textContent=mAdults; }
+  else if (type==='preschool') { mPreschool=Math.max(0,mPreschool+delta); document.getElementById('mPreschool').textContent=mPreschool; }
   else { mChildren=Math.max(0,mChildren+delta); document.getElementById('mChild').textContent=mChildren; }
   updateStartBtn();
 }
@@ -984,6 +1001,7 @@ function doCheckin() {
     label,
     adults: mAdults,
     children: mChildren,
+    preschool: mPreschool,
     disc: {...mDisc},
     visit: mVisit,
     checkinAt: Date.now(),
@@ -1033,6 +1051,7 @@ function openCheckout(id) {
     if (fee.normCount>0) html+=`<div class="result-row"><span>大人（通常）${fee.normCount}名 × ¥${fee.normFee.toLocaleString()}</span><strong>¥${(fee.normCount*fee.normFee).toLocaleString()}</strong></div>`;
     if (g.children>0) html+=`<div class="result-row"><span>子供 ${g.children}名 × ¥${fee.cEach.toLocaleString()}</span><strong>¥${fee.cTotal.toLocaleString()}</strong></div>`;
   }
+  if ((g.preschool||0)>0) html+=`<div class="result-row"><span>👶 未就学 ${g.preschool}名（無料）</span><strong>¥0</strong></div>`;
   if ((g.gacha||0)>0) html+=`<div class="result-row"><span>🎰 ガチャ ${g.gacha}回 × ¥200</span><strong>¥${fee.gachaTotal.toLocaleString()}</strong></div>`;
 
   document.getElementById('checkoutDetail').innerHTML = html;

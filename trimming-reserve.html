@@ -860,9 +860,7 @@ async function lookupPastReservation() {
   isReturning = true;
   resultEl.innerHTML = `
     <div style="font-weight:700; color:var(--accent); margin-bottom:8px;">✅ 前回のご利用情報が見つかりました</div>
-    <div>🐾 ${data.pet_name}ちゃん（${data.breed}・${data.gender}）</div>
-    <div>👤 ${data.owner_name} 様</div>
-    <div style="font-size:12px; color:var(--text-soft); margin-top:4px;">前回来店：${data.visit_date}</div>
+    <div style="font-size:13px; color:var(--text-soft);">次へ進むと、前回の内容が自動で入力されます</div>
   `;
   resultEl.classList.add('active');
   document.getElementById('step0Next').style.display = 'flex';

@@ -3,7 +3,7 @@
 松田みお先生（着物リメイクアーティスト養成講座）の note に、週1本SEO記事を作成して公開するための手順。
 毎週の自動実行セッションはこの手順書に従う。
 
-最終更新：2026年10月26日
+最終更新：2026年10月26日（記事6公開・埋め込み手順を修正）
 
 ---
 
@@ -58,12 +58,13 @@
 | 着物リメイク教室は東京で探せる？養成講座はオンラインで全国から | https://note.com/felizcjo/n/n893a1c7ee99d |
 | 着物リメイクアーティストの仕事とは？オーダー・販売・教えることの実例 | https://note.com/felizcjo/n/n63350bc77c7d |
 | 着物リメイクの講座はどう選ぶ？申し込む前に確かめたい3つのこと | https://note.com/felizcjo/n/n1a1f53e94fae |
+| 月額制講座との違いは？6ヶ月の養成講座で学ぶこと | https://note.com/felizcjo/n/n92bd59e81c98 |
 
 **毎回、実行前に `https://note.com/felizcjo` を開いて公開済み記事一覧を確認し、未使用のテーマを選ぶこと。**
 
 ## 5. テーマ候補（上から順に消化。既出なら次へ）
 
-1. 着物リメイクは何から始める？ 最初の一着に選ぶ着物
+1. 着物リメイクは何から始める？ 最初の一着に選ぶ着物  ← 次はここから
 2. 留袖・振袖はリメイクできる？ 格のある着物の活かし方
 3. 着物リメイクに必要な道具は？ 手縫いで始める最小限
 4. 着物のほどき方と洗い方。リメイク前の下準備
@@ -170,18 +171,53 @@ const s=getSelection();s.removeAllRanges();s.addRange(r);
 ```
 アップロード完了まで7秒ほど待つ。
 
-### YouTubeを埋め込む
-HTMLで貼ると素のテキストになる。**URLだけの段落を選択して削除し、text/plain で貼り直す**と埋め込みになる。
+### YouTubeやnote記事を埋め込む（確実な方法）
+
+**合成 paste イベントでの埋め込みは効かないことがある。`+` メニューを使う。**
+
+1. HTML には URL だけの段落を1行入れておく（例 `<p>https://youtu.be/RG7cWoqWsiE</p>`）
+2. その段落のテキストを JS で消して空段落にする
 
 ```js
-const yp=[...el.children].find(n=>n.innerText.includes('youtu.be'));
-const r2=document.createRange();r2.selectNodeContents(yp);
-getSelection().removeAllRanges();getSelection().addRange(r2);
+const i=[...el.children].findIndex(n=>n.innerText.includes('youtu.be'));
+const p=el.children[i];
+const r=document.createRange();r.selectNodeContents(p);
+getSelection().removeAllRanges();getSelection().addRange(r);
 document.execCommand('delete');
-const d2=new DataTransfer();d2.setData('text/plain','https://youtu.be/RG7cWoqWsiE');
-el.dispatchEvent(new ClipboardEvent('paste',{clipboardData:d2,bubbles:true,cancelable:true}));
+p.scrollIntoView({block:'center'});
+await new Promise(r=>setTimeout(r,600));
+const b=p.getBoundingClientRect();const k=1568/innerWidth;
+JSON.stringify({cx:Math.round((b.left+30)*k),cy:Math.round((b.top+b.height/2)*k)});
 ```
-5秒待って `el.querySelectorAll('iframe').length` が1以上になることを確認。
+
+3. 返ってきた `(cx, cy)` を**実クリック**してキャレットを置く
+4. その左、`(cx-59, cy)` に出る `+` ボタンをクリック
+5. メニューの「埋め込み」をクリック（+ ボタンから見て下に約110px、1568換算で `(cx+6, cy-110)` 付近）
+6. URL入力欄をクリックして URL を**タイプ**、右の「読込」ボタンをクリック
+   - URLが長いと入力欄が2行になり「読込」ボタンが下にずれる。**スクショで位置を確認してから押す**
+7. 8秒待って `el.querySelectorAll('iframe').length` が増えたことを確認
+
+note記事のURLも同じ手順でカード型の内部リンクになる。
+
+### 落とし穴
+
+- **画像のキャプションにURLが入ってしまうことがある。** 合成 paste が失敗したとき、直前に挿入した画像の `figcaption` に文字が落ちる。公開前に必ず確認する:
+
+```js
+const el=document.querySelector('[contenteditable="true"]');
+[...el.querySelectorAll('figcaption')].map(n=>n.innerText);
+```
+
+空でなければ、その figcaption を `triple_click` で全選択して `Delete`。
+
+- **本文の空行をクリックしたつもりが見出しの先頭だった**、ということが起きる。クリック後に必ず構造を確認する:
+
+```js
+const el=document.querySelector('[contenteditable="true"]');
+[...el.children].map((n,i)=>i+':'+n.tagName+':'+n.innerText.slice(0,24));
+```
+
+崩れたら `cmd+z` を4回ほど押して戻す。
 
 ### 公開
 右上「公開に進む」→ ハッシュタグ入力欄をクリックしてタグを改行区切りで入力 → 右上「投稿する」。
